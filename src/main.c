@@ -12,13 +12,11 @@ int main(struct multiboot *mboot_ptr)
 {
 	// All init calls here..
 	monitor_clear();
-	char str[40];
-	char str2[] = " & Paste";
+	char str[] = "abc";
+	char str2[] = "abcd";
 	
-	strcpy(str, "Copy");	
-	strncat(str, str2, 5);
-
-	monitor_write(str);
+	int comp = strncmp(str, str2, 3);
+	monitor_write_dec(comp);
 	
 	
 	return 0xDEADBABA;

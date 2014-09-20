@@ -133,3 +133,56 @@ char* strncat(char* dest, const char* source, size_t num)
 
 	return dest;
 }
+
+int memcmp(const void* ptr1, const void* ptr2, size_t num)
+{
+	const char* cptr1 = ptr1;
+	const char* cptr2 = ptr2;
+	
+	for (; num > 0; num--)
+	{
+		if (*cptr1 < *cptr2)
+			return -1;
+		else if (*cptr1 > *cptr2)
+			return 1;
+		
+		cptr1++;
+		cptr2++;
+	}
+	
+	return 0;
+}
+
+int strcmp(const char* str1, const char* str2)
+{
+	while (true)
+	{
+		if (*str1 < *str2)
+			return -1;
+		if (*str1 > *str2)
+			return 1;
+		if (*str1 == '\0') /* Actually, if both are null */
+			return 0;
+
+		str1++;
+		str2++;
+	}
+}
+
+int strncmp(const char* str1, const char* str2, size_t num)
+{
+	for (; num > 0; num--)
+	{
+		if (*str1 < *str2)
+			return -1;
+		if (*str1 > *str2)
+			return 1;
+		if (*str1 == '\0') /* Actually, if both are null */
+			return 0;
+
+		str1++;
+		str2++;
+	}
+
+	return 0;
+}
