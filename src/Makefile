@@ -8,7 +8,7 @@ ASFLAGS=-felf
 all: $(SOURCES) $(LIBS) link 
 
 clean:
-	-rm *.o kernel
+	-rm *.o kernel lib/*.o
 
 link:
 	ld $(LDFLAGS) -o kernel $(SOURCES) $(LIBS)

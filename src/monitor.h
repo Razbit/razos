@@ -4,7 +4,7 @@
 #ifndef MONITOR_H
 #define MONITOR_H
 
-#include "lib/common.h"
+#include "lib/stdint.h"
 
 //write a character to the screen
 void monitor_put(char c);

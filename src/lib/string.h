@@ -2,4 +2,14 @@
  *
  * Razbit 2014 */
 
-void* memset(void * ptr, char value, int num);
+#ifndef H_STRING
+#define H_STRING
+
+#include "stddef.h"
+#include "stdint.h"
+
+void* memset(void* ptr, char value, int num);
+void* memcpy(void* dest, const void* src, size_t num);
+
+
+#endif /* H_STRING */

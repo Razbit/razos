@@ -2,6 +2,7 @@
 // jamesM's tuts
 
 #include "common.h"
+#include "stdint.h"
 
 // write a byte to the port
 void outb(uint16_t port, uint8_t value)

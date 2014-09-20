@@ -1,4 +1,4 @@
-#include "common.h"
+#include "stdint.h"
 #include "math.h"
 
 int32_t pow(int32_t base, int32_t exp)
