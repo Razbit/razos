@@ -9,7 +9,12 @@
 #include "stdint.h"
 
 void* memset(void* ptr, char value, int num);
-void* memcpy(void* dest, const void* src, size_t num);
+void* memcpy(void* dest, const void* source, size_t num);
+void* memmove(void* dest, const void* source, size_t num);
 
+char* strcpy(char* dest, const char* source);
+char* strncpy(char* dest, const char* source, size_t num);
+char* strcat(char* dest, const char* source);
+char* strncat(char* dest, const char* source, size_t num);
 
 #endif /* H_STRING */
