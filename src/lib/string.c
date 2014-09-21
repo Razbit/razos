@@ -6,7 +6,7 @@
 #include "stdint.h"
 #include "stddef.h"
 #include "stdbool.h"
-#include "../monitor.h"
+
 void* memset(void* ptr, char value, int num)
 {
 	num--;
