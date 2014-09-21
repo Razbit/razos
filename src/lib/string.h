@@ -21,4 +21,15 @@ int memcmp(const void* ptr1, const void* ptr2, size_t num);
 int strcmp(const char* str1, const char* str2);
 int strncmp(const char* str1, const char* str2, size_t num);
 
+void* memchr(const void* ptr, char value, size_t num);
+char* strchr(const char* str, char value);
+char* strrchr(const char* str, char value);
+char* strpbrk(const char* str1, const char* str2);
+size_t strcspn(const char* str1, const char* str2);
+size_t strspn(const char* str1, const char* str2);
+char* strstr(const char* str1, const char* str2);
+char* strtok(char* str, const char* delimiters);
+
+size_t strlen(const char* str);
+
 #endif /* H_STRING */

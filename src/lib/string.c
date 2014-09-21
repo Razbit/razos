@@ -6,7 +6,7 @@
 #include "stdint.h"
 #include "stddef.h"
 #include "stdbool.h"
-
+#include "../monitor.h"
 void* memset(void* ptr, char value, int num)
 {
 	num--;
@@ -185,4 +185,215 @@ int strncmp(const char* str1, const char* str2, size_t num)
 	}
 
 	return 0;
+}
+
+void* memchr(const void* ptr, char value, size_t num)
+{
+	const char* cptr = ptr;
+	
+	for (; num > 0; num--)
+	{
+		if (*cptr == value)
+			return cptr;
+		cptr++;
+	}
+
+	return NULL;
+}
+
+char* strchr(const char* str, char value)
+{
+	while (*str != '\0')
+	{
+		if (*str == value)
+			return str;
+		str++;
+	}
+
+	return NULL;
+}
+
+char* strrchr(const char* str, char value)
+{
+	const char* end = str;
+
+	while (*end != '\0')
+		end++;
+
+	while (end >= str)
+	{
+		if (*end == value)
+			return end;
+		end--;
+	}
+
+	return NULL;
+		
+}
+
+char* strpbrk(const char* str1, const char* str2)
+{
+	const char* temp = str2;
+	
+	while (*str1 != '\0')
+	{
+		while (*temp != '\0')
+		{
+			if (*str1 == *temp)
+				return str1;
+			temp++;
+		}
+		
+		temp = str2;
+		str1++;
+	}
+
+	return NULL;
+}
+
+size_t strcspn(const char* str1, const char* str2)
+{
+	size_t ret = 0;
+	const char* temp = str2;
+	
+	while (*str1 != '\0')
+	{
+		while (*temp != '\0')
+		{
+			if (*str1 == *temp)
+				goto strcspn_end;
+			temp++;
+		}
+		
+		temp = str2;
+		str1++;
+		ret++;
+	}
+
+strcspn_end:
+	return ret;
+}
+
+size_t strspn(const char* str1, const char* str2)
+{
+	size_t ret = 0;
+	const char* temp = str2;
+	
+	while (*str1 != '\0')
+	{
+		while (*temp != '\0')
+		{
+			if (*temp == *str1)
+				ret++;
+			temp++;
+		}
+		
+		temp = str2;
+		str1++;
+	}
+
+	return ret;
+}
+
+char* strstr(const char* str1, const char* str2)
+{
+	int i;
+	
+	while (*str1 != '\0')
+	{
+		str1 = strchr(str1, *str2);
+		if (!str1)
+			return NULL;
+		
+		for (i = 1; i <= strlen(str2); i++)
+		{
+			if (str1[i] != str2[i])
+				break;
+			
+			
+		}
+		
+		if (i == strlen(str2))
+			return str1;
+		else
+			str1++;
+	}
+
+	return NULL;
+}
+
+char* strtok(char* str, const char* delimiters)
+{
+    static char* last;
+	if (str)
+		last = NULL;
+
+	int i = 0;
+    int len = strlen(delimiters);
+ 
+    if(len == 0)
+        return NULL;
+ 
+    /* if the original string has nothing left */
+    if(!str && !last)
+        return NULL;
+ 
+    if(str && !last)
+        last = str;
+ 
+    /* start of the substr */
+    char* p_start = last;
+
+	while (true)
+	{
+        for (i = 0; i < len; i++)
+		{
+            if (*p_start == delimiters[i])
+			{
+                p_start++;
+                break;
+            }
+        }
+ 
+        if (i == len)
+		{
+			last = p_start;       
+			break;
+        }
+    }
+ 
+    if (*last == '\0')
+	{
+        last = NULL;
+        return NULL;
+    }
+ 
+ 
+    /* find the end of the substring, replace the delimiter with null */
+    while(*last != '\0')
+	{
+        for(i = 0; i < len; i++)
+		{
+            if(*last == delimiters[i])
+			{
+                *last = '\0';
+                break;
+            }
+        }
+ 
+        last++;
+        if (i < len)
+            break;
+    }
+ 
+    return p_start;
+}
+
+size_t strlen(const char* str)
+{
+	size_t ret = 0;
+	while (*str++ != '\0')
+		ret++;
+
+	return ret;
 }
