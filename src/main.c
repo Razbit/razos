@@ -5,6 +5,7 @@
 #include "lib/string.h"
 #include "lib/stddef.h"
 #include "lib/stdint.h"
+#include "lib/ctype.h"
 
 #include "monitor.h"
 
@@ -13,15 +14,14 @@ int main(struct multiboot *mboot_ptr)
 	// All init calls here..
 	monitor_clear();
 	
-	char str[] ="- This, a sample string.";
-  	char * pch;
-  	pch = strtok (str," ,.-");
-  	while (pch != NULL)
-  	{
-    		monitor_write(pch);
-		monitor_write("\n");
-    		pch = strtok (NULL, " ,.-");
-  	}
+	char str[] ="This, a sample string.";
+int i = 0;
+  	while (str[i])
+	{
+		str[i] = tolower(str[i]);
+		i++;
+	}
+monitor_write(str);
 	monitor_write("halted");
 	return 0xDEADBABA;
 }
