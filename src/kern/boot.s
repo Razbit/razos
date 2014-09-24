@@ -1,4 +1,4 @@
- ;
+;
 ; boot.s -- Kernel start location. Also defines multiboot header.
 ; Based on Bran's kernel development tutorial file start.asm
 ;
@@ -32,14 +32,14 @@ mboot:
   dd  start                     ; Kernel entry point (initial EIP).
 
 [GLOBAL start]                  ; Kernel entry point.
-[EXTERN main]                   ; This is the entry point of our C code
+[EXTERN kmain]                   ; This is the entry point of our C code
 
 start:
   push    ebx                   ; Load multiboot header location
 
   ; Execute the kernel:
   cli                         ; Disable interrupts.
-  call main                   ; call our main() function.
+  call kmain                   ; call our kmain() function.
   jmp $                       ; Enter an infinite loop, to stop the processor
                               ; executing whatever rubbish is in the memory
                               ; after our kernel! 

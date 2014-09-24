@@ -1,4 +1,4 @@
-SOURCES=boot.o main.o monitor.o
+SOURCES=kern/boot.o kern/kmain.o kern/kio.o
 LIBS=lib/common.o lib/math.o lib/string.o lib/ctype.o
 
 CFLAGS=-m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector
@@ -8,7 +8,7 @@ ASFLAGS=-felf
 all: $(SOURCES) $(LIBS) link 
 
 clean:
-	-rm *.o kernel lib/*.o
+	rm kern/*.o lib/*.o kernel
 
 link:
 	ld $(LDFLAGS) -o kernel $(SOURCES) $(LIBS)
