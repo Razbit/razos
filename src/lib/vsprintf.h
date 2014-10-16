@@ -54,6 +54,6 @@
  *        %          a % character (0x25) is printed.
  */
 
-int vsprintf (char* s, const char* format, va_list arg);
+int vsprintf (char* str, const char* format, va_list arg);
 
 #endif /* VSPRINTF_H */
