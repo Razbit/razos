@@ -9,22 +9,13 @@
 
 #include "vsprintf.h"
 
-#define FL_SIGN 0x1
-#define FL_LEFT_JUSTIFY 0x2
-#define FL_PLUS 0x4
-#define FL_SPACE 0x8
+#define FL_SIGN 0x01
+#define FL_LEFT_JUSTIFY 0x02
+#define FL_PLUS 0x04
+#define FL_SPACE 0x08
 #define FL_SPECIAL 0x10
 #define FL_ZEROPAD 0x20
 #define FL_SMALL 0x40
-
-#define SIGNED_DECIMAL 0x1
-#define UNSIGNED_DECIMAL 0x2
-#define OCTAL 0x4
-#define HEXADECIMAL 0x8
-#define UNSIGNED_CHAR 0x10
-#define CSTRING 0x20
-#define POINTER 0x40
-#define WRITE 0x80
 
 static int atoi_ptr(const char **str)
 {
@@ -39,16 +30,16 @@ static int atoi_ptr(const char **str)
 char* numstr(char* str, int32_t num, int base, int width, int prec, int flags)
 {
     /* Convert number num of radix base */
-
+    
     char c, sign, tmp[36];
-    const char* digs = "01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const char* digs = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     int i;
 
+    if (width < 0)
+        width = -width;
+    
     if (flags & FL_SMALL)
-        digs = "01234567890abcdefghijklmnopqrstuvwxyz";
-
-    if (flags & FL_LEFT_JUSTIFY)
-        flags &= ~FL_ZEROPAD;
+        digs = "0123456789abcdefghijklmnopqrstuvwxyz";
 
     if (base<2 || base>36)
         return 0;
@@ -57,7 +48,7 @@ char* numstr(char* str, int32_t num, int base, int width, int prec, int flags)
         c = '0';
     else
         c = ' ';
-
+    
     if (flags & FL_SIGN && num < 0)
     {
         sign = '-';
@@ -76,9 +67,9 @@ char* numstr(char* str, int32_t num, int base, int width, int prec, int flags)
         }
     }
 
-    if (sign)
+    if (sign != 0)
         width--;
-
+    
     if (flags & FL_SPECIAL)
     {
         if (base == 16)
@@ -96,18 +87,19 @@ char* numstr(char* str, int32_t num, int base, int width, int prec, int flags)
         while (num != 0)
         {
             tmp[i++] = digs[num % base];
-            num = num/base;
+            num /= base;
         }
             
     }
-
+    
     if (i > prec)
         prec = i;
+    
     width -= prec;
 
-    if (!(flags & (FL_ZEROPAD + FL_LEFT_JUSTIFY)))
+    if (!(flags & FL_LEFT_JUSTIFY))
         while (width-- > 0)
-            *str++ = ' ';
+            *str++ = c;
 
     if (sign)
         *str++ = sign;
@@ -123,14 +115,13 @@ char* numstr(char* str, int32_t num, int base, int width, int prec, int flags)
         }        
     }
     
-    if (!(flags & FL_LEFT_JUSTIFY))
-        while (width-- > 0)
-            *str++ = c;
 
     while (i < prec--)
         *str++ = '0';
+
     while (i-- > 0)
         *str++ = tmp[i];
+
     while (width-- > 0)
         *str++ = ' ';
      
@@ -141,7 +132,7 @@ int vsprintf (char* buf, const char* fmt, va_list arg)
 {
     uint8_t flags = 0;
     int state = 0;
-    int width = 0;
+    int width = -1;
     int prec = -1;
     int len = 0;
     int spec = 0;
@@ -166,49 +157,54 @@ int vsprintf (char* buf, const char* fmt, va_list arg)
             fmt++;
             
         case 1: /* % received; wait for flags */
-            if (*fmt++ == '%')
+            if (*fmt == '%')
             {
-                *str++ = '%';
+                *str++ = *fmt++;
                 state = 0;
                 break;
             }
 
-            if (*fmt++ == '-')
+            if (*fmt == '-')
             {
                 flags |= FL_LEFT_JUSTIFY;
+                fmt++;
                 break;
             }
 
-            if (*fmt++ == '0')
+            if (*fmt == '0')
             {
                 flags |= FL_ZEROPAD;
+                fmt++;
                 break;
             }
 
-            if (*fmt++ == '+')
+            if (*fmt == '+')
             {
                 flags |= FL_PLUS;
                 flags |= FL_SIGN;
+                fmt++;
                 break;
             }
 
-            if (*fmt++ == ' ')
+            if (*fmt == ' ')
             {
                 flags |= FL_SPACE;
+                fmt++;
                 break;
             }
 
-            if (*fmt++ == '#')
+            if (*fmt == '#')
             {
                 flags |= FL_SPECIAL;
+                fmt++;
                 break;
             }
 
             /* Flag 'precedence' */
-            if ((flags & FL_PLUS) && (flags & FL_SPACE))
+            if (flags & FL_PLUS)
                 flags &= ~FL_SPACE; /* Remove the space flag */
             
-            if ((flags & FL_LEFT_JUSTIFY) && (flags & FL_ZEROPAD))
+            if (flags & FL_LEFT_JUSTIFY)
                 flags &= ~FL_ZEROPAD;
 
             state++;
@@ -284,7 +280,7 @@ int vsprintf (char* buf, const char* fmt, va_list arg)
                     while (--width > 0)
                         *str++ = ' ';
 
-                *str++ = (uint8_t)va_arg(arg, int);
+                *str++ = (char)va_arg(arg, int);
 
                 while (--width > 0)
                     *str++ = ' '; /* pad to left using spaces */
@@ -313,6 +309,8 @@ int vsprintf (char* buf, const char* fmt, va_list arg)
                 break;
 
             case 'p':
+                flags |= FL_SMALL;
+                flags |= FL_SPECIAL;
                 str = numstr(str, (uint32_t)va_arg(arg, void*), 16, width, prec, flags);
                 break;
 
@@ -328,7 +326,7 @@ int vsprintf (char* buf, const char* fmt, va_list arg)
         case 6:
             state = 0;
             flags = 0;
-            width = 0;
+            width = -1;
             prec = -1;
             len = 0;
             spec = 0;
