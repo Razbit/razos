@@ -29,4 +29,6 @@ void clear_scr();
 int kputchar(char c);
 int kputs(char *c);
 
+int kprintf(const char* fmt, ...);
+
 #endif /* KIO_H */

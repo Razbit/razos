@@ -121,3 +121,18 @@ int kputs(char *c)
 	return 1;
 }
 
+int kprintf(const char* fmt, ...)
+{
+    char str[128];
+
+    va_list args;
+	va_start(args, fmt);
+
+    int ret = vsprintf(str, fmt, args);
+
+    va_end(args);
+    
+    kputs(str);
+
+    return ret;
+}
