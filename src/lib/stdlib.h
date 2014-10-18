@@ -6,6 +6,6 @@
 #define STDLIB_H
 
 /* Conversion functions */
-int atoi (char *str);
+int atoi (const char *str);
 
 #endif /* STDLIB_H */
