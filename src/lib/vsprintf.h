@@ -24,7 +24,7 @@
  *              preceded by 0, 0x or 0X respectively.
  *
  * width: (num) Min. number of chars to be printed, pad w/ blanks.  [ok]
- *        *     Width is specified as an int in the argument list.  [todo]
+ *        *     Width is specified as an int in the argument list.  [ok]
  *
  * .prec: (num) For integers (d, i, o, u, x, X): specifies the min. [ok]
  *              number of digits to be written, padded w/ leading
@@ -33,7 +33,7 @@
  *              For s: max number of chars to be printed.           [ok]
  *              If the period is specified without an explicit
  *              value, 0 is assumed.
- *        *     Precision is specified as an int in the arg list.   [todo]
+ *        *     Precision is specified as an int in the arg list.   [ok]
  *
  *              d i       u o x X   c    s     p     n
  * len:   (n/a) int16_t   uint16_t  char char* void* int16_t*       [ok]

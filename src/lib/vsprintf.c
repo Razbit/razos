@@ -210,25 +210,37 @@ int vsprintf (char* buf, const char* fmt, va_list arg)
             state++;
             
         case 2: /* Field width */
-            /* TODO: width from arg. list using an asterisk (*) */
             if (isdigit(*fmt))
                 width = atoi_ptr(&fmt);
-
+            else if (*fmt == '*')
+            {
+                width = va_arg(arg, int);
+                fmt++;
+            }
+            
             state++;
 
         case 3: /* precision */
-            /* TODO: precision from arg. list using an asterisk (*) */
-            if (*fmt != '.')
+            if (*fmt == '.')
+            {
+                fmt++;
+
+                if (isdigit(*fmt))
+                    prec = atoi_ptr(&fmt);
+                else if (*fmt == '*')
+                {
+                    prec = va_arg(arg, int);
+                    fmt++;
+                }
+                                
+                state++;
+            }
+            else
             {
                 state++;
                 break;
             }
-
-            fmt++;
-
-            prec = atoi_ptr(&fmt);
-            state++;
-
+            
         case 4: /* length modifier */
             if (*fmt == 'l')
             {
