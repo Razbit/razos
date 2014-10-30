@@ -26,5 +26,11 @@ $ sudo apt-get install libwxgtk2.8-dev bochs
 $ cd /usr/share/bochs
 $ sudo wget https://github.com/larsr/bochs/blob/master/bios/VGABIOS-elpin-2.40
 ```
+
+#Acknowledgements
+Bran's kernel development tutorials. Brandon Friesen,
+	http://www.osdever.net/bkerndev/Docs/title.htm
+JamesM's kernel development tutorials. James Molloy, jamesmolloy.co.uk/tutorial_html/
+
 Cheers,
 Razbit
