@@ -1,10 +1,10 @@
         ;; This file is a part of the RazOS project
         ;;
-        ;; gdt.s -- writes the GDT pointer
+        ;; gdt.s -- writes the GDT and IDT pointers
         ;;
         ;; Razbit 2014
 
-        [GLOBAL gdt_flush]      ; Allow C to call this
+[GLOBAL gdt_flush]              ; Allow C to call this
 
 gdt_flush:                      ; Write the GDT pointer passed from C
         mov eax, [esp+4]        ; The first param
@@ -21,4 +21,10 @@ gdt_flush:                      ; Write the GDT pointer passed from C
 .flush:
         ret
         
+[GLOBAL idt_flush]              ; Allow calling from C
+
+idt_flush:                      ; Write the IDT pointer passed from C
+        mov eax, [esp+4]        ; First parameter is the pointer to the IDT
+        lidt [eax]              ; Load the pointer
+        ret
         
