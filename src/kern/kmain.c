@@ -7,9 +7,11 @@
 
 int kmain(struct multiboot *mboot_ptr)
 {
-	// All init calls here..
+	/* Init routines here.. */
 	kclear_scr();
-    	
+
+    asm volatile("int $0x0");
+    
 	kprintf("\n==HALTED==");
 	return 0xDEADBABA;
 }

@@ -23,11 +23,11 @@ static void init_idt();
 static void idt_set(uint8_t num, uint32_t base, uint16_t selector, \
                     uint8_t flags);
 
-gdt_entry_t gdt_entries[NUM_GDTS];
-gdt_ptr_t gdt_ptr;
+struct gdt_entry_t gdt_entries[NUM_GDTS];
+struct gdt_ptr_t gdt_ptr;
 
-idt_entry_t idt_entries[NUM_IDTS];
-idt_ptr_t idt_ptr;
+struct idt_entry_t idt_entries[NUM_IDTS];
+struct idt_ptr_t idt_ptr;
 
 /* Initialization: zero all ISRs, init GDT and IDT */
 void init_descr_tables()
@@ -38,7 +38,7 @@ void init_descr_tables()
 
 static void init_gdt()
 {
-    gdt_ptr.limit = sizeof(gdt_entry_t) * NUM_GDTS - 1;
+    gdt_ptr.limit = sizeof(struct gdt_entry_t) * NUM_GDTS - 1;
     gdt_ptr.base = (uint32_t) &gdt_entries;
 
     gdt_set(0, 0, 0, 0, 0);                /* null segment */
@@ -48,7 +48,7 @@ static void init_gdt()
     gdt_set(4, 0, 0xFFFFFFFF, 0xF2, 0xCF); /* user data */
 }
 
-static void gtd_set(int32_t num, uint32_t base, uint32_t limit, \
+static void gdt_set(int32_t num, uint32_t base, uint32_t limit, \
                     uint8_t access_fl, uint8_t gran)
 {
     gdt_entries[num].low_base = (base & 0xFFFF);
@@ -64,10 +64,10 @@ static void gtd_set(int32_t num, uint32_t base, uint32_t limit, \
 
 static void init_idt()
 {
-    idt_ptr.limit = sizeof(idt_entry_t) * 256 - 1;
+    idt_ptr.limit = sizeof(struct idt_entry_t) * 256 - 1;
     idt_ptr.base = (uint32_t) &idt_entries;
 
-    memset(&idt_entries, 0, sizeof(idt_entry_t) * 256);
+    memset(&idt_entries, 0, sizeof(struct idt_entry_t) * 256);
 
     idt_set(1, (uint32_t)isr1, 0x08, 0x8E);
     idt_set(2, (uint32_t)isr2, 0x08, 0x8E);
@@ -118,5 +118,5 @@ static void idt_set(uint8_t num, uint32_t base, uint16_t selector, \
     /* Uncomment when we start using the user mode
      * Sets privilege to 3 */
     
-    /* idt_entries[num].flags \= 0x60; */
+    /* idt_entries[num].flags |= 0x60; */
 }

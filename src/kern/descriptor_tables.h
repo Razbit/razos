@@ -17,7 +17,7 @@ struct gdt_entry_t
     uint8_t mid_base;   /* Base address bits 16..23 */
     uint8_t access_fl;  /* 0..3: Type (code/data); 4: Descriptor type;
                          * 5..6: Privilege (ring); 7: Present (y/n) */
-    uin8_t granularity; /* 0..3: Segment limit bits 16..19; 4..5: zero;
+    uint8_t granularity; /* 0..3: Segment limit bits 16..19; 4..5: zero;
                          * 6: Operand size (16/32) 7: Byte/kbyte */
     uint8_t high_base;  /* Base address bit 24..31 */
 }__attribute__((__packed__)); /* Don't change alignment */
