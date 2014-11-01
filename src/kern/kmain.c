@@ -13,7 +13,7 @@ int kmain(struct multiboot *mboot_ptr)
     init_descr_tables(); /* GDT, IDT */
     
     asm volatile("int $0x0");
-    
+        
 	kprintf("\n==HALTED==");
 	return 0xDEADBABE;
 }
