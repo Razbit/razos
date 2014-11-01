@@ -26,6 +26,7 @@ static void irq_remap();
 
 void init_irq()
 {
+    kprintf("Setting up IRQ handlers\n");
     irq_remap();
 
     idt_set(32, (uint32_t)irq0, 0x08, 0x8E);
@@ -71,7 +72,7 @@ void irq_handler(struct register_t regs)
 
 void install_irq_handler(int irq, irq_handler_t handler)
 {
-    handlers[irq] = handler;
+    handlers[irq-32] = handler;
 }
 
 void uinstall_irq_handler(int irq)

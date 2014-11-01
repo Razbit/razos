@@ -1,6 +1,6 @@
 SOURCES=kern/boot.s.o kern/kmain.o kern/kio.o kern/vga.o kern/isr.o \
 kern/gdt.o kern/gdt.s.o kern/idt.o kern/idt.s.o kern/interrupt.s.o \
-kern/irq.o
+kern/irq.o kern/timer.o
 
 LIBS=lib/portio.o lib/math.o lib/string.o lib/ctype.o lib/vsprintf.o \
 lib/stdlib.o lib/sprintf.o
