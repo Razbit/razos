@@ -59,6 +59,10 @@ Now you can use GDB like you normally would, pretty much the only difference
 being that you can't type 'run', but rather 'continue' to start executing the
 kernel, since in a way Bochs has already opened/started executing the kernel.
 
+See these two links for more info on debugging an OS in bochs with GDB:
+http://www.cs.princeton.edu/courses/archive/fall09/cos318/precepts/bochs_gdb.html
+http://www.csee.umbc.edu/~cpatel2/links/310/nasm/gdb_help.shtml
+
 #Acknowledgements
 Bran's kernel development tutorials. Brandon Friesen,
 http://www.osdever.net/bkerndev/Docs/title.htm
