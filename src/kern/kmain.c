@@ -4,13 +4,18 @@
  */
 
 #include "kio.h"
-#include "descriptor_tables.h"
+#include "gdt.h"
+#include "idt.h"
+#include "irq.h"
 
 int kmain(struct multiboot *mboot_ptr)
 {
 	/* Init routines here.. */
 	kclear_scr();
-    init_descr_tables(); /* GDT, IDT */
+
+    init_gdt();
+    init_idt();
+    init_irq();
     
     asm volatile("int $0x0");
         
