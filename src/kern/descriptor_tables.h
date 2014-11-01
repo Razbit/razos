@@ -41,7 +41,7 @@ struct idt_entry_t
 struct idt_ptr_t
 {
     uint16_t limit; /* Max size of the IDT */
-    uint16_t base;  /* Address of the first element */
+    uint32_t base;  /* Address of the first element */
 }__attribute__((__packed__));
 
 void init_descr_tables();

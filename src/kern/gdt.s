@@ -17,8 +17,7 @@ gdt_flush:                      ; Write the GDT pointer passed from C
         mov gs, ax
         mov ss, ax
         jmp 0x08:.flush         ; 0x08 is the offset to our code seg
-                                ; The far jump effectively changes the CS
-.flush:
+.flush:                         ; The far jump effectively changes the CS
         ret
         
 [GLOBAL idt_flush]              ; Allow calling from C

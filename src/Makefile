@@ -4,7 +4,7 @@ kern/descriptor_tables.o kern/gdt.o kern/interrupt.o
 LIBS=lib/portio.o lib/math.o lib/string.o lib/ctype.o lib/vsprintf.o \
 lib/stdlib.o
 
-CFLAGS=-m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector
+CFLAGS=-m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -g
 LDFLAGS=-m elf_i386 -Tlink.ld
 ASFLAGS=-felf
 

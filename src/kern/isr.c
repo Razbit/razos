@@ -11,5 +11,6 @@
 /* Called from asm */
 void isr_handler(struct register_t regs)
 {
-    kprintf("Received interrupt #%d\n", regs.int_no);
+    kprintf("Received interrupt %d with error code %d\n", regs.int_no,\
+        regs.err_code);
 }

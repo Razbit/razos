@@ -8,6 +8,7 @@
 #include "descriptor_tables.h"
 
 #include "../lib/stdint.h"
+#include "kio.h"
 
 #define NUM_GDTS 5
 #define NUM_IDTS 256
@@ -37,15 +38,20 @@ void init_descr_tables()
 }
 
 static void init_gdt()
-{
+{   
     gdt_ptr.limit = sizeof(struct gdt_entry_t) * NUM_GDTS - 1;
-    gdt_ptr.base = (uint32_t) &gdt_entries;
+    gdt_ptr.base = (uint32_t)&gdt_entries;
 
+    kprintf("Initializing GDT at address %p w/ size of %d bytes\n",\
+            &gdt_entries, gdt_ptr.limit);
+    
     gdt_set(0, 0, 0, 0, 0);                /* null segment */
     gdt_set(1, 0, 0xFFFFFFFF, 0x9A, 0xCF); /* kernel code */
     gdt_set(2, 0, 0xFFFFFFFF, 0x92, 0xCF); /* kernel data */
     gdt_set(3, 0, 0xFFFFFFFF, 0xFA, 0xCF); /* user code */
     gdt_set(4, 0, 0xFFFFFFFF, 0xF2, 0xCF); /* user data */
+
+    gdt_flush((uint32_t)&gdt_ptr);
 }
 
 static void gdt_set(int32_t num, uint32_t base, uint32_t limit, \
@@ -64,11 +70,16 @@ static void gdt_set(int32_t num, uint32_t base, uint32_t limit, \
 
 static void init_idt()
 {
+    
     idt_ptr.limit = sizeof(struct idt_entry_t) * 256 - 1;
     idt_ptr.base = (uint32_t) &idt_entries;
 
+    kprintf("Setting up IDT at address %p w/ size of %d bytes\n",   \
+            &idt_entries, idt_ptr.limit);
+    
     memset(&idt_entries, 0, sizeof(struct idt_entry_t) * 256);
 
+    idt_set(0, (uint32_t)isr0, 0x08, 0x8E);
     idt_set(1, (uint32_t)isr1, 0x08, 0x8E);
     idt_set(2, (uint32_t)isr2, 0x08, 0x8E);
     idt_set(3, (uint32_t)isr3, 0x08, 0x8E);

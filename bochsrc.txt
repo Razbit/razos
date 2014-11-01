@@ -6,6 +6,7 @@ boot: a
 log: bochsout.txt
 mouse: enabled=0
 clock: sync=realtime
-cpu: ips=500000 
+cpu: ips=200000 
 display_library: wx
 config_interface: wx
+#gdbstub: enabled=1, port=1234, text_base=0, data_base=0, bss_base=0

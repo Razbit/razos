@@ -27,10 +27,44 @@ $ cd /usr/share/bochs
 $ sudo wget https://github.com/larsr/bochs/blob/master/bios/VGABIOS-elpin-2.40
 ```
 
+#Building and running in Bochs
+##Build
+```shell
+$ make
+```
+
+##Run in Bochs
+Running the system requires root priviledges (see scripts for more info)
+```shell
+$ sudo ./update_image.sh
+$ sudo ./run_bochs.sh
+```
+
+#Debugging using Bochs and GDB
+To debug the kernel using GDB, first remove the # from the bochsrc file (last
+line). Then, start Bochs and in another terminal start gdb:
+```shell
+$ sudo ./run_bochs.sh
+```
+```shell
+$ cd src
+$ gdb kernel
+```
+
+In GDB, type
+```shell
+target remote localhost:1234
+```
+Now you can use GDB like you normally would, pretty much the only difference
+being that you can't type 'run', but rather 'continue' to start executing the
+kernel, since in a way Bochs has already opened/started executing the kernel.
+
 #Acknowledgements
 Bran's kernel development tutorials. Brandon Friesen,
-	http://www.osdever.net/bkerndev/Docs/title.htm
-JamesM's kernel development tutorials. James Molloy, jamesmolloy.co.uk/tutorial_html/
+http://www.osdever.net/bkerndev/Docs/title.htm
+
+JamesM's kernel development tutorials. James Molloy,
+http://jamesmolloy.co.uk/tutorial_html/
 
 Cheers,
 Razbit
