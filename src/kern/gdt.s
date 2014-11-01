@@ -1,6 +1,6 @@
         ;; This file is a part of the RazOS project
         ;;
-        ;; gdt.s -- writes the GDT and IDT pointers
+        ;; gdt.s -- writes the GDT pointer
         ;;
         ;; Razbit 2014
 
@@ -19,11 +19,3 @@ gdt_flush:                      ; Write the GDT pointer passed from C
         jmp 0x08:.flush         ; 0x08 is the offset to our code seg
 .flush:                         ; The far jump effectively changes the CS
         ret
-        
-[GLOBAL idt_flush]              ; Allow calling from C
-
-idt_flush:                      ; Write the IDT pointer passed from C
-        mov eax, [esp+4]        ; First parameter is the pointer to the IDT
-        lidt [eax]              ; Load the pointer
-        ret
-        

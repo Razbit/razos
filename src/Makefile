@@ -1,5 +1,6 @@
-SOURCES=kern/boot.o kern/kmain.o kern/kio.o kern/vga.o kern/isr.o \
-kern/descriptor_tables.o kern/gdt.o kern/interrupt.o
+SOURCES=kern/boot.s.o kern/kmain.o kern/kio.o kern/vga.o kern/isr.o \
+kern/descriptor_tables.o kern/gdt.o kern/gdt.s.o kern/idt.o \
+kern/idt.s.o kern/interrupt.s.o
 
 LIBS=lib/portio.o lib/math.o lib/string.o lib/ctype.o lib/vsprintf.o \
 lib/stdlib.o lib/sprintf.o
@@ -16,6 +17,6 @@ clean:
 link:
 	ld $(LDFLAGS) -o kernel $(SOURCES) $(LIBS)
 
-.s.o:
-	nasm $(ASFLAGS) $<
+%.s.o: %.s
+	nasm $(ASFLAGS) $< -o $@
 
