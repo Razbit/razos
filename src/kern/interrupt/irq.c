@@ -8,10 +8,10 @@
 #include "isr.h"
 #include "idt.h"
 
-#include "kio.h"
+#include "../kio.h"
 
-#include "../lib/portio.h"
-#include "../lib/stddef.h"
+#include <portio.h>
+#include <stddef.h>
 
 /* Contains function pointers to the 16 IRQ handler functions */
 irq_handler_t* handlers[] =

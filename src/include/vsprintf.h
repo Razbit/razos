@@ -5,8 +5,8 @@
 #ifndef VSPRINTF_H
 #define VSPRINTF_H
 
-#include "stdarg.h"
-#include "string.h"
+#include <stdarg.h>
+#include <string.h>
 
 /* The basis of printf() is here, the vsprintf().
  * Following is what this implementation can (will be able to) do.

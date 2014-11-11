@@ -7,9 +7,9 @@
 #include "kio.h"
 #include "vga.h"
 
-#include "../lib/vsprintf.h"
-#include "../lib/stdint.h"
-#include "../lib/stdarg.h"
+#include <vsprintf.h>
+#include <stdint.h>
+#include <stdarg.h>
 #include "colors.h"
 
 /* write a character to the screen */

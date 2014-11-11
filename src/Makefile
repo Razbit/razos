@@ -1,22 +1,24 @@
-SOURCES=kern/boot.s.o kern/kmain.o kern/kio.o kern/vga.o kern/isr.o \
-kern/gdt.o kern/gdt.s.o kern/idt.o kern/idt.s.o kern/interrupt.s.o \
-kern/irq.o kern/timer.o
+SUBOBJS = kern.o lib.o
 
-LIBS=lib/portio.o lib/math.o lib/string.o lib/ctype.o lib/vsprintf.o \
-lib/stdlib.o lib/sprintf.o
+export PWD = $(shell pwd)
+export CFLAGS = -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -c -g -I$(PWD)/include
+export LDFLAGS = -m elf_i386
+export ASFLAGS = -felf
 
-CFLAGS=-m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -g
-LDFLAGS=-m elf_i386 -Tlink.ld
-ASFLAGS=-felf
+all: boot.s.o
+	$(MAKE) -C lib
+	mv lib/lib.o ./lib.o
 
-all: $(SOURCES) $(LIBS) link 
+	$(MAKE) -C kern
+	mv kern/kern.o ./kern.o
 
-clean:
-	rm kern/*.o lib/*.o kernel
-
-link:
-	ld $(LDFLAGS) -o kernel $(SOURCES) $(LIBS)
+	ld $(LDFLAGS) -Tlink.ld -o kernel boot.s.o $(SUBOBJS)
 
 %.s.o: %.s
 	nasm $(ASFLAGS) $< -o $@
+
+clean:
+	rm ./*.o kernel
+	$(MAKE) clean -C lib
+	$(MAKE) clean -C kern
 

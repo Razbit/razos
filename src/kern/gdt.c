@@ -5,7 +5,7 @@
  * Razbit 2014 */
 
 #include "gdt.h"
-#include "../lib/stdint.h"
+#include <stdint.h>
 #include "kio.h"
 
 extern void gdt_flush(uint32_t); /* gdt.s */

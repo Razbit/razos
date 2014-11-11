@@ -6,9 +6,9 @@
 
 #include "isr.h"
 
-#include "kio.h"
-#include "../lib/string.h"
-#include "../lib/vsprintf.h"
+#include "../kio.h"
+#include <string.h>
+#include <sprintf.h>
 
 const char* exceptions[] =
 {

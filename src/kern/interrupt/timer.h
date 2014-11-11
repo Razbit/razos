@@ -7,7 +7,7 @@
 #ifndef TIMER_H
 #define TIMER_H
 
-#include "../lib/stdint.h"
+#include <stdint.h>
 
 void init_pit(uint32_t freq);
 uint32_t pit_get_ticks();

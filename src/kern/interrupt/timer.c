@@ -8,10 +8,10 @@
 #include "irq.h"
 #include "isr.h" /* For register_t */
 
-#include "../lib/stdint.h"
-#include "../lib/portio.h"
+#include <stdint.h>
+#include <portio.h>
 
-#include "kio.h"
+#include "../kio.h"
 
 uint32_t ticks = 0;
 

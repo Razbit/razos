@@ -5,8 +5,8 @@
 #ifndef H_STRING
 #define H_STRING
 
-#include "stddef.h"
-#include "stdint.h"
+#include <stddef.h>
+#include <stdint.h>
 
 void* memset(void* ptr, char value, int num);
 void* memcpy(void* dest, const void* source, size_t num);

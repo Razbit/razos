@@ -7,7 +7,7 @@
 #ifndef ISR_H
 #define ISR_H
 
-#include "../lib/stdint.h"
+#include <stdint.h>
 
 struct register_t
 {

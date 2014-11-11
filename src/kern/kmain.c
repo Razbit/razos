@@ -5,9 +5,9 @@
 
 #include "kio.h"
 #include "gdt.h"
-#include "idt.h"
-#include "irq.h"
-#include "timer.h"
+#include "interrupt/idt.h"
+#include "interrupt/irq.h"
+#include "interrupt/timer.h"
 
 int kmain(struct multiboot *mboot_ptr)
 {

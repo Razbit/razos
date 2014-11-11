@@ -5,8 +5,8 @@
  * Razbit 2014 */
 
 #include "idt.h"
-#include "kio.h"
-#include "../lib/stdint.h"
+#include "../kio.h"
+#include <stdint.h>
 
 extern void idt_flush(uint32_t); /* idt.s */
 

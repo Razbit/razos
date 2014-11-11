@@ -5,9 +5,9 @@
 #ifndef SPRINTF_H
 #define SPRINTF_H
 
-#include "stdarg.h"
-#include "string.h"
-#include "vsprintf.h"
+#include <stdarg.h>
+#include <string.h>
+#include <vsprintf.h>
 
 int sprintf(char* str, const char* fmt, ...);
 

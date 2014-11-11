@@ -6,8 +6,8 @@
 
 #include "vga.h"
 
-#include "../lib/portio.h"
-#include "../lib/stdint.h"
+#include <portio.h>
+#include <stdint.h>
 #include "colors.h"
 
 /* The VGA framebuffer starts at 0xB8000 */
