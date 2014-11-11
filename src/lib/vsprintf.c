@@ -2,12 +2,12 @@
  *
  * Razbit 2014 */
 
-#include "stdarg.h"
-#include "string.h"
-#include "ctype.h"
-#include "stdint.h"
+#include <stdarg.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdint.h>
 
-#include "vsprintf.h"
+#include <vsprintf.h>
 
 #define FL_SIGN 0x01
 #define FL_LEFT_JUSTIFY 0x02

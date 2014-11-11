@@ -4,8 +4,8 @@
  *
  * Razbit 2014 */
 
-#include "portio.h"
-#include "stdint.h"
+#include <portio.h>
+#include <stdint.h>
 
 /* write a byte to the port */
 void outb(uint16_t port, uint8_t value)

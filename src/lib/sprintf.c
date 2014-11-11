@@ -2,10 +2,10 @@
  *
  * Razbit 2014 */
 
-#include "stdarg.h"
-#include "string.h"
-#include "vsprintf.h"
-#include "sprintf.h"
+#include <stdarg.h>
+#include <string.h>
+#include <vsprintf.h>
+#include <sprintf.h>
 
 int sprintf(char* str, const char* fmt, ...)
 {

@@ -2,8 +2,8 @@
  *
  * Razbit 2014 */
 
-#include "stdlib.h"
-#include "ctype.h"
+#include <stdlib.h>
+#include <ctype.h>
 
 int atoi (const char *str)
 {

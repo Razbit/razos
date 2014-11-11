@@ -2,10 +2,10 @@
  *
  * Razbit 2014 */
 
-#include "string.h"
-#include "stdint.h"
-#include "stddef.h"
-#include "stdbool.h"
+#include <string.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
 
 void* memset(void* ptr, char value, int num)
 {
