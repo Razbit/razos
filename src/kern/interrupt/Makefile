@@ -1,4 +1,4 @@
-CSOURCES = idt.c irq.c isr.c timer.c
+CSOURCES = idt.c irq.c isr.c timer.c kb.c
 ASMSOURCES = idt.s interrupt.s
 SUBOBJS = 
 

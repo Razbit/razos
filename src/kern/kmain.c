@@ -8,6 +8,7 @@
 #include "interrupt/idt.h"
 #include "interrupt/irq.h"
 #include "interrupt/timer.h"
+#include "interrupt/kb.h"
 
 int kmain(struct multiboot *mboot_ptr)
 {
@@ -19,16 +20,12 @@ int kmain(struct multiboot *mboot_ptr)
     init_irq();
 
     __asm__ __volatile__("sti"); /* Enable IRQs */
-    
-    init_pit(10);
 
-    kprintf("Will halt in 10 seconds.\n");
-    uint32_t ticks = 0;
-    while (ticks < 100)
-    {
-        ticks = pit_get_ticks();
-    }
-        
+    init_kb();
+    init_pit(1);
+
+    for(;;);
+    
 	kprintf("\n==HALTED==");
 
     __asm__ __volatile__("cli"); /* Disable IRQs */
