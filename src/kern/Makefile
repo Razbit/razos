@@ -1,6 +1,6 @@
-CSOURCES = gdt.c kio.c kmain.c vga.c
+CSOURCES = gdt.c kio.c kmain.c vga.c panic.c
 ASMSOURCES = gdt.s 
-SUBOBJS = interrupt.o
+SUBOBJS = interrupt.o mm.o
 
 OBJS = $(patsubst %.c, %.c.o,$(CSOURCES))
 OBJS += $(patsubst %.s, %.s.o,$(ASMSOURCES))
@@ -10,6 +10,9 @@ export LDFLAGS += -r
 all: $(OBJS)
 	$(MAKE) -C interrupt
 	mv interrupt/interrupt.o ./interrupt.o
+
+	$(MAKE) -C mm
+	mv mm/mm.o ./mm.o
 
 	ld $(LDFLAGS) -o kern.o $(SUBOBJS) $(OBJS)
 
@@ -22,3 +25,4 @@ all: $(OBJS)
 clean:
 	rm *.o
 	$(MAKE) clean -C interrupt
+	$(MAKE) clean -C mm

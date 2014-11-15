@@ -75,7 +75,7 @@ void install_irq_handler(int irq, irq_handler_t handler)
     handlers[irq-32] = handler;
 }
 
-void uinstall_irq_handler(int irq)
+void uninstall_irq_handler(int irq)
 {
     handlers[irq] = NULL;
 }

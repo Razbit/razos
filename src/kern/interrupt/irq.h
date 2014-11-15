@@ -30,7 +30,7 @@ typedef void (*irq_handler_t)(struct register_t *regs);
 
 void init_irq();
 void install_irq_handler(int irq, irq_handler_t handler);
-void uinstall_irq_handler(int irq);
+void uninstall_irq_handler(int irq);
 
 extern void irq0();
 extern void irq1();

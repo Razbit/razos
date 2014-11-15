@@ -10,6 +10,8 @@
 #include <string.h>
 #include <sprintf.h>
 
+isr_handler_t isr_handlers[256];
+
 const char* exceptions[] =
 {
     "Divide-by-Zero",
@@ -42,12 +44,28 @@ static void make_errmsg(char* str, struct register_t* regs);
 /* Called from asm */
 void isr_handler(struct register_t regs)
 {
-    char mesg[100];
-    memset (mesg, 0, 100);
+    if (isr_handlers[regs.int_no] != 0)
+    {
+        isr_handler_t handler = isr_handlers[regs.int_no];
+        handler(regs);
+    }
+    else
+    {
+        char mesg[100];
+        memset (mesg, 0, 100);
+        make_errmsg(mesg, &regs);    
+        kprintf("%s\n", mesg);
+    }
+}
 
-    make_errmsg(mesg, &regs);
-    
-    kprintf("%s\n", mesg);
+void install_isr_handler(int isr, isr_handler_t handler)
+{
+    isr_handlers[isr] = handler;
+}
+
+void uninstall_isr_handler(int isr)
+{
+    isr_handlers[isr] = NULL;
 }
 
 static void make_errmsg(char* str, struct register_t* regs)
@@ -59,31 +77,31 @@ static void make_errmsg(char* str, struct register_t* regs)
         || (regs->int_no >= 21 && regs->int_no <= 29) \
         || regs->int_no == 31)
     {
-        strncpy(begin, "INTERRUPT", 10);
+        strncpy(begin, "UNHANDLED INTERRUPT", 10);
         if (regs->int_no == 2)
-            sprintf(str, "[[%s %#X, %s]]", begin, regs->int_no, \
+            sprintf(str, "[[%s 0x%X, %s]]", begin, regs->int_no, \
                     exceptions[regs->int_no]);
         else
-            sprintf(str, "[[%s %#X]]", begin, regs->int_no);
+            sprintf(str, "[[%s 0x%X]]", begin, regs->int_no);
     }
     else if (regs->int_no == 8 || regs->int_no == 18)
     {
         strncpy(begin, "ABORT", 10);
         if (regs->int_no == 8)
         {
-            sprintf(str, "[[%s %#X, %s: %#X]]", begin, regs->int_no,   \
+            sprintf(str, "[[%s 0x%X, %s: 0x%X]]", begin, regs->int_no,   \
                     exceptions[regs->int_no], regs->err_code);
         }
         else
         {
-            sprintf(str, "[[%s %#X, %s]]", begin, regs->int_no,   \
+            sprintf(str, "[[%s 0x%X, %s]]", begin, regs->int_no,   \
                     exceptions[regs->int_no]);
         }
     }        
     else if (regs->int_no == 3 || regs->int_no == 4)
     {
         strncpy(begin, "TRAP", 10);
-        sprintf(str, "[[%s %#X, %s]]", begin, regs->int_no, \
+        sprintf(str, "[[%s 0x%X, %s]]", begin, regs->int_no, \
                 exceptions[regs->int_no]);
     }
     else
@@ -92,12 +110,12 @@ static void make_errmsg(char* str, struct register_t* regs)
         if (regs->int_no < 10 || regs->int_no == 16 || regs->int_no == 19 \
             || regs->int_no == 20)
         {
-            sprintf(str, "[[%s %#X, %s]]", begin, regs->int_no, \
+            sprintf(str, "[[%s 0x%X, %s]]", begin, regs->int_no, \
                     exceptions[regs->int_no]);
         }
         else
         {
-            sprintf(str, "[[%s %#X, %s: %#X]]", begin, regs->int_no, \
+            sprintf(str, "[[%s 0x%X, %s: 0x%X]]", begin, regs->int_no, \
                     exceptions[regs->int_no], regs->err_code);
         }
     }

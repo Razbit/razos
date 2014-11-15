@@ -5,10 +5,13 @@
  * Razbit 2014 */
 
 #include "idt.h"
+#include "isr.h"
+
 #include "../kio.h"
 #include <stdint.h>
 
 extern void idt_flush(uint32_t); /* idt.s */
+extern isr_handlers;
 
 struct idt_entry_t idt_entries[256];
 struct idt_ptr_t idt_ptr;
@@ -58,6 +61,8 @@ void init_idt()
     idt_set(31, (uint32_t)isr31, 0x08, 0x8E);
 
     idt_flush((uint32_t)&idt_ptr);
+
+    memset(&isr_handlers, 0, sizeof(isr_handler_t)*256);
 }
 
 void idt_set(uint8_t num, uint32_t base, uint16_t selector, \

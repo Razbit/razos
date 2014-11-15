@@ -9,6 +9,9 @@
 #include "interrupt/irq.h"
 #include "interrupt/timer.h"
 #include "interrupt/kb.h"
+#include "mm/paging.h"
+
+#include <stdint.h>
 
 int kmain(struct multiboot *mboot_ptr)
 {
@@ -23,8 +26,11 @@ int kmain(struct multiboot *mboot_ptr)
 
     init_kb();
     init_pit(1);
+    init_paging();
 
-    for(;;);
+    kprintf("Hello world\n");
+    uint32_t* ptr = (uint32_t*)0xA0000000;
+    uint32_t pagefault = *ptr;
     
 	kprintf("\n==HALTED==");
 

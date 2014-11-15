@@ -17,5 +17,10 @@ struct register_t
     uint32_t eip, cs, eflags, useresp, ss; /* CPU pushes automatically */
 };
 
+typedef void (*isr_handler_t)(struct register_t);
+
+void install_isr_handler(int isr, isr_handler_t handler);
+void uninstall_isr_handler(int isr);
+
 #endif /* ISR_H */
 
