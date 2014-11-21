@@ -29,9 +29,9 @@ int kmain(struct multiboot *mboot_ptr)
     init_paging();
 
     kprintf("Hello world\n");
-    uint32_t* ptr = (uint32_t*)0xA0000000;
-    uint32_t pagefault = *ptr;
-    
+/*    uint32_t* ptr = (uint32_t*)0xA0000000;
+    uint32_t pagefault = *ptr;*/
+    for(;;);
 	kprintf("\n==HALTED==");
 
     __asm__ __volatile__("cli"); /* Disable IRQs */

@@ -25,7 +25,7 @@ static void kb_handler(struct register_t* regs)
     if (scancode & 0x80)
     {
         /* The key was released.. */
-        kprintf("The key 0x%X was released\n", scancode);
+        kprintf("The key 0x%X was released\n", scancode&0x7F);
     }
     else
     {
