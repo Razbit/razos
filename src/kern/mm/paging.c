@@ -102,6 +102,8 @@ void init_paging()
     /* This is the size of physical memory */
     uint32_t mem_end_page = 0x1000000; /* 16MB */
 
+    kprintf("Initializing paging with 0x%X bytes of physical memory\n", \
+            mem_end_page);
     nframes = mem_end_page / 0x1000;
     frames = (uint32_t*)kmalloc(INDEX_FROM_BIT(nframes));
     memset(frames, 0, INDEX_FROM_BIT(nframes));
@@ -112,7 +114,9 @@ void init_paging()
     memset(kernel_dir, 0, sizeof(struct page_directory_t));
     cur_dir = kernel_dir;
 
-    /* Map virtual addresses to physical ones */
+    /* Map virtual addresses to physical ones
+     * These are already allocated by the kernel */
+    
     int i = 0;
     while (i < placement_addr)
     {
@@ -125,16 +129,17 @@ void init_paging()
 
     /* Enable paging */
     switch_page_directory(kernel_dir);
+
+    uint32_t cr0;
+    __asm__ __volatile__("mov %%cr0, %0": "=r"(cr0));
+    cr0 |= 0x80000000;
+    __asm__ __volatile__("mov %0, %%cr0":: "r"(cr0));
 }
 
 void switch_page_directory(struct page_directory_t* new_pdir)
 {
     cur_dir = new_pdir;
     __asm__ __volatile__("mov %0, %%cr3":: "r"(&new_pdir->tables_physaddr));
-    uint32_t cr0;
-    __asm__ __volatile__("mov %%cr0, %0": "=r"(cr0));
-    cr0 |= 0x80000000;
-    __asm__ __volatile__("mov %0, %%cr0":: "r"(cr0));
 }
 
 struct page_t* get_page(uint32_t address, int create,   \

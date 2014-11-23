@@ -7,6 +7,7 @@
 #include "kmalloc.h"
 #include <stdint.h>
 #include <stddef.h>
+#include "../kio.h"
 
 /* The end is defined in the linker script */
 extern uint32_t end;
@@ -14,6 +15,11 @@ uint32_t placement_addr = (uint32_t)&end;
 
 static uint32_t do_kmalloc(size_t size, uint8_t align, uint32_t* physaddr)
 {
+
+    /* 8-byte alignment */
+    placement_addr &= 0xFFFFFFF8;
+    placement_addr += 0x8;
+    
     if (align && (placement_addr & 0xFFFFF000)) /* Not aligned already */
     {
         /* Align to 4KB page boundary */
@@ -22,9 +28,11 @@ static uint32_t do_kmalloc(size_t size, uint8_t align, uint32_t* physaddr)
     }
     if (physaddr)
         *physaddr = placement_addr;
-
+    
     uint32_t ret = placement_addr;
     placement_addr += size;
+
+    kprintf("kmalloc: %d %d %p\n", size, align, ret);
 
     return ret;
 }

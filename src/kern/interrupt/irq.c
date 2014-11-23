@@ -26,7 +26,7 @@ static void irq_remap();
 
 void init_irq()
 {
-    kprintf("Setting up IRQ handlers\n");
+    kprintf("Initializing IRQ handlers\n");
     irq_remap();
 
     idt_set(32, (uint32_t)irq0, 0x08, 0x8E);
