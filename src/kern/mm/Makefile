@@ -1,4 +1,4 @@
-CSOURCES = kmalloc.c paging.c
+CSOURCES = kmalloc.c paging.c heap.c
 ASMSOURCES = 
 SUBOBJS = 
 

@@ -6,6 +6,7 @@
 
 #include "paging.h"
 #include "kmalloc.h"
+#include "heap.h" /* MIN_HEAP_SIZE */
 #include "../interrupt/irq.h"
 #include "../kio.h"
 
@@ -25,10 +26,16 @@ uint32_t nframes;
 
 /* In kmalloc.c */
 extern uint32_t placement_addr;
+extern struct heap_t* kheap;
 
 /* Macros for the bitmaps */
 #define INDEX_FROM_BIT(a) (a/(32))
 #define OFFSET_FROM_BIT(a) (a%(32))
+
+/* Kernel heap props */
+#define KHEAP_START 0x200000
+#define KHEAP_INIT_SIZE MIN_HEAP_SIZE
+#define KHEAP_MAX_SIZE 0x3FFFFF /* 4 MB */
 
 static void set_frame(uint32_t addr)
 {
@@ -115,21 +122,29 @@ void init_paging()
     cur_dir = kernel_dir;
 
     /* Map virtual addresses to physical ones
-     * These are already allocated by the kernel */
-    
+     * These are already allocated by the kernel
+     * Allocate one extra page for the kernel heap */
     int i = 0;
-    while (i < placement_addr)
+    while (i < placement_addr+0x1000) 
     {
         /* Kernel code readable but not writeable from user-space */
         alloc_frame(get_page(i, 1, kernel_dir), 0, 0);
         i += 0x1000;
     }
 
+    kprintf("Setting kernel heap at 0x%X \n", KHEAP_START);
+    /* Map the initial kernel heap area */
+    for (i = KHEAP_START; i < KHEAP_START + KHEAP_INIT_SIZE; i += 0x1000)
+        alloc_frame(get_page(i, 1, kernel_dir), 0, 0);
+      
+    /* Page fault handler */
     install_isr_handler(14, &page_fault);
 
     /* Enable paging */
     switch_page_directory(kernel_dir);
 
+    kheap = create_heap(KHEAP_START, KHEAP_MAX_SIZE, 0, 0);
+    
     uint32_t cr0;
     __asm__ __volatile__("mov %%cr0, %0": "=r"(cr0));
     cr0 |= 0x80000000;

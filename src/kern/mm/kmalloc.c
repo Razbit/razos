@@ -5,36 +5,58 @@
  * Razbit 2014 */
 
 #include "kmalloc.h"
+#include "../kio.h"
+#include "heap.h"
+#include "paging.h"
+
 #include <stdint.h>
 #include <stddef.h>
-#include "../kio.h"
 
 /* The end is defined in the linker script */
 extern uint32_t end;
 uint32_t placement_addr = (uint32_t)&end;
 
+/* The kernel heap resides here */
+struct heap_t* kheap = 0;
+
+/* Paging.c */
+extern struct page_directory_t* kernel_dir;
+
 static uint32_t do_kmalloc(size_t size, uint8_t align, uint32_t* physaddr)
 {
-
-    /* 8-byte alignment */
-    placement_addr &= 0xFFFFFFF8;
-    placement_addr += 0x8;
-    
-    if (align && (placement_addr & 0xFFFFF000)) /* Not aligned already */
+    if (kheap != 0) /* We are heaping already */
     {
-        /* Align to 4KB page boundary */
-        placement_addr &= 0xFFFFF000;
-        placement_addr += 0x1000;
+        void* addr = alloc(size, kheap, align);
+        if (physaddr != 0)
+        {
+            struct page_t *pg = get_page(addr, 0, kernel_dir);
+            *physaddr = pg->frame*0x1000 + (uint32_t)addr&0xFFF;
+        }
+        //kprintf("kmalloc: %d %d %p\n", size, align, addr);
+        return (uint32_t)addr;
     }
-    if (physaddr)
-        *physaddr = placement_addr;
+    else
+    {        
+        /* 8-byte alignment */
+        placement_addr &= 0xFFFFFFF8;
+        placement_addr += 0x8;
     
-    uint32_t ret = placement_addr;
-    placement_addr += size;
+        if (align && (placement_addr & 0xFFFFF000)) /* Not aligned already */
+        {
+            /* Align to 4KB page boundary */
+            placement_addr &= 0xFFFFF000;
+            placement_addr += 0x1000;
+        }
+        if (physaddr)
+            *physaddr = placement_addr;
+    
+        uint32_t ret = placement_addr;
+        placement_addr += size;
 
-    kprintf("kmalloc: %d %d %p\n", size, align, ret);
+        kprintf("kmalloc: %d %d %p\n", size, align, ret);
 
-    return ret;
+        return ret;
+    }
 }
 
 /* Page aligned */

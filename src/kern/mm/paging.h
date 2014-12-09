@@ -54,6 +54,12 @@ void switch_page_directory(struct page_directory_t* new_pdir);
 struct page_t* get_page(uint32_t address, int create,     \
                         struct page_directory_t* dir);
 
+/* Allocates a frame */
+void alloc_frame(struct page_t* page, uint8_t is_kern, uint8_t is_rw);
+
+/* Frees a frame */
+void free_frame(struct page_t* page);
+
 /* Page fault handler */
 void page_fault(struct register_t regs);
 
