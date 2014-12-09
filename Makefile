@@ -3,3 +3,7 @@ all:
 
 clean:
 	$(MAKE) clean -C src
+
+run:
+	sudo ./update_image.sh
+	sudo ./run_bochs.sh
