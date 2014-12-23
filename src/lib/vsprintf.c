@@ -27,13 +27,14 @@ static int atoi_ptr(const char **str)
     return i;
 }
 
-char* numstr(char* str, int32_t num, int base, int width, int prec, int flags)
+static char* numstr(char* str, long number, int base, int width, int prec, int flags)
 {
-    /* Convert number num of radix base */
+/* Convert number num of radix base */
     
     char c, sign, tmp[36];
     const char* digs = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     int i;
+    uint32_t num;
 
     if (width < 0)
         width = -width;
@@ -49,13 +50,14 @@ char* numstr(char* str, int32_t num, int base, int width, int prec, int flags)
     else
         c = ' ';
     
-    if (flags & FL_SIGN && num < 0)
+    if (flags & FL_SIGN && number < 0)
     {
         sign = '-';
-        num = -num;
+        num = -number;
     }
     else
     {
+        num = number;
         if (flags & FL_PLUS)
             sign = '+';
         else
@@ -97,9 +99,9 @@ char* numstr(char* str, int32_t num, int base, int width, int prec, int flags)
     
     width -= prec;
 
-    if (!(flags & FL_LEFT_JUSTIFY))
+    if (!(flags & (FL_LEFT_JUSTIFY+FL_ZEROPAD)))
         while (width-- > 0)
-            *str++ = c;
+            *str++ = ' ';
 
     if (sign)
         *str++ = sign;
@@ -107,14 +109,19 @@ char* numstr(char* str, int32_t num, int base, int width, int prec, int flags)
     if (flags & FL_SPECIAL)
     {
         if (base == 8)
+        {
             *str++ = '0';
+        }            
         else if (base == 16)
         {
             *str++ = '0';
             *str++ = digs[33]; /* x or X */
         }        
     }
-    
+
+    if (!(flags&FL_LEFT_JUSTIFY))
+        while(width-- > 0)
+            *str++ = c;
 
     while (i < prec--)
         *str++ = '0';
@@ -126,7 +133,7 @@ char* numstr(char* str, int32_t num, int base, int width, int prec, int flags)
         *str++ = ' ';
      
     return str;
-}
+    }
 
 int vsprintf (char* buf, const char* fmt, va_list arg)
 {
@@ -322,8 +329,12 @@ int vsprintf (char* buf, const char* fmt, va_list arg)
 
             case 'p':
                 flags |= FL_SMALL;
-                flags |= FL_SPECIAL;
-                str = numstr(str, (uint32_t)va_arg(arg, void*), 16, width, prec, flags);
+                if (width == -1)
+                {
+                    flags |= FL_ZEROPAD;
+                    width = 8;
+                }
+                str = numstr(str, (uint32_t)va_arg(arg, uint32_t), 16, width, prec, flags);
                 break;
 
             case 'n':
