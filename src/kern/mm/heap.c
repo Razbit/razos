@@ -212,7 +212,7 @@ void* alloc(size_t size, struct heap_t* heap, int align)
     curnode->size = size;
     curnode->res = 1;
 
-    //dump_heap(heap);
+    dump_heap(heap);
     
     return (void*)((void*)curnode + sizeof(struct memnode_t));    
 }
@@ -220,10 +220,10 @@ void* alloc(size_t size, struct heap_t* heap, int align)
 /* Unify continuous free space following the freed memory node */
 static void unify_fwd(struct memnode_t* ptr)
 {
+    ptr->size += ptr->next->size + sizeof(struct memnode_t);
+
     ptr->next = ptr->next->next;
     ptr->next->prev = ptr;
-
-    ptr->size = ptr->next - ptr - sizeof(struct memnode_t);
 }
 
 /* Unify continuous free space before the freed memory node */
@@ -232,7 +232,7 @@ static void unify_bwd(struct memnode_t* ptr)
     ptr->prev->next = ptr->next;
     ptr->next->prev = ptr->prev;
 
-    ptr->prev->size = (void*)(ptr->next) - (void*)(ptr->prev) - sizeof(struct memnode_t);
+    ptr->prev->size += ptr->size + sizeof(struct memnode_t);
 }
 
 void do_free(void* ptr, struct heap_t* heap)
@@ -242,7 +242,7 @@ void do_free(void* ptr, struct heap_t* heap)
     ptr -= sizeof(struct memnode_t);
 
     /* Mark as free */
-    ((struct memnode_t*)ptr)->res = 0;
+    ((struct memnode_t*)ptr)->res = 0;    
 
     /* Unify free memory nodes */
     if (((struct memnode_t*)ptr)->next->res == 0)
