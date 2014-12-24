@@ -133,17 +133,18 @@ void init_paging()
     }
 
     kprintf("Setting kernel heap at 0x%X \n", KHEAP_START);
+    
     /* Map the initial kernel heap area */
-    for (i = KHEAP_START; i < KHEAP_START + KHEAP_INIT_SIZE; i += 0x1000)
+    for (i = KHEAP_START; i <= KHEAP_START + KHEAP_INIT_SIZE; i += 0x1000)
         alloc_frame(get_page(i, 1, kernel_dir), 0, 0);
       
     /* Page fault handler */
     install_isr_handler(14, &page_fault);
 
+    kheap = create_heap(KHEAP_START, KHEAP_MAX_SIZE, 0, 0);
+    
     /* Enable paging */
     switch_page_directory(kernel_dir);
-
-    kheap = create_heap(KHEAP_START, KHEAP_MAX_SIZE, 0, 0);
     
     uint32_t cr0;
     __asm__ __volatile__("mov %%cr0, %0": "=r"(cr0));

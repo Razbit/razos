@@ -83,3 +83,9 @@ void* kmalloc(size_t size)
     return (void*)do_kmalloc(size, 0, NULL);
 }
 
+/* Normal free() */
+void free(void* ptr)
+{
+    do_free(ptr, kheap);
+}
+
