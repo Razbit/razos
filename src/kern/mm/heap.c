@@ -17,15 +17,9 @@
 /* In paging.c */
 extern struct page_directory_t* cur_dir;
 
-/* Allocates pages (frames) taken by the heap */
-static void alloc_heap(struct heap_t* heap, size_t oldsize, size_t newsize);
-
 /* No need to keep the heap at maxsize, so when we run out of space AND
  * the heap size is not maxsize, we can expand it */
-static void expand(size_t newsize, struct heap_t* heap);
-
-/* Allocates pages (frames) taken by the heap */
-static void alloc_heap(struct heap_t* heap, size_t oldsize, size_t newsize);
+static void expand(struct heap_t* heap);
 
 /* Frees pages relased by contracting the heap */
 static void free_heap(struct heap_t* heap, size_t newsize);
@@ -49,10 +43,9 @@ struct heap_t* create_heap(uint32_t start, size_t maxsize, int svisor, int ronly
         maxsize += 0x1000;
     }
     
-    heap->maxsize = maxsize; /* Maximum **available** memory, thus
-                              * excludes the heap-ending dummy memnode_t */
-    heap->size = MIN_HEAP_SIZE;
-
+    heap->maxsize = maxsize;
+    heap->size = 0;
+    
     heap->start = (void*)start;
     heap->end = kmalloc(sizeof(struct memnode_t));
 
@@ -64,8 +57,14 @@ struct heap_t* create_heap(uint32_t start, size_t maxsize, int svisor, int ronly
     heap->start->prev = NULL;
     heap->start->next = heap->end;
 
-    alloc_heap(heap, 0, MIN_HEAP_SIZE);
-    
+    while (heap->size < MIN_HEAP_SIZE)
+    {
+        alloc_frame(get_page(heap->start + heap->size, 1, cur_dir), \
+                    (heap->svisor ? 1 : 0), (heap->ronly ? 0 : 1));
+        heap->size += 0x1000; /* sizeof(page) */
+    }
+
+    heap->size = MIN_HEAP_SIZE;
     heap->end->size = 0;
     heap->end->res = 1;
     heap->end->prev = NULL; /* from NULL alloc() knows that we have not
@@ -78,24 +77,10 @@ struct heap_t* create_heap(uint32_t start, size_t maxsize, int svisor, int ronly
     return heap;
 }
 
-/* Allocates pages (frames) taken by the heap */
-static void alloc_heap(struct heap_t* heap, size_t oldsize, size_t newsize)
-{
-    newsize += 0x1000;
-    while (oldsize <= newsize)
-    {
-        alloc_frame(get_page(heap->start + oldsize, 1, cur_dir), \
-                    (heap->svisor ? 1 : 0), (heap->ronly ? 0 : 1));
-        oldsize += 0x1000; /* sizeof(page) */
-    }
-}
-
 /* Frees pages relased by contracting the heap */
 static void free_heap(struct heap_t* heap, size_t newsize)
 {
-    size_t oldsize = heap->end - heap->start + sizeof(struct memnode_t);
-
-    size_t i = oldsize - 0x1000;
+    size_t i = heap->size - 0x1000;
     while (newsize < i)
     {
         free_frame(get_page(heap->start + i, 0, cur_dir));
@@ -104,47 +89,35 @@ static void free_heap(struct heap_t* heap, size_t newsize)
 }
 
 /* No need to keep the heap at maxsize, so when we run out of space AND
- * the heap size is not maxsize, we can expand it */
-static void expand(size_t newsize, struct heap_t* heap)
+ * the heap size is not maxsize, we can expand it (by one page)*/
+static void expand(struct heap_t* heap)
 {
-    kassert(newsize > heap->end - heap->start);
-    kassert(newsize <= heap->maxsize);
-
-    /* Page-align */
-    if ((newsize + sizeof(struct memnode_t)) & 0x00000FFF != 0)
-    {
-        newsize &= 0xFFFFF000;
-        newsize += 0x1000;
-        newsize -= sizeof(struct memnode_t); /* 0x10 bytes */
-    }
-
-    alloc_heap(heap, (size_t)(heap->end - heap->start), newsize);
-
-    struct memnode_t* new_end_node = heap->start + newsize;
-
-    new_end_node->prev = heap->end->prev;
-
-    heap->end = new_end_node;
-
-    heap->end->size = 0;
-    heap->end->res = 1;
-    heap->end->next = NULL;
-
-    /* Check if the last chunk of the heap is reserved (malloc'd) */
-    if (heap->end->prev->res)
-    {
-        struct memnode_t* new_emptyness_allocator = heap->end->prev \
-            + heap->end->prev->size + sizeof(struct memnode_t);
-        new_emptyness_allocator->size = 0;
-        new_emptyness_allocator->res = 0;
-        new_emptyness_allocator->prev = heap->end->prev;
-        heap->end->prev->next = new_emptyness_allocator;
-        heap->end->prev = new_emptyness_allocator;
-    }
+    kassert(heap->size + 0x1000 <= heap->maxsize);
     
-    heap->end->prev->next = heap->end;
-    heap->end->prev->size = heap->end - heap->end->prev \
-        - sizeof(struct memnode_t);
+    alloc_frame(get_page((void*)(heap->end->prev) + heap->end->prev->size \
+                         + 0x1000, 1, cur_dir), (heap->svisor ? 1 : 0), \
+                (heap->ronly ? 0 : 1));
+    
+    /* Last chunk of the heap is free */
+    if (heap->end->prev->res == 0)
+    {
+        heap->end->prev->size += 0x1000;
+    }
+    else
+    {
+        struct memnode_t* unalloc =  heap->end->prev + heap->end->prev->size;
+        unalloc->res = 0;
+        unalloc->size = 0x1000 - sizeof(struct memnode_t);
+        
+        unalloc->next = heap->end;
+        unalloc->prev = heap->end->prev;
+        heap->end->prev = unalloc;
+        heap->end->prev->next = unalloc;
+    }
+
+    heap->size += 0x1000;
+
+    kprintf("Heap is now of size %p\n", heap->size);
 }
 
 /* If the heap is way too large, we should contract it */
@@ -179,25 +152,39 @@ static void contract(size_t newsize, struct heap_t* heap)
     
 void* alloc(size_t size, struct heap_t* heap, int align)
 {
+    /* Standard malloc() is 16-byte aligned */
+    if (size & 0x0F)
+    {
+        size &= 0xFFFFFFF0;
+        size += 0x10;
+    }
+    
     struct memnode_t* curnode = heap->start;
     while (1)
     {
+        /* Heap not large enough */
+        if (curnode == heap->end)
+        {
+            /* Can we expand the heap by one page? */
+            if ((heap->size + 0x1000) < heap->maxsize)
+            {
+                expand(heap);
+                curnode = curnode->prev;
+                continue;
+            }
+            return NULL;
+        }
+        
         if (curnode->res != 0) /* The node is reserved */
         {
             curnode = curnode->next;
             continue;
         }
-        
+                
         if (curnode->size >= size) /* Is free and of adequate size */
         {
             break; /* curnode now points to a usable chunk in the heap */
         }            
-
-        if (curnode->next == NULL)
-        {
-            /* Heap not large enough */
-            return NULL;
-        }
         
         curnode = curnode->next;
     }
@@ -224,6 +211,8 @@ void* alloc(size_t size, struct heap_t* heap, int align)
     curnode->next = unalloc;
     curnode->size = size;
     curnode->res = 1;
+
+    //dump_heap(heap);
     
     return (void*)((void*)curnode + sizeof(struct memnode_t));    
 }
