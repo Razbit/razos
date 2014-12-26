@@ -32,7 +32,7 @@ struct heap_t
 };
 
 /* Create a new heap */
-struct heap_t* create_heap(uint32_t start, size_t maxsize, int svisor, int ronly);
+void create_heap(struct heap_t* heap, uint32_t start, size_t maxsize, int svisor, int ronly);
 
 /* Heap-mode internals of malloc() and free() */
 void* alloc(size_t size, struct heap_t* heap, int align);

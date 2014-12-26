@@ -12,6 +12,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+/* #define _DEBUG */
+
 /* The end is defined in the linker script */
 extern uint32_t end;
 uint32_t placement_addr = (uint32_t)&end;
@@ -32,16 +34,23 @@ static uint32_t do_kmalloc(size_t size, uint8_t align, uint32_t* physaddr)
             struct page_t *pg = get_page(addr, 0, kernel_dir);
             *physaddr = pg->frame*0x1000 + (uint32_t)addr&0xFFF;
         }
-        //kprintf("kmalloc: %d %d %p\n", size, align, addr);
+        
+        #ifdef _DEBUG
+        kprintf("kmalloc: heap: %p %d %p\n", size, align, addr);
+        #endif
+
         return (uint32_t)addr;
     }
     else
     {        
         /* 8-byte alignment */
-        placement_addr &= 0xFFFFFFF8;
-        placement_addr += 0x8;
+        if (placement_addr & 0x0F)
+        {
+            placement_addr &= 0xFFFFFFF0;
+            placement_addr += 0x10;
+        }
     
-        if (align && (placement_addr & 0xFFFFF000)) /* Not aligned already */
+        if (align && (placement_addr & 0x00000FFF)) /* Not aligned already */
         {
             /* Align to 4KB page boundary */
             placement_addr &= 0xFFFFF000;
@@ -53,8 +62,10 @@ static uint32_t do_kmalloc(size_t size, uint8_t align, uint32_t* physaddr)
         uint32_t ret = placement_addr;
         placement_addr += size;
 
-        kprintf("kmalloc: %d %d %p\n", size, align, ret);
-
+        #ifdef _DEBUG
+        kprintf("kmalloc: %p %d %p %p\n", size, align, ret, placement_addr);
+        #endif
+        
         return ret;
     }
 }

@@ -4,6 +4,8 @@
  *
  * Razbit 2014 */
 
+/* Dec. 26, 2014: Heap allocation & freeing work */
+
 #include "paging.h"
 #include "kmalloc.h"
 #include "heap.h" /* MIN_HEAP_SIZE */
@@ -80,10 +82,11 @@ static uint32_t find_free_frame()
 
 void alloc_frame(struct page_t* page, uint8_t is_kern, uint8_t is_rw)
 {
-    if (page->frame != 0)
+    if (page->frame)
         return; /* The frame was already allocated */
-
+    
     uint32_t index = find_free_frame();
+    
     if (index == (uint32_t)-1)
         panic("No free frames");
 
@@ -116,11 +119,13 @@ void init_paging()
     memset(frames, 0, INDEX_FROM_BIT(nframes));
     
     /* Create a page directory */
-    kernel_dir = (struct page_directory_t*)         \
-        kmalloc_a(sizeof(struct page_directory_t));
+    kernel_dir = kmalloc_a(sizeof(struct page_directory_t));
     memset(kernel_dir, 0, sizeof(struct page_directory_t));
     cur_dir = kernel_dir;
 
+    struct heap_t* heap = kmalloc(sizeof(struct heap_t));
+    heap->end = kmalloc(sizeof(struct memnode_t));
+        
     /* Map virtual addresses to physical ones
      * These are already allocated by the kernel
      * Allocate one extra page for the kernel heap */
@@ -128,21 +133,18 @@ void init_paging()
     while (i < placement_addr+0x1000) 
     {
         /* Kernel code readable but not writeable from user-space */
-        alloc_frame(get_page(i, 1, kernel_dir), 0, 0);
+        alloc_frame(get_page(i, 1, cur_dir), 0, 0);
         i += 0x1000;
     }
-
-    kprintf("Setting kernel heap at 0x%X \n", KHEAP_START);
-    
-    /* Map the initial kernel heap area */
-    for (i = KHEAP_START; i <= KHEAP_START + KHEAP_INIT_SIZE; i += 0x1000)
-        alloc_frame(get_page(i, 1, kernel_dir), 0, 0);
-      
+        
     /* Page fault handler */
     install_isr_handler(14, &page_fault);
 
-    kheap = create_heap(KHEAP_START, KHEAP_MAX_SIZE, 0, 0);
-    
+    kprintf("Setting kernel heap at 0x%X \n", KHEAP_START);
+
+    create_heap(heap, KHEAP_START, KHEAP_MAX_SIZE, 0, 0);
+    kheap = heap;
+
     /* Enable paging */
     switch_page_directory(kernel_dir);
     
@@ -170,8 +172,7 @@ struct page_t* get_page(uint32_t address, int create,   \
     else if (create)
     {
         uint32_t tmp;
-        dir->tables[table_index] = (struct page_table_t*)   \
-            kmalloc_ap(sizeof(struct page_table_t), &tmp);
+        dir->tables[table_index] = kmalloc_ap(sizeof(struct page_table_t), &tmp);
         memset(dir->tables[table_index], 0, 0x1000);
         dir->tables_physaddr[table_index] = tmp | 0x7; /* P, RW, USER */
         return &dir->tables[table_index]->pages[address%1024];
