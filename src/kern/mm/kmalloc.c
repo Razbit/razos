@@ -43,7 +43,7 @@ static uint32_t do_kmalloc(size_t size, uint8_t align, uint32_t* physaddr)
     }
     else
     {        
-        /* 8-byte alignment */
+        /* 16-byte alignment */
         if (placement_addr & 0x0F)
         {
             placement_addr &= 0xFFFFFFF0;
