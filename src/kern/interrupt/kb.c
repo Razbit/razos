@@ -12,6 +12,7 @@
 
 #include "irq.h"
 #include "isr.h"
+#include "kb.h"
 
 #include "../kio.h"
 
@@ -22,7 +23,7 @@ const char sc_to_ascii[] =
 	0, /* backspace */
 	0x09, /* tab */
 	'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']',
-	0, /* enter */
+	'\n', /* enter */
 	0, /* lcontrol */
 	'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`',
 	0, /* lshift */
@@ -53,123 +54,174 @@ const char sc_to_ascii[] =
 #define RCONTROL 	0x0800
 #define RELEASE 	0x1000
 #define NUMPAD		0x2000
+#define PAUSE       0x4000
 
 /* Handle a keyboard event */
 static void kb_handler(struct register_t* regs)
 {
     uint8_t scancode = inb(0x60); /* KB's data buffer */
-	uint8_t ascii;
+	uint8_t ascii = 0;
+    uint8_t keycode = 0;
 	static uint16_t flags;
-
-	//kprintf("Scancode: 0x%X", scancode);
 
 	if (scancode == 0xE0)
 	{
 		flags |= NUMPAD;
 		return;
 	}
+
+    if (scancode == 0xE1)
+    {
+        flags |= PAUSE;
+        return;
+    }
+
+    if (scancode & 0x80)
+        flags |= RELEASE;
 	
-	if (scancode & 0x80 == 0x80)
-	{
-		flags |= RELEASE;
-		scancode &= 0x7F;
-	}
+	/* Modifier keys */
+    switch (scancode)
+    {
+    case 0x1D:
+        if (flags & PAUSE)
+            return;
+        if (flags & NUMPAD)
+        {
+            flags |= RCONTROL;
+            keycode = KEY_RCTRL;
+        }
+        else
+        {
+            flags |= LCONTROL;
+            keycode = scancode;
+        }
+        break;
+    case 0x9D:
+        if (flags & PAUSE)
+            return;
+        if (flags & NUMPAD)
+        {
+            flags &= ~RCONTROL;
+            keycode = KEY_RCTRL;
+        }
+        else
+        {
+            flags &= ~LCONTROL;
+            keycode = scancode;
+        }
+        flags &= ~CONTROL; break;
+        
+    case 0x2A:
+        flags |= LSHIFT;
+        keycode = scancode; break;
+    case 0x36:
+        flags |= RSHIFT;
+        keycode = scancode; break;
+    case 0xAA:
+        flags &= ~LSHIFT;
+        flags &= ~SHIFT;
+        keycode = scancode; break;
+    case 0xB6:
+        flags &= ~RSHIFT;
+        flags &= ~SHIFT;
+        keycode = scancode; break;
+        
+    case 0x38:
+        if (flags & NUMPAD)
+        {
+            flags |= RALT;
+            keycode = KEY_RALT;
+        }
+        else
+        {
+            flags |= LALT;
+            keycode = scancode;
+        }
+        break;
+    case 0xB8:
+        if (flags & NUMPAD)
+        {
+            flags &= ~RALT;
+            keycode = KEY_RALT;
+        }            
+        else
+        {
+            flags &= ~LALT;
+            keycode = scancode;
+        }
+        flags &= ~ALT; break;
 
-	if (scancode <= 0x53)
-		ascii = sc_to_ascii[scancode];
-	else
-		ascii = 0;
+    case 0x37:
+        if (flags & NUMPAD)
+            keycode = KEY_PRSCR;
+        else
+        {
+            ascii = '*';
+            keycode = NUM_ASTER;
+        }
+        break;
+    case 0xB7:
+        if (flags & NUMPAD)
+            keycode = KEY_PRSCR;
+        else
+        {
+            ascii = '*';
+            keycode = NUM_ASTER;
+        }
+        break;            
+            
+    case 0x3A:
+        flags ^= CAPS_LOCK;
+        keycode = scancode; break;
+    case 0x45:
+        if (flags & PAUSE)
+            return;
+        flags ^= NUM_LOCK;
+        keycode = scancode; break;
+    case 0x46:
+        flags ^= SCROLL_LOCK;
+        keycode = scancode; break;
+        
+    case 0xC5:
+        if (flags & PAUSE)
+        {
+            /* Pause was pressed.. God, what a series of scancodes! */
+            keycode = KEY_PAUSE;
+        }
+        break;
+       
+    default:
+        /* The ASCII code for the key, if available */
+        if (scancode <= 0x53)
+            ascii = sc_to_ascii[scancode];
+        else
+            ascii = 0;
+    
+        /* Numpad return */
+        if ((scancode == 0x1C) && (flags & NUMPAD))
+            ascii = '\n';
+        keycode = scancode;
+    }
 
-	if (flags & RELEASE)
-	{
-		kprintf("Released\n");
-		if (flags & NUMPAD)
-		{
-			if (scancode == 0x1D)
-			{
-				flags &= ~RCONTROL;
-				flags &= ~CONTROL;
-			}
-			else if (scancode == 0x38)
-			{
-				flags &= ~RALT;
-				flags &= ~ALT;
-			}
-		}
-		else
-		{
-			switch (scancode)
-			{
-			case 0x2A:
-				flags &= ~LSHIFT;
-				flags &= ~SHIFT;
-				break;
-			case 0x36:
-				flags &= ~RSHIFT;
-				flags &= ~SHIFT;
-				break;
-			case 0x1D:
-				flags &= ~LCONTROL;
-				flags &= ~CONTROL;
-				break;
-			case 0x38:
-				flags &= ~LALT;
-				flags &= ~ALT;
-				break;
-			}
-		}
-	}
-	else
-	{
-		if (flags & NUMPAD)
-		{
-			if (scancode == 0x1D)
-			{
-				flags |= RCONTROL;
-				flags |= CONTROL;
-			}
-			else if (scancode == 0x38)
-			{
-				flags |= RALT;
-				flags |= ALT;
-			}
-		}
-		else
-		{
-			switch (scancode)
-			{
-			case 0x45:
-				flags ^= NUM_LOCK; /* flip num lock flag */
-				break;
-			case 0x46:
-				flags ^= SCROLL_LOCK;
-				break;
-			case 0x3A:
-				flags ^= CAPS_LOCK;
-				break;
-			case 0x2A:
-				flags |= LSHIFT;
-				flags |= SHIFT;
-				break;
-			case 0x36:
-				flags |= RSHIFT;
-				flags |= SHIFT;
-				break;
-			case 0x1D:
-				flags |= LCONTROL;
-				flags |= CONTROL;
-				break;
-			case 0x38:
-				flags |= LALT;
-				flags |= ALT;
-				break;
-			}
-		}
-	}
+    if (flags & RSHIFT || flags & LSHIFT)
+        flags |= SHIFT;
+    if (flags & RALT || flags & LALT)
+        flags |= ALT;
+    if (flags & RCONTROL || flags & LCONTROL)
+        flags |= CONTROL;
 
-	kprintf("%c : 0x%14.14x\n", ascii, flags);
+    uint32_t packet = (uint32_t)flags;
+    packet <<= 8;
+    packet |= (uint32_t)keycode;
+    packet <<= 8;
+    packet |= (uint32_t)ascii;
 
+    /* Send the kb event packet here */
+    /* kprintf("%p\n", packet); */
+    
 	flags &= ~NUMPAD;
+    flags &= ~PAUSE;
+    flags &= ~RELEASE;
 }
 
 void init_kb()
