@@ -12,7 +12,7 @@
 #include "../interrupt/irq.h"
 #include "../kio.h"
 
-#include <stdint.h>
+#include <sys/types.h>
 #include <panic.h>
 #include <string.h>
 

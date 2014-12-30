@@ -5,8 +5,9 @@
  * Razbit 2014 */
 
 #include "gdt.h"
-#include <stdint.h>
 #include "kio.h"
+
+#include <sys/types.h>
 
 extern void gdt_flush(uint32_t); /* gdt.s */
 static void gdt_set(int32_t num, uint32_t base, uint32_t limit, \

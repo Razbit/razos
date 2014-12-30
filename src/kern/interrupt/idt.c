@@ -8,7 +8,7 @@
 #include "isr.h"
 
 #include "../kio.h"
-#include <stdint.h>
+#include <sys/types.h>
 
 extern void idt_flush(uint32_t); /* idt.s */
 extern isr_handlers;

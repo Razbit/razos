@@ -7,7 +7,7 @@
 #ifndef PAGING_H
 #define PAGING_H
 
-#include <stdint.h>
+#include <sys/types.h>
 #include "../interrupt/isr.h"
 
 /* A page table entry */

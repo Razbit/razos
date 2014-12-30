@@ -5,8 +5,6 @@
  * Razbit 2014 
  */
 
-/* This version is _very_ simple.. */
-
 #ifndef KB_H
 #define KB_H
 

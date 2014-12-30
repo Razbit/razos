@@ -5,10 +5,10 @@
  * Razbit 2014 */
 
 #include "vga.h"
+#include "colors.h"
 
 #include <portio.h>
-#include <stdint.h>
-#include "colors.h"
+#include <sys/types.h>
 
 /* The VGA framebuffer starts at 0xB8000 */
 uint16_t *video_memory = (uint16_t*)0xB8000;

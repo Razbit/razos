@@ -5,9 +5,7 @@
  * Razbit 2014 
  */
 
-/* This version is _very_ simple.. */
-
-#include <stdint.h>
+#include <sys/types.h>
 #include <portio.h>
 
 #include "irq.h"

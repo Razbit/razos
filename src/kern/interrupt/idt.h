@@ -7,7 +7,7 @@
 #ifndef IDT_H
 #define IDT_H
 
-#include <stdint.h>
+#include <sys/types.h>
 
 void init_idt();
 void idt_set(uint8_t num, uint32_t base, uint16_t selector, uint8_t flags);

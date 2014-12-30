@@ -7,8 +7,7 @@
 /* Dec. 26, 2014: Heap allocation and freeing work, heap expands and
  * contracts as needed */
 
-#include <stdint.h>
-#include <stddef.h>
+#include <sys/types.h>
 #include <kassert.h>
 
 #include "../kio.h"

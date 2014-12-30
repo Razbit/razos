@@ -7,7 +7,7 @@
 #ifndef GDT_H
 #define GDT_H
 
-#include <stdint.h>
+#include <sys/types.h>
 
 void init_gdt();
 

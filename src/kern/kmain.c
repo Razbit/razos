@@ -11,7 +11,7 @@
 #include "interrupt/kb.h"
 #include "mm/paging.h"
 
-#include <stdint.h>
+#include <sys/types.h>
 #include <kassert.h>
 
 #include "mm/kmalloc.h"
@@ -30,7 +30,6 @@ int kmain(struct multiboot *mboot_ptr)
     init_kb();
     init_pit(1);
     init_paging();
-    
     
     for(;;);
 	kprintf("\n==HALTED==");

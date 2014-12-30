@@ -9,8 +9,7 @@
 #include "heap.h"
 #include "paging.h"
 
-#include <stdint.h>
-#include <stddef.h>
+#include <sys/types.h>
 
 /* #define _DEBUG */
 

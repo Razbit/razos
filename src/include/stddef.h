@@ -12,14 +12,14 @@
 #define NULL ((void *) 0)
 
 /* signed type for pointer subtraction */
-#ifndef _PTRDIFF_T
-#define _PTRDIFF_T
+#ifndef PTRDIFF_T
+#define PTRDIFF_T
 typedef long int ptrdiff_t;
 #endif /* _PTRDIFF_T */
 
 /* unsigned type of size of something */
-#ifndef _SIZE_T
-#define _SIZE_T
+#ifndef SIZE_T
+#define SIZE_T
 typedef long unsigned int size_t;
 #endif /* _SIZE_T */
 

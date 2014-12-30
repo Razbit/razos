@@ -7,8 +7,7 @@
 #ifndef HEAP_H
 #define HEAP_H
 
-#include <stdint.h>
-#include <stddef.h>
+#include <sys/types.h>
 
 /* Minimum heap size is 512 KB */
 #define MIN_HEAP_SIZE 0x80000

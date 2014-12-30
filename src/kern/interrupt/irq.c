@@ -11,7 +11,7 @@
 #include "../kio.h"
 
 #include <portio.h>
-#include <stddef.h>
+#include <sys/types.h>
 
 /* Contains function pointers to the 16 IRQ handler functions */
 irq_handler_t* handlers[] =

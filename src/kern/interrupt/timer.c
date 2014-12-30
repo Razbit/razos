@@ -8,7 +8,7 @@
 #include "irq.h"
 #include "isr.h" /* For register_t */
 
-#include <stdint.h>
+#include <sys/types.h>
 #include <portio.h>
 
 #include "../kio.h"

@@ -7,8 +7,7 @@
 #ifndef KMALLOC_H
 #define KMALLOC_H
 
-#include <stdint.h>
-#include <stddef.h>
+#include <sys/types.h>
 
 /* Page aligned */
 void* kmalloc_a(size_t size);
