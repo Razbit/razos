@@ -22,3 +22,10 @@ clean:
 	$(MAKE) clean -C lib
 	$(MAKE) clean -C kern
 
+tools:
+	$(MAKE) all -C tools
+	mv tools/mk-initrd ../mk-initrd
+	mv tools/hexdump ../hexdump
+
+.PHONY: tools
+
