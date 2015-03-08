@@ -24,10 +24,12 @@ struct dirent dirent;
 struct fs_node_t* prevnode = NULL;
 int index = 0;
 
+extern uint32_t inodes;
+
 static ssize_t initrd_read(struct fs_node_t* node, void* buf, size_t size, \
                            off_t offset)
 {
-    struct initrd_node_t file = initrd_files[node->inode];
+    struct initrd_node_t file = initrd_files[node->inode-1];
 
     /* Are we trying to read from outside of the file */
     if (offset > file.size) 
@@ -92,6 +94,8 @@ struct fs_node_t* init_initrd(void* loc)
     initrd_root->finddir = &initrd_finddir;
     initrd_root->ptr = NULL;
 
+	inodes += 1;
+
     /* allocate space for the files in the ramdisk */
     root_nodes = kmalloc(sizeof(struct fs_node_t) * initrd_nfiles);
     nroot_nodes = initrd_nfiles;
@@ -109,7 +113,7 @@ struct fs_node_t* init_initrd(void* loc)
         root_nodes[i].uid = 0;
         root_nodes[i].gid = 0;
         root_nodes[i].size = initrd_files[i].size;
-        root_nodes[i].inode = i;
+        root_nodes[i].inode = i+1;
         root_nodes[i].flags = FS_FILE;
         root_nodes[i].read = &initrd_read;
         root_nodes[i].write = NULL;
@@ -118,6 +122,8 @@ struct fs_node_t* init_initrd(void* loc)
         root_nodes[i].open = NULL;
         root_nodes[i].close = NULL;
     }
+
+	inodes += i;
 
     return initrd_root;
 }

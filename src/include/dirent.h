@@ -8,6 +8,9 @@
 #define DIRENT_H
 
 #include <sys/types.h>
+#include "../kern/fs/fs.h"
+
+#define DIR struct fs_node_t
 
 struct dirent
 {

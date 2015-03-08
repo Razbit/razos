@@ -10,6 +10,7 @@
 
 /* Root of the filesystem */
 struct fs_node_t* fs_root = NULL;
+extern uint32_t inodes = 0;
 
 ssize_t read_fs(struct fs_node_t* node, void* buf, size_t size, off_t offset)
 {

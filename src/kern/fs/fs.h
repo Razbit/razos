@@ -19,6 +19,7 @@
 #define FS_MNTPOINT 0x08 /* Not 0x07, now we can OR it with FS_DIR */
 
 struct fs_node_t;
+uint32_t inodes;
 
 typedef ssize_t (*read_t)(struct fs_node_t*, void*, size_t, off_t);
 typedef ssize_t (*write_t)(struct fs_node_t*, const void*, size_t, off_t);

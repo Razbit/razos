@@ -47,6 +47,23 @@ int kmain(struct multiboot *mboot_ptr)
     init_paging();
 
     fs_root = init_initrd((void*)initrd_loc);
+
+	struct dirent* node = NULL;
+	while ((node = readdir_fs(fs_root)) != NULL)
+	{
+		kprintf("Found file %s", node->d_name);
+		struct fs_node_t* fsnode = finddir_fs(fs_root, node->d_name);
+
+		if ((fsnode->flags & 0x7) == FS_DIR)
+			kprintf(" [directory]\n");
+		else
+		{
+			kprintf(", contents:\n");
+			char buf[256];
+			ssize_t size = read_fs(fsnode, buf, 256, 0);
+			kprintf("%.*s\n", size, buf);
+		}
+	}
     
     for(;;);
 	kprintf("\n==HALTED==");
