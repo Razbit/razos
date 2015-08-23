@@ -22,7 +22,7 @@ void init_idt()
     idt_ptr.limit = sizeof(struct idt_entry_t) * 256 - 1;
     idt_ptr.base = (uint32_t) &idt_entries;
 
-    kprintf("Initializing IDT at address %p\n",   \
+    kprintf("Initializing IDT at 0x%p\n",   \
             &idt_entries);
     
     memset(&idt_entries, 0, sizeof(struct idt_entry_t) * 256);

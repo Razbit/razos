@@ -9,12 +9,14 @@
 #include "paging.h"
 #include "kmalloc.h"
 #include "heap.h" /* MIN_HEAP_SIZE */
+#include "detect.h"
 #include "../interrupt/irq.h"
 #include "../kio.h"
 
 #include <sys/types.h>
 #include <panic.h>
 #include <string.h>
+#include <asm/multiboot.h>
 
 /* Kernel's page directory */
 struct page_directory_t* kernel_dir = 0;
@@ -35,7 +37,7 @@ extern struct heap_t* kheap;
 #define OFFSET_FROM_BIT(a) (a%(32))
 
 /* Kernel heap props */
-#define KHEAP_START 0x200000
+#define KHEAP_START 0x400000 /* 4MB */
 #define KHEAP_INIT_SIZE MIN_HEAP_SIZE
 #define KHEAP_MAX_SIZE 0x3FFFFF /* 4 MB */
 
@@ -107,13 +109,13 @@ void free_frame(struct page_t* page)
     page->frame = 0;
 }
 
-void init_paging()
+void init_paging(struct multiboot_info* mb)
 {
     /* This is the size of physical memory */
-    uint32_t mem_end_page = 0x1000000; /* 16MB */
+    uint32_t mem_end_page = get_avail_mem(mb);
 
-    kprintf("Initializing paging with 0x%X bytes of physical memory\n", \
-            mem_end_page);
+    kprintf("Initializing paging with %u KiB of physical memory\n", \
+            mem_end_page/1024);
     nframes = mem_end_page / 0x1000;
     frames = (uint32_t*)kmalloc(INDEX_FROM_BIT(nframes));
     memset(frames, 0, INDEX_FROM_BIT(nframes));

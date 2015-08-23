@@ -6,8 +6,6 @@
 MBOOT_PAGE_ALIGN    equ 1<<0    ; Load kernel and modules on a page boundary
 MBOOT_MEM_INFO      equ 1<<1    ; Provide your kernel with memory info
 MBOOT_HEADER_MAGIC  equ 0x1BADB002 ; Multiboot Magic value
-; NOTE: We do not use MBOOT_AOUT_KLUDGE. It means that GRUB does not
-; pass us a symbol table.
 MBOOT_HEADER_FLAGS  equ MBOOT_PAGE_ALIGN | MBOOT_MEM_INFO
 MBOOT_CHECKSUM      equ -(MBOOT_HEADER_MAGIC + MBOOT_HEADER_FLAGS)
 
@@ -20,26 +18,29 @@ MBOOT_CHECKSUM      equ -(MBOOT_HEADER_MAGIC + MBOOT_HEADER_FLAGS)
 [EXTERN end]                    ; End of the last loadable section.
 
 mboot:
-  dd  MBOOT_HEADER_MAGIC        ; GRUB will search for this value on each
+    dd MBOOT_HEADER_MAGIC       ; GRUB will search for this value on each
                                 ; 4-byte boundary in your kernel file
-  dd  MBOOT_HEADER_FLAGS        ; How GRUB should load your file / settings
-  dd  MBOOT_CHECKSUM            ; To ensure that the above values are correct
-   
-  dd  mboot                     ; Location of this descriptor
-  dd  code                      ; Start of kernel '.text' (code) section.
-  dd  bss                       ; End of kernel '.data' section.
-  dd  end                       ; End of kernel.
-  dd  start                     ; Kernel entry point (initial EIP).
+    dd MBOOT_HEADER_FLAGS       ; How GRUB should load your file / settings
+
+    dd MBOOT_CHECKSUM           ; To ensure that the above values are correct
 
 [GLOBAL start]                  ; Kernel entry point.
-[EXTERN kmain]                   ; This is the entry point of our C code
+[EXTERN kmain]                  ; This is the entry point of our C code
 
 start:
-  push    ebx                   ; Load multiboot header location
+    mov esp, stack_end          ; Set the stack
+    push esp                    ; Push stack location
+    push ebx                    ; Load multiboot header location
 
-  ; Execute the kernel:
-  cli                         ; Disable interrupts.
-  call kmain                   ; call our kmain() function.
-  jmp $                       ; Enter an infinite loop, to stop the processor
-                              ; executing whatever rubbish is in the memory
-                              ; after our kernel! 
+    cli                         ; Disable interrupts.
+    call kmain                  ; C entry
+
+
+    cli                         ; Go to infinite loop if kmain() returns
+hang:
+    hlt
+    jmp hang
+        
+stack_start:
+    resb 0xFFFF                 ; 64 KB of stack space
+stack_end:

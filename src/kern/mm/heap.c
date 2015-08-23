@@ -62,8 +62,8 @@ void create_heap(struct heap_t* heap, uint32_t start, size_t maxsize, int svisor
                              * allocated anything yet */
     heap->end->next = NULL;
      
-    kprintf("Created a heap at %p with max size of %p (%d, %d)\n", start, \
-            maxsize, svisor, ronly);
+    kprintf("Created a heap at 0x%p with max size of %u KiB (%d, %d)\n", start, \
+            maxsize/1024, svisor, ronly);
 }
 
 /* No need to keep the heap at maxsize, so when we run out of space AND
@@ -216,7 +216,7 @@ void do_free(void* ptr, struct heap_t* heap)
 
 static void print_heap_t(struct heap_t* heap)
 {
-    kprintf("Heap at %p has a max size of %p bytes, perms %d, %d \n", \
+    kprintf("Heap at %p has a max size of %u bytes, perms %d, %d \n", \
             heap, heap->maxsize, heap->svisor, heap->ronly);
     kprintf("Its first memnode_t is at %p and the last one is at %p\n", \
             heap->start, heap->end);
@@ -224,7 +224,7 @@ static void print_heap_t(struct heap_t* heap)
 
 static void print_memnode_t(struct memnode_t* memnode)
 {
-    kprintf("MEMNODE: %p %p %p, %s; %p %p\n", memnode,             \
+    kprintf("MEMNODE: %p %u %u, %s; %p %p\n", memnode,             \
             memnode->size, memnode->size+sizeof(struct memnode_t), \
             memnode->res == 0 ? "free" : "used", memnode->prev,    \
             memnode->next);

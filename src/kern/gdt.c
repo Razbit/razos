@@ -21,7 +21,7 @@ void init_gdt()
     gdt_ptr.limit = sizeof(struct gdt_entry_t) * 5 - 1;
     gdt_ptr.base = (uint32_t)&gdt_entries;
 
-    kprintf("Initializing GDT at address %p\n",\
+    kprintf("Initializing GDT at 0x%p\n",\
             &gdt_entries);
     
     gdt_set(0, 0, 0, 0, 0);                /* null segment */
