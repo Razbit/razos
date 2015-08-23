@@ -27,14 +27,24 @@ $ cd /usr/share/bochs
 $ sudo wget https://github.com/larsr/bochs/blob/master/bios/VGABIOS-elpin-2.40
 ```
 
-#Building and running in Bochs
+#Building and running
 ##Build
 ```shell
 $ make
 ```
 
-##Run in Bochs
+##Run´
 Running the system requires root priviledges (see scripts for more info)
+To run Razos using Bochs
+```shell
+$ sudo make bochs
+```
+Or using Qemu
+```shell
+$ sudo make qemu
+```
+
+You can manually use the scripts, too
 ```shell
 $ sudo ./update_image.sh
 $ sudo ./run_bochs.sh
@@ -57,9 +67,9 @@ target remote localhost:1234
 ```
 Now you can use GDB like you normally would, pretty much the only difference
 being that you can't type 'run', but rather 'continue' to start executing the
-kernel, since in a way Bochs has already opened/started executing the kernel.
+kernel, since in a way Bochs has already started executing the kernel.
 
-See these two links for more info on debugging an OS in bochs with GDB:
+See these two links for more info on debugging an OS in Bochs using GDB:
 http://www.cs.princeton.edu/courses/archive/fall09/cos318/precepts/bochs_gdb.html
 http://www.csee.umbc.edu/~cpatel2/links/310/nasm/gdb_help.shtml
 
@@ -69,6 +79,11 @@ http://www.osdever.net/bkerndev/Docs/title.htm
 
 JamesM's kernel development tutorials. James Molloy,
 http://jamesmolloy.co.uk/tutorial_html/
+
+OsDev forums and Wiki,
+http://wiki.osdev.org
+
+
 
 Cheers,
 Razbit
