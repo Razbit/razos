@@ -20,6 +20,7 @@ void dump_memdetect(struct multiboot_info* mb)
     }
 }
 
+/* Return size of available upper memory */
 size_t get_avail_mem(struct multiboot_info* mb)
 {
     size_t mem = 0x8000000; /* Default to 128 MB */
@@ -27,7 +28,7 @@ size_t get_avail_mem(struct multiboot_info* mb)
     {
         mem = mb->mem_upper;
         mem *= 0x400;
-        /* Page-align */
+        /* Page-align (4K pages) */
         mem &= 0xFFFFF000;
     }
 

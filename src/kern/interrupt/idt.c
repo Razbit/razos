@@ -7,10 +7,10 @@
 #include "idt.h"
 #include "isr.h"
 
-#include "../kio.h"
+#include "../kio.h" /* kprintf() */
 #include <sys/types.h>
 
-extern void idt_flush(uint32_t); /* idt.s */
+extern void idt_flush(uint32_t); /* in idt.s */
 extern isr_handlers;
 
 struct idt_entry_t idt_entries[256];
@@ -22,9 +22,9 @@ void init_idt()
     idt_ptr.limit = sizeof(struct idt_entry_t) * 256 - 1;
     idt_ptr.base = (uint32_t) &idt_entries;
 
-    kprintf("Initializing IDT at 0x%p\n",   \
-            &idt_entries);
-    
+    kprintf("Initializing IDT at 0x%p\n", &idt_entries);
+
+    /* Clear */
     memset(&idt_entries, 0, sizeof(struct idt_entry_t) * 256);
 
     idt_set(0, (uint32_t)isr0, 0x08, 0x8E);
@@ -65,8 +65,7 @@ void init_idt()
     memset(&isr_handlers, 0, sizeof(isr_handler_t)*256);
 }
 
-void idt_set(uint8_t num, uint32_t base, uint16_t selector, \
-                    uint8_t flags)
+void idt_set(uint8_t num, uint32_t base, uint16_t selector, uint8_t flags)
 {
     idt_entries[num].low_base = base & 0xFFFF;
     idt_entries[num].high_base = (base >> 16) & 0xFFFF;
@@ -77,7 +76,7 @@ void idt_set(uint8_t num, uint32_t base, uint16_t selector, \
     idt_entries[num].flags = flags;
 
     /* Uncomment when we start using the user mode
-     * Sets privilege to 3 */
+     * Sets privilege (ring) to 3 */
     
     /* idt_entries[num].flags |= 0x60; */
 }

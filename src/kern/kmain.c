@@ -47,7 +47,7 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
     placement_addr = initrd_end;
     
     sti();
-
+    
     init_kb();
     init_pit(1);
     

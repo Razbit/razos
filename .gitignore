@@ -1,6 +1,5 @@
 *.o
 *~
-refs/
 bochsout.txt
 src/kernel
 

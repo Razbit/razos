@@ -1,11 +1,11 @@
 /* This file is a part of the RazOS project
  *
- * gdt.h -- the x86 GDT
+ * gdt.h -- the x86 GDT; segment descriptors
  *
  * Razbit 2014 */
 
 #include "gdt.h"
-#include "kio.h"
+#include "kio.h" /* kprintf() */
 
 #include <sys/types.h>
 
@@ -17,17 +17,17 @@ struct gdt_entry_t gdt_entries[5];
 struct gdt_ptr_t gdt_ptr;
 
 void init_gdt()
-{   
+{
+    /* Setup the ptr struct */
     gdt_ptr.limit = sizeof(struct gdt_entry_t) * 5 - 1;
     gdt_ptr.base = (uint32_t)&gdt_entries;
 
-    kprintf("Initializing GDT at 0x%p\n",\
-            &gdt_entries);
+    kprintf("Initializing GDT at 0x%p\n", &gdt_entries);
     
     gdt_set(0, 0, 0, 0, 0);                /* null segment */
-    gdt_set(1, 0, 0xFFFFFFFF, 0x9A, 0xCF); /* kernel code */
+    gdt_set(1, 0, 0xFFFFFFFF, 0x9A, 0xCF); /* kernel code (ring 0) */
     gdt_set(2, 0, 0xFFFFFFFF, 0x92, 0xCF); /* kernel data */
-    gdt_set(3, 0, 0xFFFFFFFF, 0xFA, 0xCF); /* user code */
+    gdt_set(3, 0, 0xFFFFFFFF, 0xFA, 0xCF); /* user code (ring 3) */
     gdt_set(4, 0, 0xFFFFFFFF, 0xF2, 0xCF); /* user data */
 
     gdt_flush((uint32_t)&gdt_ptr);

@@ -8,8 +8,9 @@
 #include "vga.h"
 
 #include <vsprintf.h>
-#include <stdint.h>
+#include <sys/types.h>
 #include <stdarg.h>
+
 #include "colors.h"
 
 /* write a character to the screen */

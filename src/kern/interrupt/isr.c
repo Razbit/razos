@@ -41,9 +41,10 @@ const char* exceptions[] =
 
 static void make_errmsg(char* str, struct register_t* regs);
 
-/* Called from asm */
+/* Called from interrupt.s */
 void isr_handler(struct register_t regs)
 {
+    /* If we have an ISR handler installed, use that */
     if (isr_handlers[regs.int_no] != 0)
     {
         isr_handler_t handler = isr_handlers[regs.int_no];
@@ -52,7 +53,7 @@ void isr_handler(struct register_t regs)
     else
     {
         char mesg[100];
-        memset (mesg, 0, 100);
+        memset(mesg, 0, 100);
         make_errmsg(mesg, &regs);    
         kprintf("%s\n", mesg);
     }

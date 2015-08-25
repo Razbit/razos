@@ -9,6 +9,7 @@
 
 #include <sys/types.h>
 
+/* Holds CPU registers */
 struct register_t
 {
     uint32_t ds; /* DS selector */

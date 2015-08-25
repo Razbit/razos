@@ -15,7 +15,7 @@
 struct memnode_t
 {
     size_t size;            /* Size of the allocated chunk */
-    int res;                /* Used or free? */
+    uint8_t res;            /* Used or free? */
     struct memnode_t* prev; /* Previous chunk */
     struct memnode_t* next; /* Next chunk */
 };
@@ -31,7 +31,8 @@ struct heap_t
 };
 
 /* Create a new heap */
-void create_heap(struct heap_t* heap, uint32_t start, size_t maxsize, int svisor, int ronly);
+void create_heap(struct heap_t* heap, uint32_t start, size_t maxsize,   \
+                 int svisor, int ronly);
 
 /* Heap-mode internals of malloc() and free() */
 void* alloc(size_t size, struct heap_t* heap, int align);

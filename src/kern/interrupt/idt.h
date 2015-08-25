@@ -1,6 +1,6 @@
 /* This file is a part of the RazOS project
  *
- * idt.h -- the x86 IDT
+ * idt.h -- the x86 IDT; tells cpu where to find interrupt handlers
  *
  * Razbit 2014 */
 
@@ -9,6 +9,7 @@
 
 #include <sys/types.h>
 
+/* Initialize the interrupt system */
 void init_idt();
 void idt_set(uint8_t num, uint32_t base, uint16_t selector, uint8_t flags);
 
@@ -28,26 +29,26 @@ struct idt_ptr_t
 }__attribute__((__packed__));
 
 /* The 32 must-have Interrupt Service Routines */
-extern void isr0();
-extern void isr1();
-extern void isr2();
-extern void isr3();
-extern void isr4();
-extern void isr5();
-extern void isr6();
-extern void isr7();
-extern void isr8();
-extern void isr9();
-extern void isr10();
-extern void isr11();
-extern void isr12();
-extern void isr13();
-extern void isr14();
-extern void isr15();
-extern void isr16();
-extern void isr17();
-extern void isr18();
-extern void isr19();
+extern void isr0(); /* Division by zero */
+extern void isr1(); /* Debug exception */
+extern void isr2(); /* NMI */
+extern void isr3(); /* Breakpoint */
+extern void isr4(); /* Into detected overflow */
+extern void isr5(); /* Out of bounds */
+extern void isr6(); /* Invalid opcode */
+extern void isr7(); /* No coprocessor */
+extern void isr8(); /* Double fault */
+extern void isr9(); /* Coprocessor segment overrun */
+extern void isr10(); /* Bad TSS */
+extern void isr11(); /* Segment not present */
+extern void isr12(); /* Stack fault */
+extern void isr13(); /* General protection fault */
+extern void isr14(); /* Page fault */
+extern void isr15(); /* Unknown interrupt */
+extern void isr16(); /* Coprocessor fault */
+extern void isr17(); /* Alignment check */
+extern void isr18(); /* Machine check */
+extern void isr19(); /* Reserved from hereon */
 extern void isr20();
 extern void isr21();
 extern void isr22();

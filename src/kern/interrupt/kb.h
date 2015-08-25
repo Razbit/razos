@@ -11,21 +11,25 @@
 /* Key press event data format:
  * 0..7:  ASCII code
  * 8..15: Key code
- * 16:    Scroll lock
- * 17:    Num lock
- * 18:    Caps lock
- * 19:    Shift
- * 20:    Alt
- * 21:    Control
- * 22:    Left shift
- * 23:    Right shift
- * 24:    Left alt
- * 25:    Right alt
- * 26:    Left control
- * 27:    Right control
- * 28:    Released
- * 29:    From numpad
+ * 16..30: Flags
  */
+
+/* KB event flags */
+#define SCROLL_LOCK 0x0001
+#define NUM_LOCK	0x0002
+#define CAPS_LOCK	0x0004
+#define SHIFT		0x0008
+#define ALT			0x0010
+#define CONTROL		0x0020
+#define LSHIFT		0x0040
+#define RSHIFT		0x0080
+#define LALT 		0x0100
+#define RALT 		0x0200
+#define LCONTROL 	0x0400
+#define RCONTROL 	0x0800
+#define RELEASE 	0x1000
+#define NUMPAD		0x2000
+#define PAUSE       0x4000
 
 /* Key codes */
 #define KEY_ESC    0x01

@@ -10,7 +10,7 @@
 #include <portio.h>
 #include <sys/types.h>
 
-/* The VGA framebuffer starts at 0xB8000 */
+/* The VGA framebuffer */
 uint16_t *video_memory = (uint16_t*)0xB8000;
 
 uint8_t cursor_x = 0;
@@ -19,13 +19,13 @@ uint8_t cursor_y = 0;
 static void move_cursor()
 {
 	uint16_t cursor_loc = cursor_y * 80 + cursor_x;
-	outb(0x3D4, 14); /* tell the VGA board we are setting the high cursor byte */
+	outb(0x3D4, 14); /* set the high cursor byte */
 	outb(0x3D5, cursor_loc >> 8);
 	outb(0x3D4, 15); /* low cursor byte */
 	outb(0x3D5, cursor_loc);
 }
 
-/* scroll text up one line */
+/* Scroll up one line */
 static void scroll()
 {
 	/* create a 'blank' char.. */
@@ -58,18 +58,20 @@ int vga_putchar(char c, uint8_t bg_color, uint8_t fg_color)
 	uint16_t *location;
 	
 	/* backspc handler */
-	if (c == 0x08 && cursor_x)
+	if (c == 0x08 && cursor_x > 0)
 		cursor_x--;
 	
 	/* tab handler */
 	else if (c == 0x09)
 		cursor_x = (cursor_x+8) & ~(8-1); /* tab is 8 spaces */
 	
-	/* carriage ret */
+	/* carriage ret
+     * move to the beginning of the line*/
 	else if (c == '\r')
 		cursor_x = 0;
 	
-	/* newline handler */
+	/* newline handler
+     * one line down, move to the beginning of the line */
 	else if (c == '\n')
 	{
 		cursor_x = 0;

@@ -9,6 +9,7 @@
 
 #include <vsprintf.h>
 
+/* printf flags */
 #define FL_SIGN 0x01
 #define FL_LEFT_JUSTIFY 0x02
 #define FL_PLUS 0x04
@@ -29,7 +30,8 @@ static int atoi_ptr(const char **str)
 
 static char* numstr(char* str, long number, int base, int width, int prec, int flags)
 {
-/* Convert number num of radix base */
+/* Convert number [num] of radix [base] */
+/* Not much to explain, just fancy pointer fiddling */
     
     char c, sign, tmp[36];
     const char* digs = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -149,12 +151,13 @@ int vsprintf (char* buf, const char* fmt, va_list arg)
     char *s;
 
     int slen;
-    
+
+    /* State-machine: Go through every char in fmt, do things with it */
     while (*fmt != '\0')
     {
         switch (state)
         {
-        case 0: /* wait for % -char */
+        case 0: /* wait for % -char. Until found, keep printing */
             if(*fmt != '%')
             {
                 *str++ = *fmt++;
@@ -164,7 +167,7 @@ int vsprintf (char* buf, const char* fmt, va_list arg)
             fmt++;
             
         case 1: /* % received; wait for flags */
-            if (*fmt == '%')
+            if (*fmt == '%') /* If we got another %, print it */
             {
                 *str++ = *fmt++;
                 state = 0;
@@ -207,7 +210,7 @@ int vsprintf (char* buf, const char* fmt, va_list arg)
                 break;
             }
 
-            /* Flag 'precedence' */
+            /* Take care of flag 'precedence' */
             if (flags & FL_PLUS)
                 flags &= ~FL_SPACE; /* Remove the space flag */
             
@@ -319,6 +322,7 @@ int vsprintf (char* buf, const char* fmt, va_list arg)
                     while (slen < width--)
                         *str++ = ' ';
 
+                /* Add string to the output str */
                 int i;
                 for (i = 0; i < slen; i++)
                     *str++ = *s++;
@@ -334,7 +338,8 @@ int vsprintf (char* buf, const char* fmt, va_list arg)
                     flags |= FL_ZEROPAD;
                     width = 8;
                 }
-                str = numstr(str, (uint32_t)va_arg(arg, uint32_t), 16, width, prec, flags);
+                str = numstr(str, (uint32_t)va_arg(arg, uint32_t), 16,  \
+                             width, prec, flags);
                 break;
 
             case 'n':
@@ -346,7 +351,8 @@ int vsprintf (char* buf, const char* fmt, va_list arg)
             fmt++;
             state++;
             break;
-        case 6:
+            
+        case 6: /* Reset state machine, advance */
             state = 0;
             flags = 0;
             width = -1;
@@ -357,6 +363,7 @@ int vsprintf (char* buf, const char* fmt, va_list arg)
         }
     }
 
+    /* Add null termination */
     *str = '\0';
     return str-buf;
 }

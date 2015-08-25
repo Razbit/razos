@@ -1,6 +1,6 @@
 /* This file is a part of the RazOS project
  *
- * gdt.h -- the x86 GDT
+ * gdt.h -- the x86 GDT; segment descriptors
  *
  * Razbit 2014 */
 
@@ -20,15 +20,15 @@ struct gdt_entry_t
     uint8_t access_fl;  /* 0..3: Type (code/data); 4: Descriptor type;
                          * 5..6: Privilege (ring); 7: Present (y/n) */
     uint8_t granularity; /* 0..3: Segment limit bits 16..19; 4..5: zero;
-                         * 6: Operand size (16/32) 7: Byte/kbyte */
+                          * 6: Operand size (16/32) 7: Byte/kbyte */
     uint8_t high_base;  /* Base address bit 24..31 */
-}__attribute__((__packed__)); /* Don't change alignment */
+}__attribute__((__packed__));
 
 /* Used to tell the CPU where the GDT is */
 struct gdt_ptr_t
 {
     uint16_t limit; /* Max size of the GDT (minus 1) */
-    uint32_t base;  /* Address of the first gdt_entry struct */
+    uint32_t base;  /* Address of the first gdt_entry_t struct */
 }__attribute__((__packed__));
 
 #endif /* GDT_H */

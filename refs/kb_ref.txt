@@ -105,18 +105,3 @@
 0xE0_0x5D "apps"
 0xE0_0x2A_0xE0_0x37 print_screen
 0xE1_0x1D_0x45_0xE1_0x9D_0xC5 pause
-
-; 0 to 7    ASCII value of keypress
-; 8 to 15    Key code
-; 16       Scroll lock is on if set
-; 17       Number lock is on if set
-; 18       Capitals lock is on if set
-; 19 to 23    Unused/reserved
-; 24       Left shift key is also pressed if set
-; 25       Right shift key is also pressed if set
-; 26       Left alt key is also pressed if set
-; 27       Right alt key is also pressed if set
-; 28       Left control key is also pressed if set
-; 29       Right control key is also pressed if set
-; 30       Key is repeat key if set
-; 31       Key was released if set

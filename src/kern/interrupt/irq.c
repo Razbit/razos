@@ -27,6 +27,8 @@ static void irq_remap();
 void init_irq()
 {
     kprintf("Setting up IRQ handlers\n");
+    /* The default INT numbers of IRQs overlap with CPU exception numbers
+     * so we have to remap them */
     irq_remap();
 
     idt_set(32, (uint32_t)irq0, 0x08, 0x8E);
@@ -51,12 +53,12 @@ void init_irq()
 /* Called from assembly handler stub */
 void irq_handler(struct register_t regs)
 {
-    /* Send end of interrupt (EOI) to the PICs
-     *
-     * If the interrupt came from the slave PIC */    
+    /* Send end of interrupt (EOI) to the PICs */
+
+    /* If the interrupt came from the slave PIC */    
     if (regs.int_no >= 40)
         outb(0xA0, 0x20);
-    /* Reset master PIC, too */
+    /* Reset master PIC */
     outb(0x20, 0x20);
 
     /* If we have installed a handler for the recv'd IRQ,
@@ -66,7 +68,7 @@ void irq_handler(struct register_t regs)
     if (handler != NULL)
         handler(&regs);
     else
-        kprintf("Received IRQ %#X that is bound to INT %#X\n", \
+        kprintf("Received IRQ 0x%p that is bound to INT 0x%p\n", \
                 regs.int_no - 32, regs.int_no);        
 }
 

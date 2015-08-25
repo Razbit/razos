@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+/* Convert C-string to integer */
 int atoi (const char *str)
 {
     int i = 0;

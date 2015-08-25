@@ -10,6 +10,8 @@
 #include <panic.h>
 #include <sprintf.h>
 
+
+/* If the assertion fails, we panic */
 #define kassert(as)                                                      \
 ({                                                                       \
     if (!(as))                                                           \

@@ -3,9 +3,7 @@
  * Razbit 2014 */
 
 #include <string.h>
-#include <stdint.h>
-#include <stddef.h>
-#include <stdbool.h>
+#include <sys/types.h>
 
 void* memset(void* ptr, char value, int num)
 {
@@ -79,17 +77,12 @@ char* strcpy(char* dest, const char* source)
 char* strncpy(char* dest, const char* source, size_t num)
 {
 	int i = 0;
-	bool terminated = false;
 	
 	for (;i < num; i++)
 	{
+        *dest++ = *source++;
 		if (*source == '\0')
-			terminated = true;
-
-		if (terminated)
-			*dest++ = '\0';
-		else
-			*dest++ = *source++;
+            break;		
 	}
 
 	return dest;
@@ -102,7 +95,7 @@ char* strcat(char* dest, const char* source)
 	while (*start != '\0')
 		start++;
 
-	/* start now points to  the null character terminating the string 'dest'*/
+	/* start now points to the null character terminating the string 'dest'*/
 
 	while (*source != '\0')
 		*start++ = *source++;
@@ -119,7 +112,7 @@ char* strncat(char* dest, const char* source, size_t num)
 	while (*start != '\0')
 		start++;
 
-	/* start now points to  the null character terminating the string 'dest'*/
+	/* start now points to the null character terminating the string 'dest'*/
 
 	int i = 0;
 
@@ -261,7 +254,7 @@ size_t strcspn(const char* str1, const char* str2)
 		while (*temp != '\0')
 		{
 			if (*str1 == *temp)
-				goto strcspn_end;
+				return ret;
 			temp++;
 		}
 		
@@ -270,7 +263,6 @@ size_t strcspn(const char* str1, const char* str2)
 		ret++;
 	}
 
-strcspn_end:
 	return ret;
 }
 

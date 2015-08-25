@@ -5,6 +5,8 @@
  * Razbit 2014 
  */
 
+/* see refs/kb_ref.txt */
+
 #include <sys/types.h>
 #include <portio.h>
 
@@ -37,22 +39,6 @@ const char sc_to_ascii[] =
 	/* next line is from numpad */
 	'7', '8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '0', '.'
 };
-
-#define SCROLL_LOCK 0x0001
-#define NUM_LOCK	0x0002
-#define CAPS_LOCK	0x0004
-#define SHIFT		0x0008
-#define ALT			0x0010
-#define CONTROL		0x0020
-#define LSHIFT		0x0040
-#define RSHIFT		0x0080
-#define LALT 		0x0100
-#define RALT 		0x0200
-#define LCONTROL 	0x0400
-#define RCONTROL 	0x0800
-#define RELEASE 	0x1000
-#define NUMPAD		0x2000
-#define PAUSE       0x4000
 
 /* Handle a keyboard event */
 static void kb_handler(struct register_t* regs)
@@ -201,6 +187,7 @@ static void kb_handler(struct register_t* regs)
         keycode = scancode;
     }
 
+    /* Set the rest of the flags */
     if (flags & RSHIFT || flags & LSHIFT)
         flags |= SHIFT;
     if (flags & RALT || flags & LALT)
@@ -208,6 +195,7 @@ static void kb_handler(struct register_t* regs)
     if (flags & RCONTROL || flags & LCONTROL)
         flags |= CONTROL;
 
+    /* Construct the packet */
     uint32_t packet = (uint32_t)flags;
     packet <<= 8;
     packet |= (uint32_t)keycode;

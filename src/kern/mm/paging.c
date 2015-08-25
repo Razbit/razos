@@ -24,13 +24,15 @@ struct page_directory_t* kernel_dir = 0;
 /* Current page directory */
 struct page_directory_t* cur_dir = 0;
 
+
+/* In kmalloc.c */
+/* The first free address */
+extern uint32_t placement_addr;
+extern struct heap_t* kheap;
+
 /* A bitmap of used and unused frames */
 uint32_t *frames;
 uint32_t nframes;
-
-/* In kmalloc.c */
-extern uint32_t placement_addr;
-extern struct heap_t* kheap;
 
 /* Macros for the bitmaps */
 #define INDEX_FROM_BIT(a) (a/(32))
@@ -43,8 +45,8 @@ extern struct heap_t* kheap;
 
 static void set_frame(uint32_t addr)
 {
-    uint32_t frame = addr/0x1000;
-    uint32_t index = INDEX_FROM_BIT(frame);
+    uint32_t frame = addr/0x1000; /* In which frame the phys addr is */
+    uint32_t index = INDEX_FROM_BIT(frame); 
     uint32_t offset = OFFSET_FROM_BIT(frame);
     frames[index] |= (0x1 << offset);
 }
@@ -70,7 +72,7 @@ static uint32_t find_free_frame()
     uint32_t i, j;
     for (i = 0; i < INDEX_FROM_BIT(nframes); i++)
     {
-        if (frames[i] != 0xFFFFFFFF) /* No free frames -> ret */
+        if (frames[i] != 0xFFFFFFFF)
         {
             /* At least one free page */
             for (j = 0; j < 32; j++)
@@ -80,6 +82,7 @@ static uint32_t find_free_frame()
             }
         }
     }
+    return (uint32_t)-1;
 }
 
 void alloc_frame(struct page_t* page, uint8_t is_kern, uint8_t is_rw)
@@ -92,6 +95,7 @@ void alloc_frame(struct page_t* page, uint8_t is_kern, uint8_t is_rw)
     if (index == (uint32_t)-1)
         panic("No free frames");
 
+    /* setup the frame/page */
     set_frame(index*0x1000);
     page->present = 1;
     page->rw = is_rw ? 1 : 0;
@@ -111,20 +115,22 @@ void free_frame(struct page_t* page)
 
 void init_paging(struct multiboot_info* mb)
 {
-    /* This is the size of physical memory */
+    /* This is the size of physical memory. From multiboot */
     uint32_t mem_end_page = get_avail_mem(mb);
 
     kprintf("Initializing paging with %u KiB of physical memory\n", \
             mem_end_page/1024);
+    
     nframes = mem_end_page / 0x1000;
     frames = (uint32_t*)kmalloc(INDEX_FROM_BIT(nframes));
     memset(frames, 0, INDEX_FROM_BIT(nframes));
     
-    /* Create a page directory */
+    /* Create the kernel page directory */
     kernel_dir = kmalloc_a(sizeof(struct page_directory_t));
     memset(kernel_dir, 0, sizeof(struct page_directory_t));
     cur_dir = kernel_dir;
 
+    /* Allocate space for the kernel heap structures */
     struct heap_t* heap = kmalloc(sizeof(struct heap_t));
     heap->end = kmalloc(sizeof(struct memnode_t));
         
@@ -142,6 +148,7 @@ void init_paging(struct multiboot_info* mb)
     /* Page fault handler */
     install_isr_handler(14, &page_fault);
 
+    /* Set up the kernel heap */
     kprintf("Setting kernel heap at 0x%X \n", KHEAP_START);
 
     create_heap(heap, KHEAP_START, KHEAP_MAX_SIZE, 0, 0);
@@ -156,16 +163,19 @@ void init_paging(struct multiboot_info* mb)
     __asm__ __volatile__("mov %0, %%cr0":: "r"(cr0));
 }
 
+/* Load address of the page directory to CR3 */
 void switch_page_directory(struct page_directory_t* new_pdir)
 {
     cur_dir = new_pdir;
     __asm__ __volatile__("mov %0, %%cr3":: "r"(&new_pdir->tables_physaddr));
 }
 
+/* Retrieve a pointer to the page. If create == 1, create the associated
+ * page table if not already created */
 struct page_t* get_page(uint32_t address, int create,   \
                         struct page_directory_t* dir)
 {
-    address /= 0x1000; /* Turn to an index */
+    address /= 0x1000; /* Turn to an index in the bitset */
     uint32_t table_index = address / 1024;
     if (dir->tables[table_index]) /* Table is already assigned */
     {
@@ -173,10 +183,13 @@ struct page_t* get_page(uint32_t address, int create,   \
     }
     else if (create)
     {
-        uint32_t tmp;
+        uint32_t tmp; /* Physical address of the page table */
         dir->tables[table_index] = kmalloc_ap(sizeof(struct page_table_t), &tmp);
         memset(dir->tables[table_index], 0, 0x1000);
-        dir->tables_physaddr[table_index] = tmp | 0x7; /* P, RW, USER */
+        
+        /* present, writable, available from ring 3 */
+        dir->tables_physaddr[table_index] = tmp | 0x7;
+
         return &dir->tables[table_index]->pages[address%1024];
     }
     else

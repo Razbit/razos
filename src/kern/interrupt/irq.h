@@ -26,9 +26,11 @@
 #define IRQ14 46
 #define IRQ15 47
 
+/* IRQ Handler function pointer type */
 typedef void (*irq_handler_t)(struct register_t *regs);
 
 void init_irq();
+
 void install_irq_handler(int irq, irq_handler_t handler);
 void uninstall_irq_handler(int irq);
 
