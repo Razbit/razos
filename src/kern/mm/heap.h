@@ -23,6 +23,7 @@ struct memnode_t
 struct heap_t
 {
     size_t maxsize;          /* Maximum size of the heap */
+    size_t minsize;          /* Minimum size of the heap */
     size_t size;             /* Current size of the heap */
     uint8_t svisor;          /* Supervisor-only? */
     uint8_t ronly;           /* Read-only? */
@@ -31,11 +32,11 @@ struct heap_t
 };
 
 /* Create a new heap */
-void create_heap(struct heap_t* heap, uint32_t start, size_t maxsize,   \
-                 int svisor, int ronly);
+void create_heap(struct heap_t* heap, uint32_t start, size_t minsize,   \
+                 size_t maxsize, int svisor, int ronly);
 
 /* Heap-mode internals of malloc() and free() */
-void* alloc(size_t size, struct heap_t* heap, int align);
+void* do_alloc(size_t size, struct heap_t* heap, int align);
 void do_free(void* ptr, struct heap_t* heap);
 
 /* Dumps heap structures */

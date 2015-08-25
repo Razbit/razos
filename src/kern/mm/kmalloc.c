@@ -27,7 +27,7 @@ static uint32_t do_kmalloc(size_t size, uint8_t align, uint32_t* physaddr)
 {
     if (kheap != 0) /* We are heaping already */
     {
-        void* addr = alloc(size, kheap, align);
+        void* addr = do_alloc(size, kheap, align);
         if (physaddr != 0)
         {
             struct page_t *pg = get_page(addr, 0, kernel_dir);
@@ -94,7 +94,7 @@ void* kmalloc(size_t size)
 }
 
 /* Normal free() */
-void free(void* ptr)
+void kfree(void* ptr)
 {
     do_free(ptr, kheap);
 }

@@ -22,6 +22,6 @@ void* kmalloc_ap(size_t size, uint32_t* physaddr);
 void* kmalloc(size_t size);
 
 /* Normal free() */
-void free(void* ptr);
+void kfree(void* ptr);
 
 #endif /* KMALLOC_H */

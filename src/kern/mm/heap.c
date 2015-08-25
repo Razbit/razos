@@ -19,7 +19,8 @@
 extern struct page_directory_t* cur_dir;
 
 /* Create a new heap */
-void create_heap(struct heap_t* heap, uint32_t start, size_t maxsize, int svisor, int ronly)
+void create_heap(struct heap_t* heap, uint32_t start, size_t minsize,   \
+                 size_t maxsize, int svisor, int ronly)
 {    
     /* Start address is page-aligned */
     if (start & 0x00000FFF != 0)
@@ -36,6 +37,7 @@ void create_heap(struct heap_t* heap, uint32_t start, size_t maxsize, int svisor
     }
     
     heap->maxsize = maxsize;
+    heap->minsize = minsize;
     heap->size = 0;
     
     heap->start = (void*)start;
@@ -43,22 +45,22 @@ void create_heap(struct heap_t* heap, uint32_t start, size_t maxsize, int svisor
     heap->svisor = svisor;
     heap->ronly = ronly;
 
-    heap->start->size = MIN_HEAP_SIZE - sizeof(struct memnode_t);
+    heap->start->size = heap->minsize - sizeof(struct memnode_t);
     heap->start->res = 0;
     heap->start->prev = NULL;
     heap->start->next = heap->end;
 
-    while (heap->size < MIN_HEAP_SIZE)
+    while (heap->size < heap->minsize)
     {
-        alloc_frame(get_page(heap->start + heap->size, 1, cur_dir), \
-                    (heap->svisor ? 1 : 0), (heap->ronly ? 0 : 1));
+        alloc_frame(get_page(heap->start + heap->size, 1, cur_dir),   \
+          (heap->svisor ? 1 : 0), (heap->ronly ? 0 : 1));
         heap->size += 0x1000; /* sizeof(page) */
     }
 
-    heap->size = MIN_HEAP_SIZE;
+    heap->size = heap->minsize;
     heap->end->size = 0;
     heap->end->res = 1;
-    heap->end->prev = NULL; /* from NULL alloc() knows that we have not
+    heap->end->prev = NULL; /* from NULL do_alloc() knows that we have not
                              * allocated anything yet */
     heap->end->next = NULL;
      
@@ -74,7 +76,7 @@ static void expand(struct heap_t* heap)
     
     alloc_frame(get_page((void*)(heap->end->prev) + heap->end->prev->size \
                          + 0x1000, 1, cur_dir), (heap->svisor ? 1 : 0), \
-                (heap->ronly ? 0 : 1));
+                         (heap->ronly ? 0 : 1));
     
     /* Last chunk of the heap is free */
     if (heap->end->prev->res == 0)
@@ -105,7 +107,7 @@ static void contract(struct heap_t* heap)
                         0, cur_dir));
 }
     
-void* alloc(size_t size, struct heap_t* heap, int align)
+void* do_alloc(size_t size, struct heap_t* heap, int align)
 {
     /* Standard malloc() is 16-byte aligned */
     if (size & 0x0F)
@@ -149,7 +151,7 @@ void* alloc(size_t size, struct heap_t* heap, int align)
 
     if (heap->end->prev == NULL) /* First allocation */
     {
-        unalloc->size = MIN_HEAP_SIZE - size - (2 * sizeof(struct memnode_t));
+        unalloc->size = heap->minsize - size - (2 * sizeof(struct memnode_t));
         unalloc->next = heap->end;
     }
     else
@@ -205,12 +207,10 @@ void do_free(void* ptr, struct heap_t* heap)
         unify_bwd((struct memnode_t*)ptr);
 
     /* there is too much empty space in the end of the -> contract */
-    while (heap->size > MIN_HEAP_SIZE && heap->end->prev->size >= 0x1000)
+    while (heap->size > heap->minsize && heap->end->prev->size >= 0x1000)
     {
         contract(heap);
     }
-    
-    dump_heap(heap);
 }
 
 

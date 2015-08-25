@@ -61,6 +61,9 @@ void alloc_frame(struct page_t* page, uint8_t is_kern, uint8_t is_rw);
 /* Frees a frame */
 void free_frame(struct page_t* page);
 
+/* Copy a page directory */
+struct page_directory_t* clone_page_directory(struct page_directory_t* src);
+
 /* Page fault handler */
 void page_fault(struct register_t regs);
 

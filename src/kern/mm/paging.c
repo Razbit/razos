@@ -24,7 +24,6 @@ struct page_directory_t* kernel_dir = 0;
 /* Current page directory */
 struct page_directory_t* cur_dir = 0;
 
-
 /* In kmalloc.c */
 /* The first free address */
 extern uint32_t placement_addr;
@@ -38,9 +37,9 @@ uint32_t nframes;
 #define INDEX_FROM_BIT(a) (a/(32))
 #define OFFSET_FROM_BIT(a) (a%(32))
 
-/* Kernel heap props */
-#define KHEAP_START 0x400000 /* 4MB */
-#define KHEAP_INIT_SIZE MIN_HEAP_SIZE
+/* Kernel heap props. We don't want it to be resized */
+#define KHEAP_START 0x400000 /* 4 MB */
+#define KHEAP_INIT_SIZE 0x3FFFFF /* 4 MB */
 #define KHEAP_MAX_SIZE 0x3FFFFF /* 4 MB */
 
 static void set_frame(uint32_t addr)
@@ -86,7 +85,7 @@ static uint32_t find_free_frame()
 }
 
 void alloc_frame(struct page_t* page, uint8_t is_kern, uint8_t is_rw)
-{
+{    
     if (page->frame)
         return; /* The frame was already allocated */
     
@@ -138,7 +137,7 @@ void init_paging(struct multiboot_info* mb)
      * These are already allocated by the kernel
      * Allocate one extra page for the kernel heap */
     int i = 0;
-    while (i < placement_addr+0x1000) 
+    while (i < placement_addr+0x1000+KHEAP_MAX_SIZE+0x1000) 
     {
         /* Kernel code readable but not writeable from user-space */
         alloc_frame(get_page(i, 1, cur_dir), 0, 0);
@@ -151,7 +150,7 @@ void init_paging(struct multiboot_info* mb)
     /* Set up the kernel heap */
     kprintf("Setting kernel heap at 0x%X \n", KHEAP_START);
 
-    create_heap(heap, KHEAP_START, KHEAP_MAX_SIZE, 0, 0);
+    create_heap(heap, placement_addr+0x1000, KHEAP_MAX_SIZE,  KHEAP_MAX_SIZE, 0, 0);
     kheap = heap;
 
     /* Enable paging */
@@ -184,7 +183,8 @@ struct page_t* get_page(uint32_t address, int create,   \
     else if (create)
     {
         uint32_t tmp; /* Physical address of the page table */
-        dir->tables[table_index] = kmalloc_ap(sizeof(struct page_table_t), &tmp);
+        dir->tables[table_index] = kmalloc_ap(          \
+            sizeof(struct page_table_t), &tmp);
         memset(dir->tables[table_index], 0, 0x1000);
         
         /* present, writable, available from ring 3 */
@@ -194,6 +194,32 @@ struct page_t* get_page(uint32_t address, int create,   \
     }
     else
         return 0;
+}
+
+/* Clone a page dir */
+struct page_directory_t* clone_page_directory(struct page_directory_t* src)
+{
+    uint32_t phys_addr;
+
+/* Create a new page directory, get its phys. address */
+    struct page_directory_t* dir = kmalloc_ap(          \
+        sizeof(struct page_directory_t), &phys_addr);
+    memset(dir, 0, sizeof(struct page_directory_t));
+
+    /* Figure out the physical address of the new page tables */
+    uint32_t offset = (uint32_t)dir->tables_physaddr - (uint32_t)dir;
+    dir->physaddr = phys_addr + offset;
+
+    /* Copy page tables */
+    int i;
+    for(i = 0; i < 1024; i++)
+    {
+        /* Skip empty page tables */
+        if (!src->tables[i])
+            continue;
+    }
+
+    return NULL;
 }
 
 void page_fault(struct register_t regs)
