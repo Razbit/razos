@@ -52,7 +52,7 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
     init_pit(1);
     
     init_paging(mb);
-        
+       
 	kprintf("\n==HALTED==");
 
     cli();

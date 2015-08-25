@@ -1,6 +1,6 @@
 /* This file is a part of the RazOS project
  *
- * heap.c -- heap allocation, freeing etc
+ * heap.c -- heap allocation, freeing etc. Used outside of kernel
  *
  * Razbit 2014 */
 
@@ -13,7 +13,6 @@
 #include "../kio.h"
 
 #include "heap.h"
-#include "kmalloc.h"
 
 /* In paging.c */
 extern struct page_directory_t* cur_dir;

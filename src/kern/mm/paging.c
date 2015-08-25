@@ -8,7 +8,8 @@
 
 #include "paging.h"
 #include "kmalloc.h"
-#include "heap.h" /* MIN_HEAP_SIZE */
+#include "kheap.h"
+#include "heap.h"
 #include "detect.h"
 #include "../interrupt/irq.h"
 #include "../kio.h"
@@ -27,6 +28,8 @@ struct page_directory_t* cur_dir = 0;
 /* In kmalloc.c */
 /* The first free address */
 extern uint32_t placement_addr;
+
+/* In kheap.c */
 extern struct heap_t* kheap;
 
 /* A bitmap of used and unused frames */
@@ -37,10 +40,8 @@ uint32_t nframes;
 #define INDEX_FROM_BIT(a) (a/(32))
 #define OFFSET_FROM_BIT(a) (a%(32))
 
-/* Kernel heap props. We don't want it to be resized */
-#define KHEAP_START 0x400000 /* 4 MB */
-#define KHEAP_INIT_SIZE 0x3FFFFF /* 4 MB */
-#define KHEAP_MAX_SIZE 0x3FFFFF /* 4 MB */
+/* Total memory available for kernel use */
+#define KERNEL_MEMORY 0x2000000 /* 32 MB */
 
 static void set_frame(uint32_t addr)
 {
@@ -129,15 +130,17 @@ void init_paging(struct multiboot_info* mb)
     memset(kernel_dir, 0, sizeof(struct page_directory_t));
     cur_dir = kernel_dir;
 
-    /* Allocate space for the kernel heap structures */
+    /* Allocate space for the kernel heap */
     struct heap_t* heap = kmalloc(sizeof(struct heap_t));
+    void* kheap_start = kmalloc(                                \
+        KERNEL_MEMORY-placement_addr-sizeof(struct memnode_t));
     heap->end = kmalloc(sizeof(struct memnode_t));
-        
-    /* Map virtual addresses to physical ones
+    
+    /* Identity-map virtual addresses to physical ones
      * These are already allocated by the kernel
      * Allocate one extra page for the kernel heap */
     int i = 0;
-    while (i < placement_addr+0x1000+KHEAP_MAX_SIZE+0x1000) 
+    while (i < placement_addr) 
     {
         /* Kernel code readable but not writeable from user-space */
         alloc_frame(get_page(i, 1, cur_dir), 0, 0);
@@ -148,9 +151,9 @@ void init_paging(struct multiboot_info* mb)
     install_isr_handler(14, &page_fault);
 
     /* Set up the kernel heap */
-    kprintf("Setting kernel heap at 0x%X \n", KHEAP_START);
+    kprintf("Setting kernel heap at 0x%X \n", &kheap_start);
 
-    create_heap(heap, placement_addr+0x1000, KHEAP_MAX_SIZE,  KHEAP_MAX_SIZE, 0, 0);
+    create_kheap(heap, kheap_start, (size_t)((uint32_t)heap->end - (uint32_t)kheap_start));
     kheap = heap;
 
     /* Enable paging */
