@@ -86,4 +86,4 @@ http://wiki.osdev.org
 
 
 Cheers,
-Razbit
+Razbit + Itara
