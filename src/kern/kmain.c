@@ -16,6 +16,7 @@
 #include "fs/initrd.h"
 #include "mm/kmalloc.h"
 #include "mm/detect.h"
+#include "mm/task.h"
 
 #include <kassert.h>
 #include <sys/types.h>
@@ -49,13 +50,24 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
     sti();
     
     init_kb();
-    init_pit(1);
+    init_pit(1000);
     
     init_paging(mb);
-       
-	kprintf("\n==HALTED==");
+    init_tasking();    
 
-    cli();
+    
+    int ret = do_fork();
+    schedule();
+    schedule();
+    
+    
+    
+    kprintf("fork(): 0x%x get_pid(): 0x%x\n\n", ret, get_pid());
+    kprintf("Hello\n");
+    
+	kprintf("\n==HALTED==");
+    for(;;);
+    
     
 	return 0xDEADBABE;
 }

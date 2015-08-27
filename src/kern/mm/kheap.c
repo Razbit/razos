@@ -14,7 +14,7 @@
 extern struct heap_t* kheap;
 
 /* Create a new heap */
-void create_kheap(uint32_t start, size_t size)
+void create_kheap(struct heap_t* heap, uint32_t start, size_t size)
 {    
     /* Start address is page-aligned */
     if (start & 0x00000FFF != 0)
@@ -29,28 +29,28 @@ void create_kheap(uint32_t start, size_t size)
         size &= 0xFFFFF000;
     }
     
-    kheap->maxsize = 0;
-    kheap->minsize = 0;
-    kheap->size = size;
+    heap->maxsize = 0;
+    heap->minsize = 0;
+    heap->size = size;
     
-    kheap->start = (void*)start;
+    heap->start = (void*)start;
     
-    kheap->svisor = 0;
-    kheap->ronly = 0;
+    heap->svisor = 0;
+    heap->ronly = 0;
 
-    kheap->start->size = kheap->size - sizeof(struct memnode_t);
-    kheap->start->res = 0;
-    kheap->start->prev = NULL;
-    kheap->start->next = kheap->end;
+    heap->start->size = heap->size - sizeof(struct memnode_t);
+    heap->start->res = 0;
+    heap->start->prev = NULL;
+    heap->start->next = heap->end;
 
-    kheap->end->size = 0;
-    kheap->end->res = 1;
-    kheap->end->prev = NULL; /* from NULL kmalloc() knows that we have not
+    heap->end->size = 0;
+    heap->end->res = 1;
+    heap->end->prev = NULL; /* from NULL kmalloc() knows that we have not
                              * allocated anything yet */
-    kheap->end->next = NULL;
+    heap->end->next = NULL;
      
     kprintf("Created kernel heap at 0x%p with size of %u KiB\n", \
-            start, size/1024);
+            heap->start, size/1024);
 }
 
 void* do_kmalloc(size_t size, int align)
@@ -61,54 +61,116 @@ void* do_kmalloc(size_t size, int align)
         size &= 0xFFFFFFF0;
         size += 0x10;
     }
-    
-    struct memnode_t* curnode = kheap->start;
-    while (1)
-    {
-        /* Heap not large enough */
-        if (curnode == kheap->end)
-        {
-                return NULL;
-        }
-        
-        if (curnode->res != 0) /* The node is reserved */
-        {
-            curnode = curnode->next;
-            continue;
-        }
-                
-        if (curnode->size >= size) /* Is free and of adequate size */
-        {
-            break; /* curnode now points to a usable chunk in the heap */
-        }            
-        
-        curnode = curnode->next;
-    }
-    
-    struct memnode_t* unalloc = (void*)curnode + size  \
-                                        + sizeof(struct memnode_t);
 
-    if (kheap->end->prev == NULL) /* First allocation */
+    struct memnode_t* curnode = kheap->start;
+
+    if (align)
     {
-        unalloc->size = kheap->size - size - (2 * sizeof(struct memnode_t));
-        unalloc->next = kheap->end;
+        while (1)
+        {        
+            /* Heap not large enough */
+            if (curnode == kheap->end)
+            {
+                return NULL;
+            }
+        
+            if (curnode->res != 0) /* The node is reserved */
+            {
+                curnode = curnode->next;
+                continue;
+            }
+
+            /* Since we want page-align, the node has to be big enough
+             * to reserve padding, also */
+            size_t gap_size = (uint32_t)curnode->next - (((uint32_t)curnode)&0xFFFFF000);
+            if (gap_size >= size) /* Is free and of adequate size */
+            {
+                break; /* curnode now points to a usable chunk in the heap */
+            }            
+            curnode = curnode->next;
+        }
+        /* Pad to page boundary */
+        struct memnode_t* node = ((((uint32_t)curnode)&0xFFFFF000)+0x1000 \
+                                  -sizeof(struct memnode_t));
+        node->size = size;
+
+        struct memnode_t* unalloc = (void*)node + size  \
+            + sizeof(struct memnode_t);
+
+        if (kheap->end->prev == NULL) /* First allocation */
+        {
+            unalloc->size = kheap->size - (node-curnode) - size - 2*sizeof(struct memnode_t);
+            unalloc->next = kheap->end;
+        }
+        else
+        {
+            unalloc->size = curnode->next - unalloc - sizeof(struct memnode_t);
+            unalloc->next = curnode->next;
+        }
+
+        unalloc->res = 0;
+ 
+        unalloc->prev = node;
+        unalloc->next->prev = unalloc;
+
+        node->next = unalloc;
+        node->prev = curnode;
+        node->res = 1;
+        curnode->size = node-curnode-sizeof(struct memnode_t);
+        curnode->next = node;
+
+        return (void*)((void*)node + sizeof(struct memnode_t));
+        
     }
     else
     {
-        unalloc->size = curnode->size - size - sizeof(struct memnode_t);
-        unalloc->next = curnode->next;
+        while (1)
+        {        
+            /* Heap not large enough */
+            if (curnode == kheap->end)
+            {
+                return NULL;
+            }
+            
+            if (curnode->res != 0) /* The node is reserved */
+            {
+                curnode = curnode->next;
+                continue;
+            }
+            
+            if (curnode->size >= size) /* Is free and of adequate size */
+            {
+                break; /* curnode now points to a usable chunk in the heap */
+            }            
+            curnode = curnode->next;
+        }
+        struct memnode_t* unalloc = (void*)curnode + size  \
+            + sizeof(struct memnode_t);
+
+        if (kheap->end->prev == NULL) /* First allocation */
+        {
+            unalloc->size = kheap->size - size - (2 * sizeof(struct memnode_t));
+            unalloc->next = kheap->end;
+        }
+        else
+        {
+            unalloc->size = curnode->size - size - sizeof(struct memnode_t);
+            unalloc->next = curnode->next;
+        }
+
+        unalloc->res = 0;
+    
+        unalloc->prev = curnode;
+        unalloc->next->prev = unalloc;
+
+        curnode->next = unalloc;
+        curnode->size = size;
+        curnode->res = 1;
+
+        return (void*)((void*)curnode + sizeof(struct memnode_t));
     }
-
-    unalloc->res = 0;
     
-    unalloc->prev = curnode;
-    unalloc->next->prev = unalloc;
-
-    curnode->next = unalloc;
-    curnode->size = size;
-    curnode->res = 1;
-    
-    return (void*)((void*)curnode + sizeof(struct memnode_t));    
+        
 }
 
 

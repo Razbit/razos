@@ -15,7 +15,7 @@
 struct memnode_t
 {
     size_t size;            /* Size of the allocated chunk */
-    uint8_t res;            /* Used or free? */
+    uint32_t res;            /* Used or free? */
     struct memnode_t* prev; /* Previous chunk */
     struct memnode_t* next; /* Next chunk */
 }__attribute__((__packed__));

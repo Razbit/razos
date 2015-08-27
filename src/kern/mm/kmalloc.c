@@ -23,20 +23,22 @@ struct heap_t* kheap = 0;
 
 /* Paging.c */
 extern struct page_directory_t* kernel_dir;
+extern struct page_directory_t* cur_dir;
 
 static uint32_t kmalloc_int(size_t size, uint8_t align, uint32_t* physaddr)
 {
     if (kheap != 0) /* We are heaping already */
     {
         void* addr = do_kmalloc(size, align);
+        kprintf("KMALLOC: Addr: 0x%p\n", addr);
         if (physaddr != 0)
         {
-            struct page_t *pg = get_page(addr, 0, kernel_dir);
-            *physaddr = pg->frame*0x1000 + (uint32_t)addr&0xFFF;
+            struct page_t *pg = get_page(addr, 0, cur_dir);
+            *physaddr = ((pg->frame*0x1000)+((uint32_t)addr&0xFFF));
         }
         
         #ifdef _DEBUG
-        kprintf("kmalloc: heap: %p %d %p\n", size, align, addr);
+        kprintf("kmalloc: heap: sz: %p al: %d ad: %p\n", size, align, addr);
         #endif
 
         return (uint32_t)addr;

@@ -131,12 +131,12 @@ void init_paging(struct multiboot_info* mb)
     memset(kernel_dir, 0, sizeof(struct page_directory_t));
     kernel_dir->physaddr = (uint32_t)kernel_dir->tables_physaddr;
 
+    
     /* Allocate space for the kernel heap */
     struct heap_t* heap = kmalloc(sizeof(struct heap_t));
-    void* kheap_start = kmalloc_a(                              \
-        KERNEL_MEMORY-placement_addr-sizeof(struct memnode_t));
+    void* kheap_start = kmalloc_a(KERNEL_MEMORY-placement_addr-sizeof(struct memnode_t)-0x1000-9*0x1000);
     heap->end = kmalloc(sizeof(struct memnode_t));
-    
+        
     /* Identity-map virtual addresses to physical ones
      * We map the first KERNEL_MEMORY bytes of memory in the
      * kernel directory -> kheap is of static size */
@@ -152,8 +152,10 @@ void init_paging(struct multiboot_info* mb)
     install_isr_handler(14, &page_fault);
 
     /* Set up the kernel heap */   
-    create_kheap(kheap_start, (size_t)((uint32_t)heap->end          \
-                                       - (uint32_t)kheap_start));
+    create_kheap(heap, kheap_start, (size_t)((uint32_t)heap->end         \
+                                       - (uint32_t)kheap_start-0x1000));
+    kheap = heap;
+
     
     /* Enable paging */
     switch_page_dir(kernel_dir);
@@ -243,22 +245,24 @@ struct page_directory_t* clone_page_dir(struct page_directory_t* src)
     /* Figure out the physical address of the new page tables */
     uint32_t offset = (uint32_t)dir->tables_physaddr - (uint32_t)dir;
     dir->physaddr = phys_addr + offset;
-
+    
     /* Copy page tables */
     int i;
+    /* First 32MB is for kernel -> link */
+    
     for(i = 0; i < 1024; i++)
     {
         /* Skip empty page tables */
-        if (!src->tables[i])
+        if (!(src->tables[i]))
             continue;
+
         if (kernel_dir->tables[i] == src->tables[i])
-        {
-            /* The page table is in the kernel -> link */
+        {            
             dir->tables[i] = src->tables[i];
             dir->tables_physaddr[i] = src->tables_physaddr[i];
         }
         else
-        {
+        {            
             /* Copy the table if not from kernel */
             uint32_t phys;
             dir->tables[i] = clone_table(src->tables[i], &phys);
@@ -281,6 +285,7 @@ void page_fault(struct register_t regs)
     int res = regs.err_code & 0x08;    /* Overwrite CPU-reserved bits */
     int id = regs.err_code & 0x10;     /* Instruction fetch */
 
-    kprintf("PAGE FAULT (0x%X at %p\n", regs.err_code, faulty_address);
+    kprintf("PAGE FAULT (0x%X at %p)\n", regs.err_code, faulty_address);
+    dump_heap(kheap);
     panic("PAGE FAULT");
 }

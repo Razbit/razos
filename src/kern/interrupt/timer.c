@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <portio.h>
 
+#include "../mm/task.h" /* schedule() */
 #include "../kio.h"
 
 uint32_t ticks = 0;
@@ -18,6 +19,7 @@ uint32_t ticks = 0;
 static void pit_callback(struct register_t* regs)
 {
     ticks++;
+    //   schedule();
 }
 
 void init_pit(uint32_t freq)

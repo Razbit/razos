@@ -28,4 +28,6 @@ typedef uint32_t uid_t;
 typedef uint32_t ino_t;
 typedef uint32_t mode_t;
 
+typedef uint32_t pid_t;
+
 #endif /* TYPES_H */
