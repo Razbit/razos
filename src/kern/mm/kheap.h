@@ -8,7 +8,7 @@
 #define KHEAP_H
 
 /* Create a new heap */
-void create_kheap(struct heap_t* heap, uint32_t start, size_t size);
+void create_kheap(uint32_t start, size_t size);
 
 /* Heap-mode internals of malloc() and free() */
 void* do_kmalloc(size_t size, int align);

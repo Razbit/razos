@@ -18,7 +18,7 @@ struct memnode_t
     uint8_t res;            /* Used or free? */
     struct memnode_t* prev; /* Previous chunk */
     struct memnode_t* next; /* Next chunk */
-};
+}__attribute__((__packed__));
 
 struct heap_t
 {
@@ -29,7 +29,7 @@ struct heap_t
     uint8_t ronly;           /* Read-only? */
     struct memnode_t* start; /* First chunk of memory */
     struct memnode_t* end;   /* The dummy end node */
-};
+}__attribute__((__packed__));
 
 /* Create a new heap */
 void create_heap(struct heap_t* heap, uint32_t start, size_t minsize,   \

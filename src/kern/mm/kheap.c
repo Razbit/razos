@@ -14,7 +14,7 @@
 extern struct heap_t* kheap;
 
 /* Create a new heap */
-void create_kheap(struct heap_t* heap, uint32_t start, size_t size)
+void create_kheap(uint32_t start, size_t size)
 {    
     /* Start address is page-aligned */
     if (start & 0x00000FFF != 0)
@@ -29,25 +29,25 @@ void create_kheap(struct heap_t* heap, uint32_t start, size_t size)
         size &= 0xFFFFF000;
     }
     
-    heap->maxsize = 0;
-    heap->minsize = 0;
-    heap->size = size;
+    kheap->maxsize = 0;
+    kheap->minsize = 0;
+    kheap->size = size;
     
-    heap->start = (void*)start;
+    kheap->start = (void*)start;
     
-    heap->svisor = 0;
-    heap->ronly = 0;
+    kheap->svisor = 0;
+    kheap->ronly = 0;
 
-    heap->start->size = heap->size - sizeof(struct memnode_t);
-    heap->start->res = 0;
-    heap->start->prev = NULL;
-    heap->start->next = heap->end;
+    kheap->start->size = kheap->size - sizeof(struct memnode_t);
+    kheap->start->res = 0;
+    kheap->start->prev = NULL;
+    kheap->start->next = kheap->end;
 
-    heap->end->size = 0;
-    heap->end->res = 1;
-    heap->end->prev = NULL; /* from NULL kmalloc() knows that we have not
+    kheap->end->size = 0;
+    kheap->end->res = 1;
+    kheap->end->prev = NULL; /* from NULL kmalloc() knows that we have not
                              * allocated anything yet */
-    heap->end->next = NULL;
+    kheap->end->next = NULL;
      
     kprintf("Created kernel heap at 0x%p with size of %u KiB\n", \
             start, size/1024);

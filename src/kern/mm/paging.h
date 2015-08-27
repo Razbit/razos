@@ -48,7 +48,7 @@ struct page_directory_t
 void init_paging();
 
 /* Loads the specified page directory to the CR3 */
-void switch_page_directory(struct page_directory_t* new_pdir);
+void switch_page_dir(struct page_directory_t* new_pdir);
 
 /* Retrieve a pointer to the page. If create == 1, create the associated
  * page table if not already created */
@@ -62,7 +62,7 @@ void alloc_frame(struct page_t* page, uint8_t is_kern, uint8_t is_rw);
 void free_frame(struct page_t* page);
 
 /* Copy a page directory */
-struct page_directory_t* clone_page_directory(struct page_directory_t* src);
+struct page_directory_t* clone_page_dir(struct page_directory_t* src);
 
 /* Page fault handler */
 void page_fault(struct register_t regs);

@@ -126,50 +126,48 @@ void init_paging(struct multiboot_info* mb)
     memset(frames, 0, INDEX_FROM_BIT(nframes));
     
     /* Create the kernel page directory */
+    uint32_t phys;
     kernel_dir = kmalloc_a(sizeof(struct page_directory_t));
     memset(kernel_dir, 0, sizeof(struct page_directory_t));
-    cur_dir = kernel_dir;
+    kernel_dir->physaddr = (uint32_t)kernel_dir->tables_physaddr;
 
     /* Allocate space for the kernel heap */
     struct heap_t* heap = kmalloc(sizeof(struct heap_t));
-    void* kheap_start = kmalloc(                                \
+    void* kheap_start = kmalloc_a(                              \
         KERNEL_MEMORY-placement_addr-sizeof(struct memnode_t));
     heap->end = kmalloc(sizeof(struct memnode_t));
     
     /* Identity-map virtual addresses to physical ones
-     * These are already allocated by the kernel
-     * Allocate one extra page for the kernel heap */
+     * We map the first KERNEL_MEMORY bytes of memory in the
+     * kernel directory -> kheap is of static size */
     int i = 0;
     while (i < placement_addr) 
     {
         /* Kernel code readable but not writeable from user-space */
-        alloc_frame(get_page(i, 1, cur_dir), 0, 0);
+        alloc_frame(get_page(i, 1, kernel_dir), 0, 0);
         i += 0x1000;
     }
         
     /* Page fault handler */
     install_isr_handler(14, &page_fault);
 
-    /* Set up the kernel heap */
-    kprintf("Setting kernel heap at 0x%X \n", &kheap_start);
-
-    create_kheap(heap, kheap_start, (size_t)((uint32_t)heap->end - (uint32_t)kheap_start));
-    kheap = heap;
-
-    /* Enable paging */
-    switch_page_directory(kernel_dir);
+    /* Set up the kernel heap */   
+    create_kheap(kheap_start, (size_t)((uint32_t)heap->end          \
+                                       - (uint32_t)kheap_start));
     
+    /* Enable paging */
+    switch_page_dir(kernel_dir);
+}
+
+/* Load address of the page directory to CR3 */
+void switch_page_dir(struct page_directory_t* new_pdir)
+{
+    cur_dir = new_pdir;
+    __asm__ __volatile__("mov %0, %%cr3":: "r"(&new_pdir->tables_physaddr));
     uint32_t cr0;
     __asm__ __volatile__("mov %%cr0, %0": "=r"(cr0));
     cr0 |= 0x80000000;
     __asm__ __volatile__("mov %0, %%cr0":: "r"(cr0));
-}
-
-/* Load address of the page directory to CR3 */
-void switch_page_directory(struct page_directory_t* new_pdir)
-{
-    cur_dir = new_pdir;
-    __asm__ __volatile__("mov %0, %%cr3":: "r"(&new_pdir->tables_physaddr));
 }
 
 /* Retrieve a pointer to the page. If create == 1, create the associated
@@ -199,12 +197,45 @@ struct page_t* get_page(uint32_t address, int create,   \
         return 0;
 }
 
-/* Clone a page dir */
-struct page_directory_t* clone_page_directory(struct page_directory_t* src)
+/* Clone a page table */
+static struct page_table_t* clone_table(struct page_table_t* src,   \
+                                        uint32_t phys_addr)
 {
-    uint32_t phys_addr;
+    /* Make a new page table */
+    struct page_table_t* table = kmalloc_ap(        \
+        sizeof(struct page_table_t), phys_addr);
+    memset(table, 0, sizeof(struct page_directory_t));
 
-/* Create a new page directory, get its phys. address */
+    /* For all the entries in the table */
+    int i;
+    for (i = 0; i < 1024; i++)
+    {
+        /* Skip empty pages */
+        if (!src->pages[i].frame)
+            continue;
+
+        /* Get a new frame */
+        alloc_frame(&table->pages[i], 0, 0);
+
+        /* Clone the flags */
+        if (src->pages[i].present) table->pages[i].present = 1;
+        if (src->pages[i].rw) table->pages[i].rw = 1;
+        if (src->pages[i].user) table->pages[i].user = 1;
+        if (src->pages[i].accessed) table->pages[i].accessed = 1;
+        if (src->pages[i].dirty) table->pages[i].dirty = 1;
+
+        /* Clone the data */
+        memcpy(table->pages[i].frame*0x1000, src->pages[i].frame*0x1000, 0x1000);
+    }
+    return table;
+}
+
+/* Clone a page dir */
+struct page_directory_t* clone_page_dir(struct page_directory_t* src)
+{
+    uint32_t phys_addr; /* Physical address of the page directory */
+
+    /* Create a new page directory, get its phys. address */
     struct page_directory_t* dir = kmalloc_ap(          \
         sizeof(struct page_directory_t), &phys_addr);
     memset(dir, 0, sizeof(struct page_directory_t));
@@ -220,9 +251,21 @@ struct page_directory_t* clone_page_directory(struct page_directory_t* src)
         /* Skip empty page tables */
         if (!src->tables[i])
             continue;
+        if (kernel_dir->tables[i] == src->tables[i])
+        {
+            /* The page table is in the kernel -> link */
+            dir->tables[i] = src->tables[i];
+            dir->tables_physaddr[i] = src->tables_physaddr[i];
+        }
+        else
+        {
+            /* Copy the table if not from kernel */
+            uint32_t phys;
+            dir->tables[i] = clone_table(src->tables[i], &phys);
+            dir->tables_physaddr[i] = phys | 0x07;
+        }
     }
-
-    return NULL;
+    return dir;
 }
 
 void page_fault(struct register_t regs)
