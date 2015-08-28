@@ -66,7 +66,6 @@ void schedule()
     if (eip == 0xB16B00B5) /* Magic boobies for figuring out the above */
     {
         kprintf("BOOBIEEESSS!!!!1!!1!!\n");
-        //panic("Sched");
         return;
     }
     else
@@ -89,7 +88,7 @@ void schedule()
     ebp = cur_task->ebp;
     
     cur_dir = cur_task->page_dir;
-    kprintf("EIP: 0x%x ESP: 0x%x EBP: 0x%x DIR: 0x%x\n", eip, esp, ebp, cur_dir);
+//    kprintf("EIP: 0x%x ESP: 0x%x EBP: 0x%x DIR: 0x%x\n", eip, esp, ebp, cur_dir);
     
     cli();
     __asm__ __volatile__("mov %0, %%ecx" :: "r"(eip));
@@ -131,9 +130,9 @@ pid_t do_fork()
 
     /* Here we will enter the new process */
     uint32_t eip = read_eip();
-
+    dump_task();
     /* We can now be either the parent or the child (after scheduling)*/
-    if (cur_task = parent_task)
+    if (cur_task == parent_task)
     {
         /* We are the parent -> set up the child */
         uint32_t esp, ebp;
@@ -159,4 +158,22 @@ pid_t do_fork()
 pid_t get_pid()
 {
     return cur_task->pid;
+}
+
+
+void print_task(struct task_t* task)
+{
+    kprintf("TASK: %u 0x%x 0x%x 0x%x 0x%p 0x%p\n", task->pid, task->esp, task->ebp, task->eip, task->page_dir, task->next);
+}
+void dump_task()
+{
+    kprintf("**TASK DUMP**\n");
+    kprintf("pid esp ebp eip page_dir next\n");
+    struct task_t* ptr = task_queue;
+    while(ptr)
+    {
+        print_task(ptr);
+        ptr=ptr->next;
+    }
+    kprintf("\n");
 }

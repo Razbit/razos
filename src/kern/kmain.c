@@ -50,23 +50,17 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
     sti();
     
     init_kb();
-    init_pit(1000);
+    init_pit(100);
     
     init_paging(mb);
     init_tasking();    
 
     
     int ret = do_fork();
-    schedule();
-    schedule();
-    
-    
-    
     kprintf("fork(): 0x%x get_pid(): 0x%x\n\n", ret, get_pid());
     kprintf("Hello\n");
     
 	kprintf("\n==HALTED==");
-    for(;;);
     
     
 	return 0xDEADBABE;

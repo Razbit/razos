@@ -31,5 +31,8 @@ pid_t do_fork();
 /* Return PID of the current process */
 pid_t get_pid();
 
+void print_task(struct task_t* task);
+void dump_task();
+
 #endif /* TASK_H */
 

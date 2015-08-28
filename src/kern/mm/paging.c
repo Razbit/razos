@@ -286,6 +286,6 @@ void page_fault(struct register_t regs)
     int id = regs.err_code & 0x10;     /* Instruction fetch */
 
     kprintf("PAGE FAULT (0x%X at %p)\n", regs.err_code, faulty_address);
-    dump_heap(kheap);
+//    dump_heap(kheap);
     panic("PAGE FAULT");
 }
