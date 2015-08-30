@@ -144,7 +144,6 @@ int vsprintf (char* buf, const char* fmt, va_list arg)
     int width = -1;
     int prec = -1;
     int len = 0;
-    int spec = 0;
     int *printed;
     
     char *str = buf;
@@ -267,7 +266,7 @@ int vsprintf (char* buf, const char* fmt, va_list arg)
             case 'i':
                 flags |= FL_SIGN;                
             case 'u':
-                if (len = 0)
+                if (len == 0)
                     str = numstr(str, (uint32_t)va_arg(arg, int),
                                  10, width, prec, flags);
                 else
@@ -276,7 +275,7 @@ int vsprintf (char* buf, const char* fmt, va_list arg)
                 break;
 
             case 'o':
-                if (len = 0)
+                if (len == 0)
                     str = numstr(str, (uint32_t)va_arg(arg, int),
                                  8, width, prec, flags);
                 else
@@ -288,7 +287,7 @@ int vsprintf (char* buf, const char* fmt, va_list arg)
                 flags |= FL_SMALL;
             case 'X':
                 
-                if (len = 0)
+                if (len == 0)
                     str = numstr(str, (uint32_t)va_arg(arg, int),
                                  16, width, prec, flags);
                 else
@@ -358,7 +357,6 @@ int vsprintf (char* buf, const char* fmt, va_list arg)
             width = -1;
             prec = -1;
             len = 0;
-            spec = 0;
             break;
         }
     }

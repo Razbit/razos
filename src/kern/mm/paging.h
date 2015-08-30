@@ -65,6 +65,6 @@ void free_frame(struct page_t* page);
 struct page_directory_t* clone_page_dir(struct page_directory_t* src);
 
 /* Page fault handler */
-void page_fault(struct register_t regs);
+void page_fault(struct register_t* regs);
 
 #endif /* PAGING_H */

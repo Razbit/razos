@@ -137,4 +137,6 @@
 #define KEY_PRSCR  0x6A
 #define KEY_PAUSE  0x6B
 
+void init_kb();
+
 #endif /* KB_H */

@@ -9,6 +9,7 @@
 
 #include "../kio.h" /* kprintf() */
 #include <sys/types.h>
+#include <string.h>
 
 extern void idt_flush(uint32_t); /* in idt.s */
 extern isr_handlers;

@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <asm/system.h>
 #include <panic.h>
+#include <string.h>
 
 #include "paging.h"
 #include "kmalloc.h"

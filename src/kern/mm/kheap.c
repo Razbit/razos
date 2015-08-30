@@ -9,6 +9,7 @@
 #include "kmalloc.h"
 #include "heap.h"
 #include "kheap.h"
+#include "../kio.h"
 
 /* The kernel heap resides here */
 extern struct heap_t* kheap;
@@ -17,14 +18,14 @@ extern struct heap_t* kheap;
 void create_kheap(struct heap_t* heap, uint32_t start, size_t size)
 {    
     /* Start address is page-aligned */
-    if (start & 0x00000FFF != 0)
+    if ((start & 0x00000FFF) != 0)
     {
         start &= 0xFFFFF000;
         start += 0x1000;
     }
     
     /* End address is page-aligned */
-    if (size & 0x00000FFF != 0)
+    if ((size & 0x00000FFF) != 0)
     {
         size &= 0xFFFFF000;
     }

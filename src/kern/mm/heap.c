@@ -22,14 +22,14 @@ void create_heap(struct heap_t* heap, uint32_t start, size_t minsize,   \
                  size_t maxsize, int svisor, int ronly)
 {    
     /* Start address is page-aligned */
-    if (start & 0x00000FFF != 0)
+    if ((start & 0x00000FFF) != 0)
     {
         start &= 0xFFFFF000;
         start += 0x1000;
     }
     
     /* End address is page-aligned */
-    if (maxsize & 0x00000FFF != 0)
+    if ((maxsize & 0x00000FFF) != 0)
     {
         maxsize &= 0xFFFFF000;
         maxsize += 0x1000;

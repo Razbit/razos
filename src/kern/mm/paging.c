@@ -126,7 +126,6 @@ void init_paging(struct multiboot_info* mb)
     memset(frames, 0, INDEX_FROM_BIT(nframes));
     
     /* Create the kernel page directory */
-    uint32_t phys;
     kernel_dir = kmalloc_a(sizeof(struct page_directory_t));
     memset(kernel_dir, 0, sizeof(struct page_directory_t));
     kernel_dir->physaddr = (uint32_t)kernel_dir->tables_physaddr;
@@ -140,7 +139,7 @@ void init_paging(struct multiboot_info* mb)
     /* Identity-map virtual addresses to physical ones
      * We map the first KERNEL_MEMORY bytes of memory in the
      * kernel directory -> kheap is of static size */
-    int i = 0;
+    unsigned int i = 0;
     while (i < placement_addr) 
     {
         /* Kernel code readable but not writeable from user-space */
@@ -271,20 +270,20 @@ struct page_directory_t* clone_page_dir(struct page_directory_t* src)
     return dir;
 }
 
-void page_fault(struct register_t regs)
+void page_fault(struct register_t* regs)
 {
     /* Faulting address is in CR2 */
     uint32_t faulty_address;
     __asm__ __volatile__("mov %%cr2, %0" : "=r"(faulty_address));
 
     /* Parse error code */
-    int pres = !(regs.err_code & 0x1); /* Page not present */
-    int rw = regs.err_code & 0x2;      /* Write */
-    int user = regs.err_code & 0x4;    /* user-mode */
-    int res = regs.err_code & 0x08;    /* Overwrite CPU-reserved bits */
-    int id = regs.err_code & 0x10;     /* Instruction fetch */
+    int pres = !(regs->err_code & 0x1); /* Page not present */
+    int rw = regs->err_code & 0x2;      /* Write */
+    int user = regs->err_code & 0x4;    /* user-mode */
+    int res = regs->err_code & 0x08;    /* Overwrite CPU-reserved bits */
+    int id = regs->err_code & 0x10;     /* Instruction fetch */
 
-    kprintf("PAGE FAULT (0x%X at %p)\n", regs.err_code, faulty_address);
+    kprintf("PAGE FAULT (0x%X at %p)\n", regs->err_code, faulty_address);
 //    dump_heap(kheap);
     panic("PAGE FAULT");
 }
