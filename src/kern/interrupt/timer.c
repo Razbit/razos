@@ -19,7 +19,7 @@ uint32_t ticks = 0;
 static void pit_callback(struct register_t* regs)
 {
     ticks++;
-    schedule();
+    schedule(regs);
 }
 
 void init_pit(uint32_t freq)

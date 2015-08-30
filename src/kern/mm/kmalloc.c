@@ -33,8 +33,7 @@ static uint32_t kmalloc_int(size_t size, uint8_t align, uint32_t* physaddr)
         kprintf("KMALLOC: Addr: 0x%p\n", addr);
         if (physaddr != 0)
         {
-            struct page_t *pg = get_page(addr, 0, cur_dir);
-            *physaddr = ((pg->frame*0x1000)+((uint32_t)addr&0xFFF));
+            *physaddr = (uint32_t)addr;
         }
         
         #ifdef _DEBUG

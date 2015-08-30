@@ -92,7 +92,7 @@ isr_common_stub:
 
 	popa                        ; Pop edi et al.
 	add esp, 8                  ; Cleans up the pushed error code and ISR num
-	iret                        ; Pops CS, EIP, EFLAGS, SS and ESP
+	iret                        ; Pops CS, EIP, EFLAGS, SS and ESP (pushed automatically)
 
 
 

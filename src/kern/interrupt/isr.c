@@ -48,7 +48,7 @@ void isr_handler(struct register_t regs)
     if (isr_handlers[regs.int_no] != 0)
     {
         isr_handler_t handler = isr_handlers[regs.int_no];
-        handler(regs);
+        handler(&regs);
     }
     else
     {

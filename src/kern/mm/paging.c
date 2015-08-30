@@ -201,7 +201,7 @@ struct page_t* get_page(uint32_t address, int create,   \
 
 /* Clone a page table */
 static struct page_table_t* clone_table(struct page_table_t* src,   \
-                                        uint32_t phys_addr)
+                                        uint32_t* phys_addr)
 {
     /* Make a new page table */
     struct page_table_t* table = kmalloc_ap(        \
@@ -213,21 +213,21 @@ static struct page_table_t* clone_table(struct page_table_t* src,   \
     for (i = 0; i < 1024; i++)
     {
         /* Skip empty pages */
-        if (!src->pages[i].frame)
-            continue;
+        if (src->pages[i].frame)
+        {
+            /* Get a new frame */
+            alloc_frame(&table->pages[i], 0, 0);
 
-        /* Get a new frame */
-        alloc_frame(&table->pages[i], 0, 0);
+            /* Clone the flags */
+            if (src->pages[i].present) table->pages[i].present = 1;
+            if (src->pages[i].rw) table->pages[i].rw = 1;
+            if (src->pages[i].user) table->pages[i].user = 1;
+            if (src->pages[i].accessed) table->pages[i].accessed = 1;
+            if (src->pages[i].dirty) table->pages[i].dirty = 1;
 
-        /* Clone the flags */
-        if (src->pages[i].present) table->pages[i].present = 1;
-        if (src->pages[i].rw) table->pages[i].rw = 1;
-        if (src->pages[i].user) table->pages[i].user = 1;
-        if (src->pages[i].accessed) table->pages[i].accessed = 1;
-        if (src->pages[i].dirty) table->pages[i].dirty = 1;
-
-        /* Clone the data */
-        memcpy(table->pages[i].frame*0x1000, src->pages[i].frame*0x1000, 0x1000);
+            /* Clone the data */
+            memcpy(table->pages[i].frame*0x1000, src->pages[i].frame*0x1000, 0x1000);
+        }
     }
     return table;
 }
@@ -247,15 +247,14 @@ struct page_directory_t* clone_page_dir(struct page_directory_t* src)
     dir->physaddr = phys_addr + offset;
     
     /* Copy page tables */
-    int i;
-    /* First 32MB is for kernel -> link */
-    
+    int i;   
     for(i = 0; i < 1024; i++)
     {
         /* Skip empty page tables */
-        if (!(src->tables[i]))
+        if (!src->tables[i])
             continue;
 
+        /* First 32MB is for kernel -> link */
         if (kernel_dir->tables[i] == src->tables[i])
         {            
             dir->tables[i] = src->tables[i];

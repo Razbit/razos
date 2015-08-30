@@ -27,6 +27,7 @@
 extern uint32_t placement_addr;
 uint32_t ini_esp = 0;
 
+
 int kmain(struct multiboot_info* mb, uint32_t esp)
 {
     ini_esp = esp;
@@ -50,10 +51,10 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
     sti();
     
     init_kb();
-    init_pit(100);
+    init_pit(1);
     
     init_paging(mb);
-    init_tasking();    
+    init_tasking();
 
     
     int ret = do_fork();
@@ -61,7 +62,7 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
     kprintf("Hello\n");
     
 	kprintf("\n==HALTED==");
-    
+    for(;;);
     
 	return 0xDEADBABE;
 }
