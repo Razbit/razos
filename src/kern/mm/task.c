@@ -38,7 +38,7 @@ void init_tasking()
     /* Initialize the first task (kernel) */
     cur_task = task_queue = kmalloc(sizeof(struct task_t));
     cur_task->pid = next_pid++;
-    cur_task->regs = NULL;
+    cur_task->regs = kmalloc(sizeof(struct register_t));
     cur_task->page_dir = cur_dir;
     cur_task->parent = NULL;
     cur_task->next = NULL;
@@ -73,6 +73,7 @@ pid_t do_fork()
     
     /* Create new task */
     struct task_t* new_task = kmalloc(sizeof(struct task_t));
+	new_task->regs = kmalloc(sizeof(struct register_t));
 
     /* Clone address space */
     struct page_directory_t* dir = clone_page_dir(cur_dir);
@@ -122,7 +123,7 @@ pid_t do_fork()
     /* This is where the new task starts executing */
     __asm__ __volatile__("mov $., %0" : "=r"(eip));
 
-    kprintf("Forking\n");
+    kprintf("Forking (pid: %u)\n", get_pid());
     if (cur_task == parent_task)
     {
         cur_task->regs->eip = new_task->regs->eip = eip;
