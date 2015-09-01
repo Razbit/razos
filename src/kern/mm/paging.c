@@ -164,7 +164,7 @@ void init_paging(struct multiboot_info* mb)
 void switch_page_dir(struct page_directory_t* new_pdir)
 {
     cur_dir = new_pdir;
-    __asm__ __volatile__("mov %0, %%cr3":: "r"(&new_pdir->tables_physaddr));
+    __asm__ __volatile__("mov %0, %%cr3":: "r"(new_pdir->physaddr));
     uint32_t cr0;
     __asm__ __volatile__("mov %%cr0, %0": "=r"(cr0));
     cr0 |= 0x80000000;

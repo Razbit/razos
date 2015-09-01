@@ -22,6 +22,7 @@ typedef void (*isr_handler_t)(struct register_t*);
 
 void install_isr_handler(int isr, isr_handler_t handler);
 void uninstall_isr_handler(int isr);
+void dump_registers(struct register_t* regs);
 
 #endif /* ISR_H */
 

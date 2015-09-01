@@ -9,6 +9,7 @@
 #include "../kio.h"
 #include <string.h>
 #include <sprintf.h>
+#include <panic.h>
 
 isr_handler_t isr_handlers[256];
 
@@ -56,6 +57,8 @@ void isr_handler(struct register_t regs)
         memset(mesg, 0, 100);
         make_errmsg(mesg, &regs);    
         kprintf("%s\n", mesg);
+        dump_registers(&regs);
+        panic("PANIC");
     }
 }
 
@@ -111,8 +114,8 @@ static void make_errmsg(char* str, struct register_t* regs)
         if (regs->int_no < 10 || regs->int_no == 16 || regs->int_no == 19 \
             || regs->int_no == 20)
         {
-            sprintf(str, "[[%s 0x%X, %s]]", begin, regs->int_no, \
-                    exceptions[regs->int_no]);
+            sprintf(str, "[[%s 0x%X, %s at 0x%p]]", begin, regs->int_no, \
+                    exceptions[regs->int_no], regs->eip);
         }
         else
         {
@@ -120,4 +123,21 @@ static void make_errmsg(char* str, struct register_t* regs)
                     exceptions[regs->int_no], regs->err_code);
         }
     }
+}
+
+void dump_registers(struct register_t* regs)
+{
+    kprintf("ds : 0x%x ss : 0x%x cs : 0x%x, eip: 0x%x\n",   \
+            regs->ds, regs->ss, regs->cs, regs->eip);
+    kprintf("eax: 0x%x ebx: 0x%x ecx: 0x%x edx: 0x%x\n",    \
+            regs->eax, regs->ebx, regs->ecx, regs->edx);
+    kprintf("edi: 0x%x esi: 0x%x ebp: 0x%x esp: 0x%x\n",    \
+            regs->edi, regs->esi, regs->ebp, regs->esp);
+    kprintf("eflags: 0x%x useresp: 0x%x\n",     \
+            regs->eflags, regs->useresp);
+    uint32_t cr0, cr2, cr3;
+    __asm__("mov %%cr0, %0" : "=r"(cr0));
+    __asm__("mov %%cr2, %0" : "=r"(cr2));
+    __asm__("mov %%cr3, %0" : "=r"(cr3));
+    kprintf("cr0: 0x%x cr2: 0x%x cr3: 0x%x\n", cr0, cr2, cr3);
 }
