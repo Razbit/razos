@@ -52,8 +52,9 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
     init_pit(100);
 
     init_paging(mb);
-    init_tasking();
     init_stack(esp);
+    init_tasking();
+    
 //    dump_stack(kstack);
 
     

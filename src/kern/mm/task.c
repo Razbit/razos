@@ -44,6 +44,7 @@ void init_tasking()
     cur_task = task_queue = kmalloc(sizeof(struct task_t));
     cur_task->pid = next_pid++;
     cur_task->regs = kmalloc(sizeof(struct register_t));
+    cur_task->stack = kstack;
     cur_task->page_dir = cur_dir;
     cur_task->parent = NULL;
     cur_task->next = NULL;
@@ -77,9 +78,23 @@ void schedule(struct register_t* regs)
     {
         kprintf("Finalizing forking: pid %u\n", get_pid());
         cur_task->regs = kmalloc(sizeof(struct register_t));
-        memcpy(cur_task->regs, cur_task->parent->regs, sizeof(struct register_t));
+        memcpy(cur_task->regs, cur_task->parent->regs,  \
+               sizeof(struct register_t));
+
+        uint32_t stack_end =                                            \
+            (uint32_t)cur_task->stack->start + cur_task->stack->size;
+        cur_task->regs->esp = stack_end - cur_task->parent->stack->offset;
+        
         kassert(cur_task == new_task);
     }
+    else
+    {
+        uint32_t stack_end =                                            \
+            (uint32_t)cur_task->stack->start + cur_task->stack->size;
+        cur_task->stack->offset = stack_end - cur_task->regs->esp;
+        
+    }
+    kprintf("SCHED: ESP: 0x%p EBP: 0x%p\n", cur_task->regs->esp, cur_task->regs->ebp);
     //dump_registers(cur_task->regs);
 
     /* Setup execution context */
@@ -100,6 +115,9 @@ pid_t do_fork()
     new_task->page_dir = dir;
     new_task->parent = cur_task;
     new_task->next = NULL;
+    new_task->stack = create_stack(STACK_SIZE);
+
+    memcpy(new_task->stack->start, cur_task->stack->start, STACK_SIZE);
 
     /* Add to task queue */
     struct task_t* tmp = task_queue;
@@ -113,6 +131,12 @@ pid_t do_fork()
     kprintf("Forking (pid: %u)\n", get_pid());
     if (cur_task->next != NULL)
     {
+        cli();
+        uint32_t esp;
+        __asm__ __volatile__("mov %%esp, %0" : "=r"(esp));
+        dump_stack_esp(cur_task->stack, esp);
+        
+        //for(;;);
         return new_task->pid;
     }
     else

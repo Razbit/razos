@@ -30,14 +30,13 @@ static uint32_t kmalloc_int(size_t size, uint8_t align, uint32_t* physaddr)
     if (kheap != 0) /* We are heaping already */
     {
         void* addr = do_kmalloc(size, align);
-        kprintf("KMALLOC: allocated 0x%p (%u B) at 0x%p\n", size, size, addr);
         if (physaddr != 0)
         {
             *physaddr = (uint32_t)addr;
         }
         
         #ifdef _DEBUG
-        kprintf("kmalloc: heap: sz: %p al: %d ad: %p\n", size, align, addr);
+        kprintf("KMALLOC: allocated 0x%p (%u B) at 0x%p\n", size, size, addr);
         #endif
 
         return (uint32_t)addr;

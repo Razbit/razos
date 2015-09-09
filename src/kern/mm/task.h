@@ -9,6 +9,7 @@
 
 #include <sys/types.h>
 #include "../interrupt/isr.h" /* struct register_t */
+#include "stack.h"
 
 struct task_t
 {
@@ -17,6 +18,7 @@ struct task_t
        ds, cs, ss, eflags, useresp */
     struct register_t* regs;
     struct page_directory_t* page_dir; /* Page directory */
+    struct stack_t* stack; /* Stack for the process */
     struct task_t* parent; /* Parent task */
     struct task_t* next; /* Next task in the linked list */
 };
