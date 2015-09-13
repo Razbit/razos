@@ -59,10 +59,18 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 
     
     int ret = do_fork();
-    kprintf("fork(): 0x%x get_pid(): 0x%x\n\n", ret, get_pid());
+    if (ret)
+    {
+        kprintf("Parent: %u\n", ret);
+    }
+    else
+    {
+        kprintf("Child: %u\n", ret);
+    }
+    //kprintf("fork(): 0x%x get_pid(): 0x%x\n\n", ret, get_pid());
     //kprintf("Hello\n");
     
-    kprintf("\n==HALTED==");
+    //kprintf("\n==HALTED==");
     for(;;);
     
 	return 0xDEADBABE;

@@ -51,16 +51,16 @@ void init_tasking()
 
     sti();
 
+    /* Use the scheduler to finalize */
     __asm__ __volatile__("int $32");
 }
-int counter = 0;
+
 /* Called in interrupt/timer.c */
 void schedule(struct register_t* regs)
 {
     /* Return if tasking is not yet initialized */
     if (!cur_task)
         return;
-    kprintf("Scheduling \n");
 
     /* Copy current context to the task struct */
     memcpy(cur_task->regs, regs, sizeof(struct register_t));
@@ -69,40 +69,31 @@ void schedule(struct register_t* regs)
     cur_task = cur_task->next;
     if (!cur_task)
         cur_task = task_queue;
-
-    switch_page_dir(cur_task->page_dir);
-
+    
     /* This is the last-forked task (forking incomplete)
      * -> finalize forking */
     if (cur_task->regs == NULL)
     {
         kprintf("Finalizing forking: pid %u\n", get_pid());
+        
         cur_task->regs = kmalloc(sizeof(struct register_t));
         memcpy(cur_task->regs, cur_task->parent->regs,  \
                sizeof(struct register_t));
-
-        uint32_t stack_end =                                            \
-            (uint32_t)cur_task->stack->start + cur_task->stack->size;
-        cur_task->regs->esp = stack_end - cur_task->parent->stack->offset;
         
-        kassert(cur_task == new_task);
     }
     else
     {
+        switch_page_dir(cur_task->page_dir);
         uint32_t stack_end =                                            \
             (uint32_t)cur_task->stack->start + cur_task->stack->size;
         cur_task->stack->offset = stack_end - cur_task->regs->esp;
         
+        /* Setup execution context */
+        memcpy(regs, cur_task->regs, sizeof(struct register_t));
     }
-    kprintf("SCHED: ESP: 0x%p EBP: 0x%p\n", cur_task->regs->esp, cur_task->regs->ebp);
-    //dump_registers(cur_task->regs);
-
-    /* Setup execution context */
-    memcpy(regs, cur_task->regs, sizeof(struct register_t));
 }
 
-/* UNIX fork(): copy address space, spawn new process */
-pid_t do_fork()
+struct task_t* fork_inner()
 {
     /* Create new task */
     new_task = kmalloc(sizeof(struct task_t));
@@ -115,9 +106,12 @@ pid_t do_fork()
     new_task->page_dir = dir;
     new_task->parent = cur_task;
     new_task->next = NULL;
+    /* TODO:
+     * This actually has to be mapped to the same virtual address as
+     * the original (but is still memcpy'd). Change name to kstack.
+     * Need 2 stacks, kstack created here and user stack in exec()
+     */
     new_task->stack = create_stack(STACK_SIZE);
-
-    memcpy(new_task->stack->start, cur_task->stack->start, STACK_SIZE);
 
     /* Add to task queue */
     struct task_t* tmp = task_queue;
@@ -125,25 +119,13 @@ pid_t do_fork()
         tmp = tmp->next;
     tmp->next = new_task;
 
+    /* Copy the stack */
+    memcpy(new_task->stack->start, cur_task->stack->start, STACK_SIZE);
+    
     /* Let scheduler fill the data to the task struct */
     __asm__ __volatile__("int $32");
-    
-    kprintf("Forking (pid: %u)\n", get_pid());
-    if (cur_task->next != NULL)
-    {
-        cli();
-        uint32_t esp;
-        __asm__ __volatile__("mov %%esp, %0" : "=r"(esp));
-        dump_stack_esp(cur_task->stack, esp);
-        
-        //for(;;);
-        return new_task->pid;
-    }
-    else
-    {
-        return 0;
-    }
-    
+
+    return new_task;
 }
 
 /* Return PID of the current process */
