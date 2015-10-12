@@ -14,7 +14,7 @@
 #include "isr.h"
 #include "kb.h"
 
-#include "../kio.h"
+#include <console.h>
 
 const char sc_to_ascii[] =
 {

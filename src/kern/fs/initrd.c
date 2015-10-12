@@ -10,7 +10,7 @@
 
 #include "fs.h"
 #include "initrd.h"
-#include "../kio.h"
+#include "../console.h"
 
 uint32_t initrd_nfiles;
 struct initrd_node_t* initrd_files;

@@ -1,10 +1,10 @@
 /* This file is a part of the RazOS project
  *
- * kio.c -- kernel i/o system
+ * console.c -- kernel i/o system
  *
  * Razbit 2014 */
 
-#include "kio.h"
+#include <console.h>
 #include "vga.h"
 
 #include <vsprintf.h>

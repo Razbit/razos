@@ -4,17 +4,7 @@
 	;; Based on Bran's kernel development tutorial file start.asm
 	;;
 	;; Razbit 2014-2015
-
-SECTION .bss
-	        
-stack_start:
-	resb 0xFFFF                 ; 64 KB of stack space
-stack_end:
-
-fpu_testword:
-	resw 0x0001
-    
-	        
+        
 SECTION .text
 	        
 MBOOT_PAGE_ALIGN    equ 1<<0    ; Load kernel and modules on a page boundary
@@ -32,32 +22,37 @@ mboot:
 	dd MBOOT_CHECKSUM           ; To ensure that the above values are correct
 
 	        
-[GLOBAL start]                  ; Kernel entry point.
+[GLOBAL start]                  ; Kernel entry point
+[GLOBAL end_of_image]		; End of kernel image
 [EXTERN kmain]                  ; This is the entry point of our C code
 
 start:
-	mov edx, cr0                ; Test if we have floating-point support
-	and edx, (-1) - (0x4 + 0x8)
-	mov cr0, edx
-	mov [fpu_testword+4], word 0x55aa      
-    
-	fninit                      ; Init the FPU
-	
-	fnstsw [fpu_testword+4]
-	cmp word [fpu_testword+4], 0
-	jne hang                    ; Hang if don't have floats (for now)
-	
-	mov esp, stack_end          ; Set the stack
+    mov esp, stack_end          ; Setup the stack
+    push dword 0
+    push dword 0
+    mov ebp, esp
+   	
 	push esp                    ; Push stack location
 	push ebx                    ; Load multiboot header location
 
+    fninit                      ; Init the FPU	
+	mov eax, cr0
+    or eax, 1 << 5              ; FPU NE bit
+    mov cr0, eax
+    
 	cli                         ; Disable interrupts.
 	call kmain                  ; C entry
 
 
 	cli                         ; Go to infinite loop if kmain() returns
 
-hang:
-	hlt
-	jmp hang
+SECTION .bss
+	        
+stack_start:
+	resb 0xFFFF                 ; 64 KB of stack space
+stack_end:
+
+SECTION .end_of_image
+end_of_image:
+
 	        
