@@ -18,6 +18,11 @@ void* kernel_page_alloc();
 /* Allocate a page for kernel use. Set contents to 0 */
 void* kernel_page_alloc_zeroed();
 
+/* These two don't check anything, so be careful.
+ * Allocate a page at addr for kernel use */
+void* kernel_page_alloc_at(uint32_t addr);
+void* kernel_page_alloc_zeroed_at(uint32_t addr);
+
 /* Free a page */
 void kernel_page_free(void* addr);
 

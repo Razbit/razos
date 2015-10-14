@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <panic.h>
 #include <string.h>
+#include <util.h>
 
 #include "paging.h"
 
@@ -51,6 +52,29 @@ void* kernel_page_alloc()
     return ret;
 }
 
+/* Allocate a page at addr for kernel use */
+void* kernel_page_alloc_at(uint32_t addr)
+{
+    /* Out of memory */
+    if (addr >= end)
+    {
+        return NULL;
+    }
+
+    uint32_t page_start = round_down(addr, PAGE_SIZE);
+    page_map(page_start, page_alloc(), PE_PRESENT | PE_RW);
+
+    return page_start;
+}
+
+/* Allocate a page at addr for kernel use, set contents to 0 */
+void* kernel_page_alloc_zeroed_at(uint32_t addr)
+{
+    void* page = kernel_page_alloc_at(addr);
+    memset(page, 0, PAGE_SIZE);
+    return page;
+}
+    
 /* Allocate a page for kernel use. Set contents to 0 */
 void* kernel_page_alloc_zeroed()
 {
