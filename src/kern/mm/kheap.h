@@ -13,10 +13,11 @@
 #include "paging.h"
 #include "kernel_page.h"
 
-#define KHEAP_END KERNEL_STACK_BEGIN
+#define KHEAP_MAX KERNEL_STACK_BEGIN
 
-/* Internals of the kmalloc() -family */
-void* do_kmalloc(size_t size, int align);
+/* Internals of the kmalloc() -family
+ * We align the start address to [align] bytes (multiple of 16)*/
+void* do_kmalloc(size_t size, size_t align);
 
 /* Internals of the kfree() */
 void do_kfree(void* ptr);
@@ -27,5 +28,6 @@ int kbrk(void* addr);
 /* Kernel's sbrk()-ish functionality */
 void* ksbrk(size_t increment);
 
+void dump_kheap();
 
 #endif /* KHEAP_H */

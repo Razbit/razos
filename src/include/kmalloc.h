@@ -10,13 +10,16 @@
 #include <sys/types.h>
 
 /* Page aligned */
-void* kmalloc_a(size_t size);
+void* kmalloc_pa(size_t size);
+
+/* Aligned */
+void* kmalloc_a(size_t size, size_t align);
 
 /* Returns physical address */
-void* kmalloc_p(size_t size, uint32_t* physaddr);
+/* TODO: void* kmalloc_p(size_t size, uint32_t* physaddr); */
 
 /* Page aligned and returns physical address */
-void* kmalloc_ap(size_t size, uint32_t* physaddr);
+/* TODO: void* kmalloc_ap(size_t size, uint32_t* physaddr); */
 
 /* Normal malloc() */
 void* kmalloc(size_t size);

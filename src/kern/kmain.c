@@ -11,14 +11,13 @@
 #include "interrupt/pit.h"
 #include "mm/paging.h"
 #include "mm/kernel_page.h"
-
+#include "mm/kheap.h"
 
 #include <kassert.h>
 #include <sys/types.h>
 #include <asm/system.h>
 #include <asm/multiboot.h>
-
-extern uint32_t placement_addr;
+#include <kmalloc.h>
 
 int kmain(struct multiboot_info* mb, uint32_t esp)
 {
@@ -34,6 +33,8 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
     pit_set_freq(100);
 
     paging_init(mb);
+
+    /* kmalloc(), kfree() available from this point on */
     
     kprintf("\n==HALTED==");
 
