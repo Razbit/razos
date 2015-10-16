@@ -12,4 +12,3 @@
 void pit_set_freq(uint32_t freq);
 
 #endif /* PIT_H */
-

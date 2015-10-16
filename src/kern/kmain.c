@@ -1,8 +1,8 @@
 /* This file is a part of the RazOS project
  *
  * Define kernel's C-side entry point
- * 
- * Razbit 2014, 2015 
+ *
+ * Razbit 2014, 2015
  */
 
 #include <console.h>
@@ -21,25 +21,26 @@
 
 int kmain(struct multiboot_info* mb, uint32_t esp)
 {
-    /* Init routines here.. */
-    kclear_scr();
+	/* Init routines here.. */
+	kclear_scr();
 
-    gdt_init();
-    idt_init();
+	gdt_init();
+	idt_init();
 
-    kprintf("Stack is at 0x%p\n", esp);
+	kprintf("Stack is at 0x%p\n", esp);
 
 
-    pit_set_freq(100);
+	pit_set_freq(100);
 
-    paging_init(mb);
+	paging_init(mb);
 
-    /* kmalloc(), kfree() available from this point on */
-    
-    kprintf("\n==HALTED==");
+	/* kmalloc(), kfree() available from this point on */
+	sti();
 
-    for(;;);
-    
+	kprintf("\n==HALTED==");
+
+	for(;;);
+
 	return 0xDEADBABE;
 }
 

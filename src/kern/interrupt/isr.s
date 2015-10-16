@@ -1,17 +1,20 @@
     ;; This file is a part of the RazOS project
-	;;
-	;; isr.s -- Interrupt Service Routines
-	;;
-	;; Razbit 2015 (based on Charlie Somerville's Radium)
+    ;;
+    ;; isr.s -- Interrupt Service Routines
+    ;;
+    ;; Razbit 2015 (based on Charlie Somerville's Radium)
 
 [GLOBAL idt_init_asm]
 [GLOBAL idt_load]
-    
+
     ;; idt.c: void interrupt_register_isr(uint8_t int_no, void* handler)
-[EXTERN interrupt_register_isr] 
+[EXTERN interrupt_register_isr]
 [EXTERN idt_ptr]                ; idt.c
 [EXTERN panic]                  ; panic.c
-[EXTERN sched_switch]
+
+    ;; C-side interrupt handlers
+[EXTERN sched_switch]           ; task.c
+[EXTERN kb_handler]             ; kb.c
 
     ;; Some quite heavy macro-magic
     ;; Have a hard stare at this and you'll figure it out
@@ -89,11 +92,11 @@ BEGIN_ISR 32
     ACK_IRQ
 
     ;push ebp
-   ; push dword 0
     ;push dword 0
-   ; mov ebp, esp
+    ;push dword 0
+    ;mov ebp, esp
 
-   ; call sched_switch
+    ;call sched_switch
 
     ;add esp, 8
     ;pop ebp
@@ -101,10 +104,12 @@ BEGIN_ISR 32
     iret
 END_ISR 32
 
-    ;;  Keyboard
-    ;TODO: this has to do something, gotta re-use the handler in kb.c
+    ;; Keyboard
 BEGIN_ISR 33
     ACK_IRQ
+
+    call kb_handler
+
     iret
 END_ISR 33
 

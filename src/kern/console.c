@@ -36,16 +36,16 @@ int kputs(char *c)
 
 int kprintf(const char* fmt, ...)
 {
-    char str[1024];
+	char str[1024];
 
-    va_list args;
-    va_start(args, fmt);
+	va_list args;
+	va_start(args, fmt);
 
-    int ret = vsprintf(str, fmt, args);
+	int ret = vsprintf(str, fmt, args);
 
-    va_end(args);
-    
-    kputs(str);
+	va_end(args);
 
-    return ret;
+	kputs(str);
+
+	return ret;
 }

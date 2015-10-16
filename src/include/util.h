@@ -11,13 +11,12 @@
 
 static inline uint32_t round_down(uint32_t val, uint32_t divisor)
 {
-    return val - val % divisor;
+	return val - val % divisor;
 }
 
 static inline uint32_t round_up(uint32_t val, uint32_t divisor)
 {
-    return round_down(val + divisor - 1, divisor);
+	return round_down(val + divisor - 1, divisor);
 }
-
 
 #endif /* UTIL_H */

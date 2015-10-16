@@ -1,7 +1,7 @@
 /* This file is a part of the RazOS project
  *
  * system.h -- some global kernel-mode things
- * 
+ *
  * Razbit 2015
  */
 

@@ -1,8 +1,8 @@
     ;; This file is a part of the RazOS project
-	;;
-	;; gdt.s -- Global Descriptor Table assembly part
-	;;
-	;; Razbit 2015 (based on Charlie Somerville's Radium)
+    ;;
+    ;; gdt.s -- Global Descriptor Table assembly part
+    ;;
+    ;; Razbit 2015 (based on Charlie Somerville's Radium)
 
 [EXTERN gdt_ptr]                ; in gdt.c
 [GLOBAL gdt_reload]             ; in gdt.h as void gdt_reload()
@@ -20,4 +20,3 @@ gdt_reload:
     mov gs, eax
     mov ss, eax
     ret
-    

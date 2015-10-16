@@ -10,7 +10,7 @@ int32_t pow(int32_t base, int32_t exp)
 		return base;
 
 	int32_t ret = base;
-	
+
 	if (base > 0) /* negative exponent done when needed.. */
 	{
 		int i;

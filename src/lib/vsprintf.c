@@ -20,348 +20,348 @@
 
 static int atoi_ptr(const char **str)
 {
-    int i = 0;
+	int i = 0;
 
-    while (isdigit(**str))
-        i = i * 10 + *((*str)++) - '0';
+	while (isdigit(**str))
+		i = i * 10 + *((*str)++) - '0';
 
-    return i;
+	return i;
 }
 
 static char* numstr(char* str, long number, int base, int width, int prec, int flags)
 {
 /* Convert number [num] of radix [base] */
 /* Not much to explain, just fancy pointer fiddling */
-    
-    char c, sign, tmp[36];
-    const char* digs = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    int i;
-    uint32_t num;
 
-    if (width < 0)
-        width = -width;
-    
-    if (flags & FL_SMALL)
-        digs = "0123456789abcdefghijklmnopqrstuvwxyz";
+	char c, sign, tmp[36];
+	const char* digs = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	int i;
+	uint32_t num;
 
-    if (base<2 || base>36)
-        return 0;
+	if (width < 0)
+		width = -width;
 
-    if (flags & FL_ZEROPAD)
-        c = '0';
-    else
-        c = ' ';
-    
-    if (flags & FL_SIGN && number < 0)
-    {
-        sign = '-';
-        num = -number;
-    }
-    else
-    {
-        num = number;
-        if (flags & FL_PLUS)
-            sign = '+';
-        else
-        {
-            if (flags & FL_SPACE)
-                sign = ' ';
-            else
-                sign = 0;
-        }
-    }
+	if (flags & FL_SMALL)
+		digs = "0123456789abcdefghijklmnopqrstuvwxyz";
 
-    if (sign != 0)
-        width--;
-    
-    if (flags & FL_SPECIAL)
-    {
-        if (base == 16)
-            width -= 2;
-        else if (base == 8)
-            width--;
-    }
+	if (base<2 || base>36)
+		return 0;
 
-    i = 0;
+	if (flags & FL_ZEROPAD)
+		c = '0';
+	else
+		c = ' ';
 
-    if (num == 0)
-        tmp[i++]='0';
-    else
-    {
-        while (num != 0)
-        {
-            tmp[i++] = digs[num % base];
-            num /= base;
-        }
-            
-    }
-    
-    if (i > prec)
-        prec = i;
-    
-    width -= prec;
+	if (flags & FL_SIGN && number < 0)
+	{
+		sign = '-';
+		num = -number;
+	}
+	else
+	{
+		num = number;
+		if (flags & FL_PLUS)
+			sign = '+';
+		else
+		{
+			if (flags & FL_SPACE)
+				sign = ' ';
+			else
+				sign = 0;
+		}
+	}
 
-    if (!(flags & (FL_LEFT_JUSTIFY+FL_ZEROPAD)))
-        while (width-- > 0)
-            *str++ = ' ';
+	if (sign != 0)
+		width--;
 
-    if (sign)
-        *str++ = sign;
+	if (flags & FL_SPECIAL)
+	{
+		if (base == 16)
+			width -= 2;
+		else if (base == 8)
+			width--;
+	}
 
-    if (flags & FL_SPECIAL)
-    {
-        if (base == 8)
-        {
-            *str++ = '0';
-        }            
-        else if (base == 16)
-        {
-            *str++ = '0';
-            *str++ = digs[33]; /* x or X */
-        }        
-    }
+	i = 0;
 
-    if (!(flags&FL_LEFT_JUSTIFY))
-        while(width-- > 0)
-            *str++ = c;
+	if (num == 0)
+		tmp[i++]='0';
+	else
+	{
+		while (num != 0)
+		{
+			tmp[i++] = digs[num % base];
+			num /= base;
+		}
 
-    while (i < prec--)
-        *str++ = '0';
+	}
 
-    while (i-- > 0)
-        *str++ = tmp[i];
+	if (i > prec)
+		prec = i;
 
-    while (width-- > 0)
-        *str++ = ' ';
-     
-    return str;
-    }
+	width -= prec;
+
+	if (!(flags & (FL_LEFT_JUSTIFY+FL_ZEROPAD)))
+		while (width-- > 0)
+			*str++ = ' ';
+
+	if (sign)
+		*str++ = sign;
+
+	if (flags & FL_SPECIAL)
+	{
+		if (base == 8)
+		{
+			*str++ = '0';
+		}
+		else if (base == 16)
+		{
+			*str++ = '0';
+			*str++ = digs[33]; /* x or X */
+		}
+	}
+
+	if (!(flags&FL_LEFT_JUSTIFY))
+		while(width-- > 0)
+			*str++ = c;
+
+	while (i < prec--)
+		*str++ = '0';
+
+	while (i-- > 0)
+		*str++ = tmp[i];
+
+	while (width-- > 0)
+		*str++ = ' ';
+
+	return str;
+}
 
 int vsprintf (char* buf, const char* fmt, va_list arg)
 {
-    uint8_t flags = 0;
-    int state = 0;
-    int width = -1;
-    int prec = -1;
-    int len = 0;
-    int *printed;
-    
-    char *str = buf;
-    char *s;
+	uint8_t flags = 0;
+	int state = 0;
+	int width = -1;
+	int prec = -1;
+	int len = 0;
+	int *printed;
 
-    int slen;
+	char *str = buf;
+	char *s;
 
-    /* State-machine: Go through every char in fmt, do things with it */
-    while (*fmt != '\0')
-    {
-        switch (state)
-        {
-        case 0: /* wait for % -char. Until found, keep printing */
-            if(*fmt != '%')
-            {
-                *str++ = *fmt++;
-                break;
-            }
-            state++;
-            fmt++;
-            
-        case 1: /* % received; wait for flags */
-            if (*fmt == '%') /* If we got another %, print it */
-            {
-                *str++ = *fmt++;
-                state = 0;
-                break;
-            }
+	int slen;
 
-            if (*fmt == '-')
-            {
-                flags |= FL_LEFT_JUSTIFY;
-                fmt++;
-                break;
-            }
+	/* State-machine: Go through every char in fmt, do things with it */
+	while (*fmt != '\0')
+	{
+		switch (state)
+		{
+		case 0: /* wait for % -char. Until found, keep printing */
+			if(*fmt != '%')
+			{
+				*str++ = *fmt++;
+				break;
+			}
+			state++;
+			fmt++;
 
-            if (*fmt == '0')
-            {
-                flags |= FL_ZEROPAD;
-                fmt++;
-                break;
-            }
+		case 1: /* % received; wait for flags */
+			if (*fmt == '%') /* If we got another %, print it */
+			{
+				*str++ = *fmt++;
+				state = 0;
+				break;
+			}
 
-            if (*fmt == '+')
-            {
-                flags |= FL_PLUS;
-                flags |= FL_SIGN;
-                fmt++;
-                break;
-            }
+			if (*fmt == '-')
+			{
+				flags |= FL_LEFT_JUSTIFY;
+				fmt++;
+				break;
+			}
 
-            if (*fmt == ' ')
-            {
-                flags |= FL_SPACE;
-                fmt++;
-                break;
-            }
+			if (*fmt == '0')
+			{
+				flags |= FL_ZEROPAD;
+				fmt++;
+				break;
+			}
 
-            if (*fmt == '#')
-            {
-                flags |= FL_SPECIAL;
-                fmt++;
-                break;
-            }
+			if (*fmt == '+')
+			{
+				flags |= FL_PLUS;
+				flags |= FL_SIGN;
+				fmt++;
+				break;
+			}
 
-            /* Take care of flag 'precedence' */
-            if (flags & FL_PLUS)
-                flags &= ~FL_SPACE; /* Remove the space flag */
-            
-            if (flags & FL_LEFT_JUSTIFY)
-                flags &= ~FL_ZEROPAD;
+			if (*fmt == ' ')
+			{
+				flags |= FL_SPACE;
+				fmt++;
+				break;
+			}
 
-            state++;
-            
-        case 2: /* Field width */
-            if (isdigit(*fmt))
-                width = atoi_ptr(&fmt);
-            else if (*fmt == '*')
-            {
-                width = va_arg(arg, int);
-                fmt++;
-            }
-            
-            state++;
+			if (*fmt == '#')
+			{
+				flags |= FL_SPECIAL;
+				fmt++;
+				break;
+			}
 
-        case 3: /* precision */
-            if (*fmt == '.')
-            {
-                fmt++;
+			/* Take care of flag 'precedence' */
+			if (flags & FL_PLUS)
+				flags &= ~FL_SPACE; /* Remove the space flag */
 
-                if (isdigit(*fmt))
-                    prec = atoi_ptr(&fmt);
-                else if (*fmt == '*')
-                {
-                    prec = va_arg(arg, int);
-                    fmt++;
-                }
-                                
-                state++;
-            }
-            else
-            {
-                state++;
-                break;
-            }
-            
-        case 4: /* length modifier */
-            if (*fmt == 'l')
-            {
-                len = 1;
-                fmt++;
-            }                
+			if (flags & FL_LEFT_JUSTIFY)
+				flags &= ~FL_ZEROPAD;
 
-            state++;
+			state++;
 
-        case 5: /* Conversion specifier */
-            switch (*fmt)
-            {
-            case 'd':
-            case 'i':
-                flags |= FL_SIGN;                
-            case 'u':
-                if (len == 0)
-                    str = numstr(str, (uint32_t)va_arg(arg, int),
-                                 10, width, prec, flags);
-                else
-                    str = numstr(str, (uint32_t)va_arg(arg, uint32_t),
-                                 10, width, prec, flags);
-                break;
+		case 2: /* Field width */
+			if (isdigit(*fmt))
+				width = atoi_ptr(&fmt);
+			else if (*fmt == '*')
+			{
+				width = va_arg(arg, int);
+				fmt++;
+			}
 
-            case 'o':
-                if (len == 0)
-                    str = numstr(str, (uint32_t)va_arg(arg, int),
-                                 8, width, prec, flags);
-                else
-                    str = numstr(str, (uint32_t)va_arg(arg, uint32_t),
-                                 8, width, prec, flags);
-                break;
+			state++;
 
-            case 'x':
-                flags |= FL_SMALL;
-            case 'X':
-                
-                if (len == 0)
-                    str = numstr(str, (uint32_t)va_arg(arg, int),
-                                 16, width, prec, flags);
-                else
-                    str = numstr(str, (uint32_t)va_arg(arg, uint32_t),
-                                 16, width, prec, flags);
-                break;
+		case 3: /* precision */
+			if (*fmt == '.')
+			{
+				fmt++;
 
-            case 'c':
-                /* pad to right using spaces */
-                if (!(flags & FL_LEFT_JUSTIFY))
-                    while (--width > 0)
-                        *str++ = ' ';
+				if (isdigit(*fmt))
+					prec = atoi_ptr(&fmt);
+				else if (*fmt == '*')
+				{
+					prec = va_arg(arg, int);
+					fmt++;
+				}
 
-                *str++ = (char)va_arg(arg, int);
+				state++;
+			}
+			else
+			{
+				state++;
+				break;
+			}
 
-                while (--width > 0)
-                    *str++ = ' '; /* pad to left using spaces */
-                
-                break;
+		case 4: /* length modifier */
+			if (*fmt == 'l')
+			{
+				len = 1;
+				fmt++;
+			}
 
-            case 's':
-                s = va_arg(arg, char*);
-                slen = strlen(s);
+			state++;
 
-                if (prec < 0)
-                    prec = slen;
-                else if (slen > prec)
-                    slen = prec;
-                
-                if (!(flags & FL_LEFT_JUSTIFY))
-                    while (slen < width--)
-                        *str++ = ' ';
+		case 5: /* Conversion specifier */
+			switch (*fmt)
+			{
+			case 'd':
+			case 'i':
+				flags |= FL_SIGN;
+			case 'u':
+				if (len == 0)
+					str = numstr(str, (uint32_t)va_arg(arg, int),
+					             10, width, prec, flags);
+				else
+					str = numstr(str, (uint32_t)va_arg(arg, uint32_t),
+					             10, width, prec, flags);
+				break;
 
-                /* Add string to the output str */
-                int i;
-                for (i = 0; i < slen; i++)
-                    *str++ = *s++;
-                while (slen < width--)
-                    *str++ = ' ';
-                
-                break;
+			case 'o':
+				if (len == 0)
+					str = numstr(str, (uint32_t)va_arg(arg, int),
+					             8, width, prec, flags);
+				else
+					str = numstr(str, (uint32_t)va_arg(arg, uint32_t),
+					             8, width, prec, flags);
+				break;
 
-            case 'p':
-                flags |= FL_SMALL;
-                if (width == -1)
-                {
-                    flags |= FL_ZEROPAD;
-                    width = 8;
-                }
-                str = numstr(str, (uint32_t)va_arg(arg, uint32_t), 16,  \
-                             width, prec, flags);
-                break;
+			case 'x':
+				flags |= FL_SMALL;
+			case 'X':
 
-            case 'n':
-                printed = va_arg(arg, int*);
-                *printed = (str - buf);
-                break;
-            }
-            
-            fmt++;
-            state++;
-            break;
-            
-        case 6: /* Reset state machine, advance */
-            state = 0;
-            flags = 0;
-            width = -1;
-            prec = -1;
-            len = 0;
-            break;
-        }
-    }
+				if (len == 0)
+					str = numstr(str, (uint32_t)va_arg(arg, int),
+					             16, width, prec, flags);
+				else
+					str = numstr(str, (uint32_t)va_arg(arg, uint32_t),
+					             16, width, prec, flags);
+				break;
 
-    /* Add null termination */
-    *str = '\0';
-    return str-buf;
+			case 'c':
+				/* pad to right using spaces */
+				if (!(flags & FL_LEFT_JUSTIFY))
+					while (--width > 0)
+						*str++ = ' ';
+
+				*str++ = (char)va_arg(arg, int);
+
+				while (--width > 0)
+					*str++ = ' '; /* pad to left using spaces */
+
+				break;
+
+			case 's':
+				s = va_arg(arg, char*);
+				slen = strlen(s);
+
+				if (prec < 0)
+					prec = slen;
+				else if (slen > prec)
+					slen = prec;
+
+				if (!(flags & FL_LEFT_JUSTIFY))
+					while (slen < width--)
+						*str++ = ' ';
+
+				/* Add string to the output str */
+				int i;
+				for (i = 0; i < slen; i++)
+					*str++ = *s++;
+				while (slen < width--)
+					*str++ = ' ';
+
+				break;
+
+			case 'p':
+				flags |= FL_SMALL;
+				if (width == -1)
+				{
+					flags |= FL_ZEROPAD;
+					width = 8;
+				}
+				str = numstr(str, (uint32_t)va_arg(arg, uint32_t), 16,	\
+				             width, prec, flags);
+				break;
+
+			case 'n':
+				printed = va_arg(arg, int*);
+				*printed = (str - buf);
+				break;
+			}
+
+			fmt++;
+			state++;
+			break;
+
+		case 6: /* Reset state machine, advance */
+			state = 0;
+			flags = 0;
+			width = -1;
+			prec = -1;
+			len = 0;
+			break;
+		}
+	}
+
+	/* Add null termination */
+	*str = '\0';
+	return str-buf;
 }

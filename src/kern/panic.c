@@ -4,25 +4,25 @@
  *
  * Razbit 2014 */
 
-#include <panic.h>
 #include <asm/system.h>
 #include <stdarg.h>
 #include <vsprintf.h>
-
 #include <console.h>
+
+#include <panic.h>
 
 void panic(const char* msg, ...)
 {
-    cli();
-    
-    char str[1024];
-    va_list va;
-    va_start(va, msg);
+	cli();
 
-    vsprintf(str, msg, va);
-    kprintf("\nKernel panic: %s\n", str);
+	char str[1024];
+	va_list va;
+	va_start(va, msg);
 
-    va_end(va);
-    
-    for(;;);
+	vsprintf(str, msg, va);
+	kprintf("\nKernel panic: %s\n", str);
+
+	va_end(va);
+
+	for(;;);
 }

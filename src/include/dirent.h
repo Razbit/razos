@@ -14,8 +14,8 @@
 
 struct dirent
 {
-    ino_t d_ino; /* Inode */
-    char d_name[]; /* Name of dir entry */
+	ino_t d_ino;   /* Inode */
+	char d_name[]; /* Name of dir entry */
 };
 
 #endif /* DIRENT_H */

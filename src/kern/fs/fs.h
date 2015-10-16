@@ -30,7 +30,7 @@ typedef struct fs_node_t* (*finddir_t)(struct fs_node_t*, char*);
 
 struct fs_node_t
 {
-    char name[128];           /* filename */ 
+    char name[128];           /* filename */
     mode_t mode;              /* permission mask */
     uid_t uid;                /* owning user */
     gid_t gid;                /* owning group */

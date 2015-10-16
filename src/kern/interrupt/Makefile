@@ -1,4 +1,4 @@
-CSOURCES = idt.c pit.c
+CSOURCES = idt.c pit.c kb.c
 ASMSOURCES = isr.s
 SUBOBJS = 
 

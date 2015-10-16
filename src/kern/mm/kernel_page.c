@@ -15,8 +15,8 @@
 
 typedef union kernel_page
 {
-    union kernel_page* next;
-    uint8_t mem[PAGE_SIZE];
+	union kernel_page* next;
+	uint8_t mem[PAGE_SIZE];
 } kernel_page_t;
 
 static kernel_page_t* allocated_to = NULL;
@@ -25,68 +25,64 @@ static kernel_page_t* next_free = NULL;
 
 void kernel_page_init(uint32_t begin, uint32_t _end)
 {
-    allocated_to = begin;
-    end = _end;
+	allocated_to = begin;
+	end = _end;
 }
 
 /* Allocate a page for kernel use */
 void* kernel_page_alloc()
 {
-    if (next_free)
-    {
-        kernel_page_t* page = next_free;
-        next_free = next_free->next;
-        return page;
-    }
+	if (next_free)
+	{
+		kernel_page_t* page = next_free;
+		next_free = next_free->next;
+		return page;
+	}
 
-    /* Out of memory */
-    if (allocated_to >= end)
-    {
-        return NULL;
-    }
+	/* Out of memory */
+	if (allocated_to >= end)
+		return NULL;
 
-    page_map(allocated_to, page_alloc(), PE_PRESENT | PE_RW);
+	page_map(allocated_to, page_alloc(), PE_PRESENT | PE_RW);
 
-    void* ret = allocated_to++;
+	void* ret = allocated_to++;
 
-    return ret;
+	return ret;
 }
 
 /* Allocate a page at addr for kernel use */
 void* kernel_page_alloc_at(uint32_t addr)
 {
-    /* Out of memory */
-    if (addr >= end)
-    {
-        return NULL;
-    }
+	/* Out of memory */
+	if (addr >= end)
+		return NULL;
 
-    uint32_t page_start = round_down(addr, PAGE_SIZE);
-    page_map(page_start, page_alloc(), PE_PRESENT | PE_RW);
+	uint32_t page_start = round_down(addr, PAGE_SIZE);
+	page_map(page_start, page_alloc(), PE_PRESENT | PE_RW);
 
-    return page_start;
+	return page_start;
 }
 
 /* Allocate a page at addr for kernel use, set contents to 0 */
 void* kernel_page_alloc_zeroed_at(uint32_t addr)
 {
-    void* page = kernel_page_alloc_at(addr);
-    memset(page, 0, PAGE_SIZE);
-    return page;
+	void* page = kernel_page_alloc_at(addr);
+	memset(page, 0, PAGE_SIZE);
+	return page;
 }
-    
+
 /* Allocate a page for kernel use. Set contents to 0 */
 void* kernel_page_alloc_zeroed()
 {
-    void* page = kernel_page_alloc();
-    memset(page, 0, PAGE_SIZE);
-    return page;
+	void* page = kernel_page_alloc();
+	memset(page, 0, PAGE_SIZE);
+	return page;
 }
 
 /* Free a page */
 void kernel_page_free(void* addr)
 {
-    kernel_page_t* page = addr;
-    page->next = next_free;
-    next_free = page;
+	kernel_page_t* page = addr;
+	page->next = next_free;
+	next_free = page;
 }
