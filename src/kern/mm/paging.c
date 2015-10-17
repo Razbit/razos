@@ -67,8 +67,7 @@ uint32_t page_alloc()
 
 	if (paging_enabled())
 	{
-		uint32_t* temp_mapping = page_temp_map(page);
-		next_free_page = *temp_mapping;
+		next_free_page = page_temp_map(page);
 		page_temp_unmap();
 	}
 	else
@@ -84,8 +83,7 @@ void page_free(uint32_t addr)
 {
 	if (paging_enabled())
 	{
-		uint32_t* temp_mapping = page_temp_map(addr);
-		*temp_mapping = next_free_page;
+		page_temp_map(addr);
 		page_temp_unmap();
 	}
 	else
