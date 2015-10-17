@@ -32,12 +32,12 @@ double ldexp(double x, int exp)
     return x * m;
 }
 
-// C99 and newer standards only
+/* C99 and newer standards only */
 static double trunc(double x)
 {
     if (isnan(x))
         return x;
-    if (fabs(x) > (2ul << 62))
+    if (fabs(x) > (2ull << 62))
         return x;
 
     return (long int)x;
@@ -47,7 +47,7 @@ double floor(double x)
 {
     if (isnan(x))
         return x;
-    if (fabs(x) > (2ul << 62))
+    if (fabs(x) > (2ull << 62))
         return x;
     if (x < 0)
         x = ((long int)x == x ? x : x - 1);
@@ -59,7 +59,7 @@ double ceil(double x)
 {
     if (isnan(x))
         return x;
-    if (fabs(x) > (2ul << 62))
+    if (fabs(x) > (2ull << 62))
         return x;
     if (x > 0)
         x = ((long int)x == x ? x : x + 1);
