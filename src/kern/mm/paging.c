@@ -68,7 +68,20 @@ uint32_t page_alloc()
 	if (paging_enabled())
 	{
 		uint32_t* temp_mapping = page_temp_map(page);
-		next_free_page = *temp_mapping;
+		
+		/* Ok, this is here to please GCC: since dereferencing
+		 * NULL-pointers is bad, compilers want to f*ck your code up.
+		 * That's why we are bending the rules, i.e. writing the
+		 * NULL-dereferencing part in assembly..
+		 * Feel free to punch me in the face :D
+		 *
+		 * next_free_page = *temp_mapping; */
+		__asm__ __volatile__("mov (%1), %%eax; mov %%eax, %0"
+		                     : "=r"(next_free_page)
+		                     : "r"(temp_mapping)
+		                     : "%eax"
+			);
+		/* TODO: Do not bend the rules */
 		page_temp_unmap();
 	}
 	else
@@ -85,7 +98,20 @@ void page_free(uint32_t addr)
 	if (paging_enabled())
 	{
 		uint32_t* temp_mapping = page_temp_map(addr);
-		*temp_mapping = next_free_page;
+		
+		/* Ok, this is here to please GCC: since dereferencing
+		 * NULL-pointers is bad, compilers want to f*ck your code up.
+		 * That's why we are bending the rules, i.e. writing the
+		 * NULL-dereferencing part in assembly..
+		 * Feel free to punch me in the face :D
+		 *
+		 * *temp_mapping = next_free_page; */
+		__asm__ __volatile__("mov %1, %%eax; mov %%eax, (%0)"
+		                     : "=r"(temp_mapping)
+		                     : "r"(next_free_page)
+		                     : "%eax"
+			);
+		/* TODO: Do not bend the rules */
 		page_temp_unmap();
 	}
 	else
