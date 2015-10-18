@@ -60,16 +60,16 @@ void* do_kmalloc(size_t size, size_t align)
 	void* ret = NULL;
 
 	/* Find a decent node */
-	while (1)
+	while (curnode != NULL)
 	{
-		if (curnode == NULL)
-			break;
-
 		if (curnode->next == NULL)
 		{
-			/* TODO: what if this last node is reserved? */
-
-			/* Enlarge the heap */
+			/* If the last block was reserved completely, the end
+			 * of the heap would not be able to grow or shrink. */
+			if (size == curnode->size)
+				size += sizeof(struct kheap_node_t);
+			
+			/* Enlarge the heap. */
 			if (curnode->size < size + PAGE_SIZE)
 			{
 				void* prev_end = ksbrk(0);
@@ -115,7 +115,7 @@ void* do_kmalloc(size_t size, size_t align)
 			padding = (void*)curnode + sizeof(struct kheap_node_t) + size;
 			padding->prev = curnode;
 			padding->next = curnode->next;
-			if (padding->next)
+			if (padding->next != NULL)
 			{
 				padding->size = (size_t)padding->next - (size_t)padding \
 					- sizeof(struct kheap_node_t);
@@ -146,41 +146,28 @@ static void unify_fwd(struct kheap_node_t* ptr)
 
 	ptr->next = ptr->next->next;
 
-	if (ptr->next)
+	if (ptr->next != NULL)
 		ptr->next->prev = ptr;
-}
-
-/* Unify continuous free space before the freed memory node */
-static void unify_bwd(struct kheap_node_t* ptr)
-{
-	if (ptr->prev)
-	{
-		ptr->prev->next = ptr->next;
-		ptr->prev->size += ptr->size + sizeof(struct kheap_node_t);
-	}
-
-	ptr->next->prev = ptr->prev;
 }
 
 /* Internals of the kfree() */
 void do_kfree(void* _ptr)
 {
 	/* The given ptr points to the beginning of usable space rather than
-	 * to the beginning of the hkeap_node_t struct */
+	 * to the beginning of the kheap_node_t struct */
 
 	_ptr -= sizeof(struct kheap_node_t);
 	struct kheap_node_t* ptr = _ptr;
-
 
 	/* Mark as free */
 	ptr->status = KMALLOC_FREE;
 
 	/* Unify free memory nodes */
-	if (ptr->next && ptr->next->status == KMALLOC_FREE)
+	if (ptr->next != NULL && ptr->next->status == KMALLOC_FREE)
 		unify_fwd(ptr);
 
-	if (ptr->prev && ptr->prev->status == KMALLOC_FREE)
-		unify_bwd(ptr);
+	if (ptr->prev != NULL && ptr->prev->status == KMALLOC_FREE)
+		unify_fwd(ptr->prev);
 
 	/* Last element -> free some of the heap */
 	if (ptr->next == NULL)
@@ -266,9 +253,9 @@ void* ksbrk(size_t increment)
 
 static void print_kheap_node_t(struct kheap_node_t* node)
 {
-	kprintf("KHEAP_NODE: %p %u %u, %s; %p %p\n", node,			   \
-	        node->size, node->size+sizeof(struct kheap_node_t),	   \
-	        node->status == KMALLOC_FREE ? "free" : "used",		   \
+	kprintf("%p\t%u\t\t%u\t\t%s\t%p\t%p\n", node,			\
+	        node->size, node->size + sizeof(struct kheap_node_t),	\
+	        node->status == KMALLOC_FREE ? "free" : "used",		\
 	        node->prev, node->next);
 }
 
@@ -277,7 +264,8 @@ void dump_kheap()
 	kprintf("**KERNEL HEAP DUMP**\n");
 	struct kheap_node_t* ptr = (void*)kheap_start;
 	kprintf("KHEAP: SIZE: %p START: %p\n", kheap_size, kheap_start);
-	while (ptr)
+	kprintf("NODE\t\tSIZE\t\tWITH STRUCT\tSTATUS\tPREV\t\tNEXT\n");
+	while (ptr != NULL)
 	{
 		print_kheap_node_t(ptr);
 		ptr = ptr->next;
