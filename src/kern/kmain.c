@@ -39,7 +39,7 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 	syscall_init();
 
 	/* kmalloc(), kfree() available from this point on */
-
+	sti();
 	char* mem = kmalloc(12);
 
 	kprintf("\n==HALTED==");
