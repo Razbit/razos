@@ -28,9 +28,9 @@ $ sudo wget https://github.com/larsr/bochs/blob/master/bios/VGABIOS-elpin-2.40
 ```
 
 #Building and running
-##Build
+##Build the kernel
 ```shell
-$ make
+$ make kernel
 ```
 
 ##Run´
