@@ -1,19 +1,19 @@
 razos
 =====
 
-Razbit's (Very basic) operating system, RazOS.
+Razbit's (very basic) operating system, RazOS.
 
-TBH, I really have no specific goals for this project..
+~~TBH, I really have no specific goals for this project..
 I hope that when I'll build the RPU, a computer made from ttl chips,
 I could run this system on it. So, the code will have to be specific for
 the RPU platform (8086-ish), and the platform will have to be able to
 run code this complex. But, we'll see.. This is a hobby for which I don't
-have much time..
+have much time..~~
+
+Now this project has changed; it is no longer a weekend project but rather the diploma work of Itara20 and me.. So, now there actually are goals (discussed later).
 
 #Setting up the developing environment
-My host system is Ubuntu/Debian based and I use the Netwide Assembler as the
-assembler for this project (until transitioning to rasm one day, when the RPU or
-a simulator of it is done). The simulator for now is Bochs (wx).
+We are using a Ubuntu/Debian-based Linux as the host system. QEMU and Bochs (mostly QEMU) are used for running the RazOS system. The compiler we use is GCC, and NASM is used as the assembler.
 
 ##Setting up NASM
 ```shell
@@ -39,7 +39,7 @@ To run Razos using Bochs
 ```shell
 $ sudo make bochs
 ```
-Or using Qemu
+Or using QEMU
 ```shell
 $ sudo make qemu
 ```
@@ -83,6 +83,8 @@ http://jamesmolloy.co.uk/tutorial_html/
 OsDev forums and Wiki,
 http://wiki.osdev.org
 
+Charlie Somerville (His project, Radium),
+https://github.com/charliesome/radium
 
 
 Cheers,
