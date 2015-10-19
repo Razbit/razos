@@ -46,6 +46,10 @@ void page_map(uint32_t virt_page, uint32_t phys_page, uint32_t flag);
 /* Unmap a page */
 void page_unmap(uint32_t page);
 
+/* Behind-the-scenes of the above */
+void* page_temp_map(uint32_t phys_page);
+void page_temp_unmap();
+
 /* Return physical address of memory pointed to by virt */
 uint32_t virt_to_phys(uint32_t virt);
 

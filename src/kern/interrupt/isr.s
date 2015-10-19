@@ -13,7 +13,7 @@
 [EXTERN panic]                  ; panic.c
 
     ;; C-side interrupt handlers
-[EXTERN sched_switch]           ; task.c
+[EXTERN sched_switch]           ; task.s
 [EXTERN kb_handler]             ; kb.c
 
     ;; Some quite heavy macro-magic

@@ -42,7 +42,7 @@ void set_page_directory(uint32_t page_dir)
 
 
 /* Used in page_alloc() and page_free() */
-static void* page_temp_map(uint32_t phys_page)
+void* page_temp_map(uint32_t phys_page)
 {
 	/* The temporary page is mapped to the first page in the first
 	 * page table, i.e. at virtual address 0 i.e. physical 0xFFC00000 */
@@ -54,7 +54,7 @@ static void* page_temp_map(uint32_t phys_page)
 }
 
 /* Used in page_alloc() and page_free() */
-static void page_temp_unmap()
+void page_temp_unmap()
 {
 	*temp_page_entry = old_null_page;
 	tlb_flush(0);

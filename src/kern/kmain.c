@@ -12,6 +12,8 @@
 #include "mm/paging.h"
 #include "mm/kernel_page.h"
 #include "mm/kheap.h"
+#include "mm/task.h"
+#include "syscall/syscall.h"
 
 #include <kassert.h>
 #include <sys/types.h>
@@ -33,9 +35,12 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 	pit_set_freq(100);
 
 	paging_init(mb);
+	task_init();
+	syscall_init();
 
 	/* kmalloc(), kfree() available from this point on */
-	sti();
+
+	char* mem = kmalloc(12);
 
 	kprintf("\n==HALTED==");
 
