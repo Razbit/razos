@@ -15,7 +15,7 @@
 #define PE_FLAG_MASK (PAGE_SIZE - 1)
 #define PE_ADDR_MASK (~PE_FLAG_MASK)
 
-/* Memory map (see README.md) */
+/* Memory map (see memory_map.md) */
 #define KERNEL_STACK_BEGIN 0x0FC00000
 #define KERNEL_STACK_END   0x0FFFFFFC
 #define USER_MEMORY_BEGIN  0x10000000
