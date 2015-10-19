@@ -1,5 +1,5 @@
 CSOURCES = gdt.c console.c kmain.c vga.c panic.c
-ASMSOURCES = gdt.s 
+ASMSOURCES = gdt.s
 SUBOBJS = interrupt.o mm.o syscall.o
 
 OBJS = $(patsubst %.c, %.c.o,$(CSOURCES))

@@ -1,3 +1,0 @@
-http://geezer.osdevbrasil.net/osd/tasks/index.htm
-http://www.osdever.net/tutorials/view/software-task-switching
-http://www.osdever.net/tutorials/view/multitasking-howto

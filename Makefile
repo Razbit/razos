@@ -1,10 +1,11 @@
 all:
-	$(MAKE) -C src
+	echo "Usage: make kernel|clean|bochs|qemu|tools"
+
+kernel:
+	$(MAKE) -C kernel
 
 clean:
-	$(MAKE) clean -C src
-	rm hexdump
-	rm mk-initrd
+	$(MAKE) clean -C kernel
 
 bochs:
 	sudo ./update_image.sh
@@ -15,4 +16,6 @@ qemu:
 	qemu-system-x86_64 -fda floppy.img
 
 tools:
-	$(MAKE) tools -C src
+	$(MAKE) tools -C tools
+
+.PHONY: kernel
