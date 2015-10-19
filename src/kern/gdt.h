@@ -1,34 +1,33 @@
 /* This file is a part of the RazOS project
  *
- * gdt.h -- the x86 GDT; segment descriptors
+ * gdt.h -- Global Descriptor Table
  *
- * Razbit 2014 */
+ * Razbit 2015 (based on Charlie Somerville's Radium) */
 
 #ifndef GDT_H
 #define GDT_H
 
 #include <sys/types.h>
 
-void init_gdt();
+/* GDT selectors */
+#define GDT_KERNEL_CODE 0x08
+#define GDT_KERNEL_DATA 0x10
+#define GDT_USER_CODE 0x18
+#define GDT_USER_DATA 0x20
+#define GDT_TSS 0x28
 
-/* Contains a GDT entry */
-struct gdt_entry_t
-{
-    uint16_t low_lim;   /* Low 16 bits of the segment limit */
-    uint16_t low_base;  /* Low 16 bits of the base address */
-    uint8_t mid_base;   /* Base address bits 16..23 */
-    uint8_t access_fl;  /* 0..3: Type (code/data); 4: Descriptor type;
-                         * 5..6: Privilege (ring); 7: Present (y/n) */
-    uint8_t granularity; /* 0..3: Segment limit bits 16..19; 4..5: zero;
-                          * 6: Operand size (16/32) 7: Byte/kbyte */
-    uint8_t high_base;  /* Base address bit 24..31 */
-}__attribute__((__packed__));
+/* GDT privilege (ring) */
+#define GDT_KERNEL 0
+#define GDT_USER 3
 
-/* Used to tell the CPU where the GDT is */
-struct gdt_ptr_t
-{
-    uint16_t limit; /* Max size of the GDT (minus 1) */
-    uint32_t base;  /* Address of the first gdt_entry_t struct */
-}__attribute__((__packed__));
+/* GDT entry type */
+#define GDT_DATA 0
+#define GDT_CODE 1
+
+void gdt_set_entry(uint32_t sel, uint32_t base, uint32_t limit, \
+                   uint32_t priv, uint32_t type);
+void gdt_set_tss(uint32_t sel, uint32_t base, uint32_t limit);
+void gdt_reload(); /* gdt.s */
+void gdt_init();
 
 #endif /* GDT_H */

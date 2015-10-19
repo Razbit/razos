@@ -7,8 +7,8 @@
 int isalnum(char c)
 {
 	if ((c >= 0x41 && c <=0x5A)					\
-		|| (c >= 0x61 && c <= 0x7A)				\
-		|| (c >= 0x30 && c <= 0x39))
+	    || (c >= 0x61 && c <= 0x7A)				\
+	    || (c >= 0x30 && c <= 0x39))
 		return 1;
 	return 0;
 }
@@ -58,9 +58,9 @@ int isprint(char c)
 int ispunct(char c)
 {
 	if ((c >= 0x21 && c <= 0x2F)				\
-		|| (c >= 0x3A && c <= 0x40)				\
-		|| (c >= 0x5B && c <= 0x60)				\
-		|| (c >= 0x7B && c <= 0x7E))
+	    || (c >= 0x3A && c <= 0x40)				\
+	    || (c >= 0x5B && c <= 0x60)				\
+	    || (c >= 0x7B && c <= 0x7E))
 		return 1;
 	return 0;
 }
@@ -82,8 +82,8 @@ int isupper(char c)
 int isxdigit(char c)
 {
 	if ((c >= 0x30 && c <= 0x39)				\
-		|| (c >= 0x41 && c <= 0x46)				\
-		|| (c >= 0x61 && c <= 0x66))
+	    || (c >= 0x41 && c <= 0x46)				\
+	    || (c >= 0x61 && c <= 0x66))
 		return 1;
 	return 0;
 }

@@ -41,7 +41,7 @@ int close_fs(struct fs_node_t* node)
     if (node->close != NULL)
         return node->close(node);
     else
-        return -1;        
+        return -1;
 }
 
 struct dirent* readdir_fs(struct fs_node_t* node)

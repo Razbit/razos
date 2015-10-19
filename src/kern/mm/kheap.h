@@ -1,20 +1,33 @@
 /* This file is a part of the RazOS project
  *
- * kheap.c -- kernel heap allocation, freeing etc
+ * kheap.h -- kernel heap system
  *
  * Razbit 2015 */
 
 #ifndef KHEAP_H
 #define KHEAP_H
 
-/* Create a new heap */
-void create_kheap(uint32_t start, size_t size);
+#include <sys/types.h>
+#include <console.h>
 
-/* Heap-mode internals of malloc() and free() */
-void* do_kmalloc(size_t size, int align);
+#include "paging.h"
+#include "kernel_page.h"
+
+#define KHEAP_MAX KERNEL_STACK_BEGIN
+
+/* Internals of the kmalloc() -family
+ * We align the start address to [align] bytes (multiple of 16)*/
+void* do_kmalloc(size_t size, size_t align);
+
+/* Internals of the kfree() */
 void do_kfree(void* ptr);
 
-/* Dumps heap structures */
+/* Kernel's brk()-ish functionality */
+int kbrk(void* addr);
+
+/* Kernel's sbrk()-ish functionality */
+void* ksbrk(size_t increment);
+
 void dump_kheap();
 
 #endif /* KHEAP_H */

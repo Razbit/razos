@@ -1,48 +1,91 @@
 /* This file is a part of the RazOS project
  *
- * gdt.h -- the x86 GDT; segment descriptors
+ * gdt.c -- Global Descriptor Table
  *
- * Razbit 2014 */
-
-#include "gdt.h"
-#include "kio.h" /* kprintf() */
+ * Razbit 2015 (based on Charlie Somerville's Radium) */
 
 #include <sys/types.h>
+#include <panic.h>
+#include <console.h>
 
-extern void gdt_flush(uint32_t); /* gdt.s */
-static void gdt_set(int32_t num, uint32_t base, uint32_t limit, \
-                    uint8_t access_fl, uint8_t gran);
+#include "gdt.h"
 
-struct gdt_entry_t gdt_entries[5];
-struct gdt_ptr_t gdt_ptr;
-
-void init_gdt()
+struct gdt_entry_t
 {
-    /* Setup the ptr struct */
-    gdt_ptr.limit = sizeof(struct gdt_entry_t) * 5 - 1;
-    gdt_ptr.base = (uint32_t)&gdt_entries;
+	uint16_t low_lim;	 /* Low 16 bits of the segment limit */
+	uint16_t low_base;	 /* Low 16 bits of the base address */
+	uint8_t mid_base;	 /* Base address bits 16..23 */
+	uint8_t access;		 /* 0..3: Type (code/data); 4: Descriptor type;
+			              * 5..6: Privilege (ring); 7: Present (y/n) */
+	uint8_t granularity; /* 0..3: Segment limit bits 16..19; 4..5: zero;
+	                      * 6: Operand size (16/32) 7: Byte/kbyte */
+	uint8_t high_base;	 /* Base address bits 24..31 */
+};
 
-    kprintf("Initializing GDT at 0x%p\n", &gdt_entries);
-    
-    gdt_set(0, 0, 0, 0, 0);                /* null segment */
-    gdt_set(1, 0, 0xFFFFFFFF, 0x9A, 0xCF); /* kernel code (ring 0) */
-    gdt_set(2, 0, 0xFFFFFFFF, 0x92, 0xCF); /* kernel data */
-    gdt_set(3, 0, 0xFFFFFFFF, 0xFA, 0xCF); /* user code (ring 3) */
-    gdt_set(4, 0, 0xFFFFFFFF, 0xF2, 0xCF); /* user data */
+/* The GDT table entries */
+static struct gdt_entry_t gdt[6];
 
-    gdt_flush((uint32_t)&gdt_ptr);
+volatile struct
+{
+	uint16_t size;			  /* Max size of the GDT (minus 1) */
+	struct gdt_entry_t* base; /* Address of the first GDT entry */
+} __attribute__((__packed__)) gdt_ptr;
+
+/* Set a GDT table entry */
+static void do_gdt_set_entry(uint32_t sel, uint32_t base,	\
+                             uint32_t limit, uint8_t access)
+{
+	if (sel >= sizeof(gdt))
+	{
+		panic("GDT overflow");
+	}
+
+	uint8_t flags = 1 << 6; /* 32-bit operand */
+
+	if (limit >= 1 << 20) /* If we are working with > 1MiB segments */
+	{
+		flags |= 1 << 7; /* Use 1 KiB granularity. Otherwise 1 B */
+		limit /= 4096;
+	}
+
+	struct gdt_entry_t entry;
+	entry.low_base = base & 0xFFFF;
+	entry.mid_base = (base >> 16) & 0xFF;
+	entry.high_base = (base >> 24) & 0xFF;
+	entry.low_lim = limit & 0xFFFF;
+	entry.granularity = ((limit >> 16) & 0x0F) | flags;
+	entry.access = access;
+
+	gdt[sel/sizeof(struct gdt_entry_t)] = entry;
 }
 
-static void gdt_set(int32_t num, uint32_t base, uint32_t limit, \
-                    uint8_t access_fl, uint8_t gran)
+void gdt_set_entry(uint32_t sel, uint32_t base, uint32_t limit, \
+                   uint32_t priv, uint32_t type)
 {
-    gdt_entries[num].low_base = (base & 0xFFFF);
-    gdt_entries[num].mid_base = (base >> 16) & 0xFF;
-    gdt_entries[num].high_base = (base >> 24) & 0xFF;
+	uint32_t access = 1 << 7;	 /* present */
+	access |= ((priv & 3) << 5); /* privilege */
+	access |= (1 << 4);			 /* dunno lol */
+	access |= ((type & 1) << 3); /* code or data? */
+	access |= (1 << 1);			 /* data RW, code R */
 
-    gdt_entries[num].low_lim = (limit & 0xFFFF);
-    gdt_entries[num].granularity = (limit >> 16) & 0x0F;
+	do_gdt_set_entry(sel, base, limit, access);
+}
 
-    gdt_entries[num].granularity |= gran & 0xF0;
-    gdt_entries[num].access_fl = access_fl;
+void gdt_set_tss(uint32_t sel, uint32_t base, uint32_t limit)
+{
+	/* Access byte 0x89: present|executable|accessed */
+	do_gdt_set_entry(sel, base, limit, 0x89);
+}
+
+void gdt_init()
+{
+	gdt_ptr.size = sizeof(gdt) - 1;
+	gdt_ptr.base = gdt;
+
+	gdt_set_entry(GDT_KERNEL_CODE, 0, 0xFFFFFFFF, GDT_KERNEL, GDT_CODE);
+	gdt_set_entry(GDT_KERNEL_DATA, 0, 0xFFFFFFFF, GDT_KERNEL, GDT_DATA);
+	gdt_set_entry(GDT_USER_CODE, 0, 0xFFFFFFFF, GDT_USER, GDT_CODE);
+	gdt_set_entry(GDT_USER_DATA, 0, 0xFFFFFFFF, GDT_USER, GDT_DATA);
+
+	gdt_reload();
 }

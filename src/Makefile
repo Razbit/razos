@@ -1,7 +1,7 @@
 SUBOBJS = kern.o lib.o
 
 export PWD = $(shell pwd)
-export CFLAGS = -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -c -g -I$(PWD)/include
+export CFLAGS = -m32 -std=gnu99 -ffreestanding -O2 -Wall -Wextra -c -g -I$(PWD)/include
 export LDFLAGS = -m elf_i386
 export ASFLAGS = -felf
 
@@ -18,9 +18,9 @@ all: boot.s.o
 	nasm $(ASFLAGS) $< -o $@
 
 clean:
-	rm ./*.o kernel
 	$(MAKE) clean -C lib
 	$(MAKE) clean -C kern
+	rm ./*.o kernel
 
 tools:
 	$(MAKE) all -C tools

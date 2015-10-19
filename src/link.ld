@@ -28,5 +28,7 @@ SECTIONS
     . = ALIGN(4096);
   }
 
-  end = .; _end = .; __end = .;
+  .end_of_image : {
+    *(.end_of_image)
+  }
 } 

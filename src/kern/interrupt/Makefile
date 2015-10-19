@@ -1,5 +1,5 @@
-CSOURCES = idt.c irq.c isr.c timer.c kb.c
-ASMSOURCES = idt.s interrupt.s
+CSOURCES = idt.c pit.c kb.c
+ASMSOURCES = isr.s
 SUBOBJS = 
 
 OBJS = $(patsubst %.c,%.c.o,$(CSOURCES))

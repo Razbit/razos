@@ -4,13 +4,25 @@
  *
  * Razbit 2014 */
 
+#include <asm/system.h>
+#include <stdarg.h>
+#include <vsprintf.h>
+#include <console.h>
+
 #include <panic.h>
 
-#include "kio.h"
-
-void panic(char* str)
+void panic(const char* msg, ...)
 {
-    __asm__ __volatile__ ("cli");
-    kprintf("KERNEL PANIC: %s\n", str);
-    for(;;);
+	cli();
+
+	char str[1024];
+	va_list va;
+	va_start(va, msg);
+
+	vsprintf(str, msg, va);
+	kprintf("\nKernel panic: %s\n", str);
+
+	va_end(va);
+
+	for(;;);
 }

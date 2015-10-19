@@ -1,6 +1,6 @@
-CSOURCES = gdt.c kio.c kmain.c vga.c panic.c
+CSOURCES = gdt.c console.c kmain.c vga.c panic.c
 ASMSOURCES = gdt.s 
-SUBOBJS = interrupt.o mm.o fs.o
+SUBOBJS = interrupt.o mm.o syscall.o
 
 OBJS = $(patsubst %.c, %.c.o,$(CSOURCES))
 OBJS += $(patsubst %.s, %.s.o,$(ASMSOURCES))
@@ -14,8 +14,8 @@ all: $(OBJS)
 	$(MAKE) -C mm
 	mv mm/mm.o ./mm.o
 
-	$(MAKE) -C fs
-	mv fs/fs.o ./fs.o
+	$(MAKE) -C syscall
+	mv syscall/syscall.o ./syscall.o
 
 	ld $(LDFLAGS) -o kern.o $(SUBOBJS) $(OBJS)
 
@@ -29,3 +29,4 @@ clean:
 	rm *.o
 	$(MAKE) clean -C interrupt
 	$(MAKE) clean -C mm
+	$(MAKE) clean -C syscall

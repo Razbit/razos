@@ -1,169 +1,270 @@
 /* This file is a part of the RazOS project
  *
- * kheap.c -- kernel heap allocation, freeing etc
+ * kheap.c -- kernel heap system
  *
  * Razbit 2015 */
 
 #include <sys/types.h>
+#include <console.h>
+#include <util.h>
+#include <string.h>
 
-#include "kmalloc.h"
-#include "heap.h"
+#include "paging.h"
+#include "kernel_page.h"
+
 #include "kheap.h"
 
-/* The kernel heap resides here */
-extern struct heap_t* kheap;
+static uint32_t kheap_start = 0;
+static uint32_t kheap_size = 0;
 
-/* Create a new heap */
-void create_kheap(uint32_t start, size_t size)
-{    
-    /* Start address is page-aligned */
-    if (start & 0x00000FFF != 0)
-    {
-        start &= 0xFFFFF000;
-        start += 0x1000;
-    }
-    
-    /* End address is page-aligned */
-    if (size & 0x00000FFF != 0)
-    {
-        size &= 0xFFFFF000;
-    }
-    
-    kheap->maxsize = 0;
-    kheap->minsize = 0;
-    kheap->size = size;
-    
-    kheap->start = (void*)start;
-    
-    kheap->svisor = 0;
-    kheap->ronly = 0;
+#define KMALLOC_FREE 1
+#define KMALLOC_RES 0
 
-    kheap->start->size = kheap->size - sizeof(struct memnode_t);
-    kheap->start->res = 0;
-    kheap->start->prev = NULL;
-    kheap->start->next = kheap->end;
-
-    kheap->end->size = 0;
-    kheap->end->res = 1;
-    kheap->end->prev = NULL; /* from NULL kmalloc() knows that we have not
-                             * allocated anything yet */
-    kheap->end->next = NULL;
-     
-    kprintf("Created kernel heap at 0x%p with size of %u KiB\n", \
-            start, size/1024);
-}
-
-void* do_kmalloc(size_t size, int align)
+struct kheap_node_t
 {
-    /* Standard malloc() is 16-byte aligned */
-    if (size & 0x0F)
-    {
-        size &= 0xFFFFFFF0;
-        size += 0x10;
-    }
-    
-    struct memnode_t* curnode = kheap->start;
-    while (1)
-    {
-        /* Heap not large enough */
-        if (curnode == kheap->end)
-        {
-                return NULL;
-        }
-        
-        if (curnode->res != 0) /* The node is reserved */
-        {
-            curnode = curnode->next;
-            continue;
-        }
-                
-        if (curnode->size >= size) /* Is free and of adequate size */
-        {
-            break; /* curnode now points to a usable chunk in the heap */
-        }            
-        
-        curnode = curnode->next;
-    }
-    
-    struct memnode_t* unalloc = (void*)curnode + size  \
-                                        + sizeof(struct memnode_t);
+	size_t size;
+	uint32_t status; /* free or res */
+	struct kheap_node_t* next;
+	struct kheap_node_t* prev;
+};
 
-    if (kheap->end->prev == NULL) /* First allocation */
-    {
-        unalloc->size = kheap->size - size - (2 * sizeof(struct memnode_t));
-        unalloc->next = kheap->end;
-    }
-    else
-    {
-        unalloc->size = curnode->size - size - sizeof(struct memnode_t);
-        unalloc->next = curnode->next;
-    }
+static struct kheap_node_t* kheap_last_node = NULL;
 
-    unalloc->res = 0;
-    
-    unalloc->prev = curnode;
-    unalloc->next->prev = unalloc;
+/* Internals of the kmalloc() -family.
+ * We align the start address to [align] bytes */
+void* do_kmalloc(size_t size, size_t align)
+{
+	/* Start address is aligned to [align] that is a multiple of 8.
+	 * End of the block is aligned so that the entire chunk's end is
+	 * aligned to 8 bytes. */
 
-    curnode->next = unalloc;
-    curnode->size = size;
-    curnode->res = 1;
-    
-    return (void*)((void*)curnode + sizeof(struct memnode_t));    
+	if (size == 0)
+		return NULL;
+
+	size = round_up(size, sizeof(struct kheap_node_t));
+
+	/* Make sure we have a heap */
+	if (kheap_start == 0)
+	{
+		ksbrk(size + PAGE_SIZE);
+		struct kheap_node_t* start = (struct kheap_node_t*)kheap_start;
+		start->size = kheap_size - sizeof(struct kheap_node_t);
+		start->status = KMALLOC_FREE;
+		start->next = NULL;
+		start->prev = NULL;
+	}
+
+	struct kheap_node_t* startnode = (struct kheap_node_t*)kheap_start;
+	struct kheap_node_t* curnode = startnode;
+
+	void* ret = NULL;
+
+	/* Find a decent node */
+	while (curnode != NULL)
+	{
+		if (curnode->next == NULL)
+		{
+			/* Enlarge the heap. */
+			if (curnode->size < size + PAGE_SIZE)
+			{
+				void* prev_end = ksbrk(0);
+				void* new_end = ksbrk(size + PAGE_SIZE - curnode->size);
+				curnode->size += (size_t)(new_end - prev_end);
+			}
+		}
+
+		if (curnode->status == KMALLOC_RES)
+		{
+			curnode = curnode->next;
+			continue;
+		}
+
+		size_t padding_amount = 0;
+		if (((size_t)curnode % align) != 0)
+		{
+			padding_amount = align - ((size_t)curnode % align);
+		}
+
+		if (curnode->size < (size + padding_amount))
+		{
+			curnode = curnode->next;
+			continue;
+		}
+
+		/* If we reach this, we have found a decent node */
+
+		struct kheap_node_t* padding = curnode;
+		if (padding_amount != 0 && padding_amount != sizeof(struct kheap_node_t))
+		{
+			/* Set the padding node */
+			curnode = (void*)curnode + padding_amount - sizeof(struct kheap_node_t);
+			padding->size = padding_amount - 2*sizeof(struct kheap_node_t);
+			padding->status = KMALLOC_FREE;
+			padding->next = curnode;
+			curnode->prev = padding;
+		}
+
+		/* Pad if we need to */
+		if (curnode->size != size)
+		{
+			padding = (void*)curnode + sizeof(struct kheap_node_t) + size;
+			padding->prev = curnode;
+			padding->next = curnode->next;
+			if (padding->next != NULL)
+			{
+				padding->size = (size_t)padding->next - (size_t)padding \
+						- sizeof(struct kheap_node_t);
+				padding->next->prev = padding;
+			}
+			else
+			{
+				padding->size = (kheap_start + kheap_size) \
+					- (size_t)padding - sizeof(struct kheap_node_t);
+			}
+			padding->status = KMALLOC_FREE;
+			curnode->next = padding;
+		}
+
+		curnode->size = size;
+		curnode->status = KMALLOC_RES;
+
+		ret = (void*)((void*)curnode + sizeof(struct kheap_node_t));
+		break;
+	}
+
+	return ret;
 }
-
 
 /* Unify continuous free space following the freed memory node */
-static void unify_fwd(struct memnode_t* ptr)
+static void unify_fwd(struct kheap_node_t* ptr)
 {
-    ptr->size += ptr->next->size + sizeof(struct memnode_t);
+	ptr->size += ptr->next->size + sizeof(struct kheap_node_t);
 
-    ptr->next = ptr->next->next;
-    ptr->next->prev = ptr;
+	ptr->next = ptr->next->next;
+
+	if (ptr->next != NULL)
+		ptr->next->prev = ptr;
 }
 
-/* Unify continuous free space before the freed memory node */
-static void unify_bwd(struct memnode_t* ptr)
+/* Internals of the kfree() */
+void do_kfree(void* _ptr)
 {
-    ptr->prev->next = ptr->next;
-    ptr->next->prev = ptr->prev;
+	/* The given ptr points to the beginning of usable space rather than
+	 * to the beginning of the kheap_node_t struct */
 
-    ptr->prev->size += ptr->size + sizeof(struct memnode_t);
+	_ptr -= sizeof(struct kheap_node_t);
+	struct kheap_node_t* ptr = _ptr;
+
+	/* Mark as free */
+	ptr->status = KMALLOC_FREE;
+
+	/* Unify free memory nodes */
+	if (ptr->next != NULL && ptr->next->status == KMALLOC_FREE)
+		unify_fwd(ptr);
+
+	if (ptr->prev != NULL && ptr->prev->status == KMALLOC_FREE)
+		unify_fwd(ptr->prev);
+
+	/* Last element -> free some of the heap */
+	if (ptr->next == NULL)
+	{
+		kheap_last_node = ptr;
+
+		if (ptr->size > 2*PAGE_SIZE)
+		{
+			kbrk((void*)(kheap_start + kheap_size - ptr->size));
+		}
+	}
 }
 
-void do_kfree(void* ptr)
+/* Kernel's brk()-ish functionality */
+int kbrk(void* addr)
 {
-    /* The given ptr points to the beginning of usable space rather than
-     * to the beginning of the memnode_t struct */
-    ptr -= sizeof(struct memnode_t);
+	/* Take care of the paging behind kernel's heap, much like
+	 * the brk() syscall, i.e. maintain a contiguous heap of memory
+	 * available for kmalloc()'s use. */
 
-    /* Mark as free */
-    ((struct memnode_t*)ptr)->res = 0;    
+	if (addr >= (void*)KHEAP_MAX)
+		return -1;
 
-    /* Unify free memory nodes */
-    if (((struct memnode_t*)ptr)->next->res == 0)
-        unify_fwd((struct memnode_t*)ptr);
+	/* First allocation? */
+	if (kheap_start == 0)
+	{
+		kheap_start = (uint32_t)kernel_page_alloc_zeroed();
+		kheap_size += PAGE_SIZE;
+	}
 
-    if (((struct memnode_t*)ptr)->prev->res == 0)
-        unify_bwd((struct memnode_t*)ptr);
+	while (kheap_start + kheap_size < (uint32_t)addr)
+	{
+		/* We increase the size of the kernel heap */
+		kernel_page_alloc_zeroed();
+		kheap_size += PAGE_SIZE;
+	}
+
+	while (kheap_start + kheap_size - PAGE_SIZE > (uint32_t)addr)
+	{
+		/* Free memory from the end of the kernel heap */
+		kernel_page_free((void*)round_down(kheap_start+kheap_size-1, PAGE_SIZE));
+		kheap_size -= PAGE_SIZE;
+		kheap_last_node->size -= PAGE_SIZE;
+	}
+
+	/* If we have freed the whole kheap, we have to create a new one.
+	 * We do that in the next call to kbrk() or ksbrk() */
+	if (kheap_size == 0)
+		kheap_start = 0;
+
+	return 0;
 }
 
-
-static void print_memnode_t(struct memnode_t* memnode)
+/* Kernel's sbrk()-ish functionality */
+void* ksbrk(size_t increment)
 {
-    kprintf("MEMNODE: %p %u %u, %s; %p %p\n", memnode,             \
-            memnode->size, memnode->size+sizeof(struct memnode_t), \
-            memnode->res == 0 ? "free" : "used", memnode->prev,    \
-            memnode->next);
+	/* First allocation? */
+	if (kheap_start == 0)
+	{
+		kheap_start = (uint32_t)kernel_page_alloc_zeroed();
+		kheap_size += PAGE_SIZE;
+
+		if (increment >= PAGE_SIZE)
+			increment -= PAGE_SIZE;
+		else
+			increment = 0;
+	}
+
+	/* Truncate if we try to allocate over the heap boundary */
+	while (kheap_start + kheap_size + increment > KHEAP_MAX)
+		increment -= PAGE_SIZE;
+
+	/* Allocate memory to the heap, page by page */
+	size_t i = 0;
+	for (i = 0; i < increment; i += PAGE_SIZE)
+	{
+		kernel_page_alloc_zeroed();
+		kheap_size += PAGE_SIZE;
+	}
+
+	return (void*)(kheap_start + kheap_size);
+}
+
+static void print_kheap_node_t(struct kheap_node_t* node)
+{
+	kprintf("%p\t%u\t\t%u\t\t%s\t%p\t%p\n", node,			\
+	        node->size, node->size + sizeof(struct kheap_node_t),	\
+	        node->status == KMALLOC_FREE ? "free" : "used",		\
+	        node->prev, node->next);
 }
 
 void dump_kheap()
 {
-    kprintf("**KERNEL HEAP DUMP**\n");
-    struct memnode_t* ptr = kheap->start;
-    while (ptr)
-    {
-        print_memnode_t(ptr);
-        ptr = ptr->next;    
-    }
-    kprintf("\n");
+	kprintf("**KERNEL HEAP DUMP**\n");
+	struct kheap_node_t* ptr = (void*)kheap_start;
+	kprintf("KHEAP: SIZE: %p START: %p\n", kheap_size, kheap_start);
+	kprintf("NODE\t\tSIZE\t\tWITH STRUCT\tSTATUS\tPREV\t\tNEXT\n");
+	while (ptr != NULL)
+	{
+		print_kheap_node_t(ptr);
+		ptr = ptr->next;
+	}
+	kprintf("\n");
 }

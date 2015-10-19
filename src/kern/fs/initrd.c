@@ -10,7 +10,7 @@
 
 #include "fs.h"
 #include "initrd.h"
-#include "../kio.h"
+#include "../console.h"
 
 uint32_t initrd_nfiles;
 struct initrd_node_t* initrd_files;
@@ -32,12 +32,12 @@ static ssize_t initrd_read(struct fs_node_t* node, void* buf, size_t size, \
     struct initrd_node_t file = initrd_files[node->inode-1];
 
     /* Are we trying to read from outside of the file */
-    if (offset > file.size) 
+    if (offset > file.size)
         return 0;
     if (offset + size > file.size)
         size = file.size - offset;
     memcpy(buf, file.offset + offset, size);
-    
+
     return size;
 }
 
@@ -56,7 +56,7 @@ static struct dirent* initrd_readdir(struct fs_node_t* node)
     dirent.d_ino = root_nodes[index].inode;
 
     index++;
-    
+
     return &dirent;
 }
 
@@ -72,13 +72,13 @@ static struct fs_node_t* initrd_finddir(struct fs_node_t* node, char* name)
 
 /* Sets up the initrd file system for use by kernel */
 struct fs_node_t* init_initrd(void* loc)
-{    
+{
     initrd_nfiles = *((uint32_t*)loc);
     initrd_files = (struct initrd_node_t*)(loc + 4);
 
     /* set up the root directory */
     initrd_root = kmalloc(sizeof(struct fs_node_t));
-    
+
     strcpy(initrd_root->name, "initrd");
     initrd_root->mode = 0;
     initrd_root->uid = 0;

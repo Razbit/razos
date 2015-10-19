@@ -7,6 +7,8 @@
 #ifndef PANIC_H
 #define PANIC_H
 
-void panic(char* str);
+#include <stdarg.h>
+
+void panic(const char* msg, ...);
 
 #endif /* PANIC_H */

@@ -1,5 +1,5 @@
-CSOURCES = kmalloc.c paging.c kheap.c heap.c detect.c
-ASMSOURCES = 
+CSOURCES = paging.c kernel_page.c paging_init.c kheap.c kmalloc.c task.c
+ASMSOURCES = task.s
 SUBOBJS = 
 
 OBJS = $(patsubst %.c,%.c.o,$(CSOURCES))

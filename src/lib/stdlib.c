@@ -8,12 +8,12 @@
 /* Convert C-string to integer */
 int atoi (const char *str)
 {
-    int i = 0;
+	int i = 0;
 
-    while (isdigit(*str))
-        i = i * 10 + (*str++) - '0';
+	while (isdigit(*str))
+		i = i * 10 + (*str++) - '0';
 
-    return i;
+	return i;
 }
 
 div_t div(int numer, int denom)
