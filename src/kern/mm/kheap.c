@@ -64,11 +64,6 @@ void* do_kmalloc(size_t size, size_t align)
 	{
 		if (curnode->next == NULL)
 		{
-			/* If the last block was reserved completely, the end
-			 * of the heap would not be able to grow or shrink. */
-			if (size == curnode->size)
-				size += sizeof(struct kheap_node_t);
-			
 			/* Enlarge the heap. */
 			if (curnode->size < size + PAGE_SIZE)
 			{
@@ -118,7 +113,8 @@ void* do_kmalloc(size_t size, size_t align)
 			if (padding->next != NULL)
 			{
 				padding->size = (size_t)padding->next - (size_t)padding \
-					- sizeof(struct kheap_node_t);
+						- sizeof(struct kheap_node_t);
+				padding->next->prev = padding;
 			}
 			else
 			{
