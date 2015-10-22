@@ -67,7 +67,7 @@ uint32_t page_alloc()
 
 	if (paging_enabled())
 	{
-		uint32_t* temp_mapping = page_temp_map(page);
+		page_temp_map(page);
 		
 		/* Ok, this is here to please GCC: since dereferencing
 		 * NULL-pointers is bad, compilers want to f*ck your code up.
@@ -75,11 +75,10 @@ uint32_t page_alloc()
 		 * NULL-dereferencing part in assembly..
 		 * Feel free to punch me in the face :D
 		 *
-		 * next_free_page = *temp_mapping; */
-		__asm__ __volatile__("mov (%1), %%eax; mov %%eax, %0"
+		 * next_free_page = *0; */
+		__asm__ __volatile__("mov (0), %0"
 		                     : "=r"(next_free_page)
-		                     : "r"(temp_mapping)
-		                     : "%eax"
+				     :
 			);
 		/* TODO: Do not bend the rules */
 		page_temp_unmap();
@@ -97,7 +96,7 @@ void page_free(uint32_t addr)
 {
 	if (paging_enabled())
 	{
-		uint32_t* temp_mapping = page_temp_map(addr);
+		page_temp_map(addr);
 		
 		/* Ok, this is here to please GCC: since dereferencing
 		 * NULL-pointers is bad, compilers want to f*ck your code up.
@@ -105,11 +104,10 @@ void page_free(uint32_t addr)
 		 * NULL-dereferencing part in assembly..
 		 * Feel free to punch me in the face :D
 		 *
-		 * *temp_mapping = next_free_page; */
-		__asm__ __volatile__("mov %1, %%eax; mov %%eax, (%0)"
-		                     : "=r"(temp_mapping)
+		 * *0 = next_free_page; */
+		__asm__ __volatile__("mov %0, (0)"
+		                     :
 		                     : "r"(next_free_page)
-		                     : "%eax"
 			);
 		/* TODO: Do not bend the rules */
 		page_temp_unmap();
@@ -127,8 +125,8 @@ void page_map(uint32_t virt_page, uint32_t phys_page, uint32_t flags)
 	/* Page directories mapped recursively to themselves */
 	uint32_t* cur_page_dir = CUR_PG_DIR;
 
-	size_t page_dir_index = (virt_page / 4096) / 1024;
-	size_t page_table_index = (virt_page / 4096) % 1024;
+	size_t page_dir_index = (virt_page / PAGE_SIZE) / 1024;
+	size_t page_table_index = (virt_page / PAGE_SIZE) % 1024;
 
 	uint32_t* page_table =								\
 		CUR_PG_TABLE_BASE + page_dir_index * PAGE_SIZE;
@@ -159,9 +157,9 @@ uint32_t virt_to_phys(uint32_t virt)
 {
 	uint32_t* cur_page_dir = CUR_PG_DIR;
 
-	size_t page_dir_index = (virt / 4096) / 1024;
-	size_t page_table_index = (virt / 4096) % 1024;
-	size_t page_offset = virt % 4096;
+	size_t page_dir_index = (virt / PAGE_SIZE) / 1024;
+	size_t page_table_index = (virt / PAGE_SIZE) % 1024;
+	size_t page_offset = virt % PAGE_SIZE;
 
 	/* No such page directory allocated */
 	if (!(cur_page_dir[page_dir_index] & PE_PRESENT))
