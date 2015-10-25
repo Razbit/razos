@@ -1,3 +1,7 @@
+# set these to your cross compiler (see cross-compiler for instructions)
+export CC = i686-elf-gcc 
+export LD = i686-elf-ld
+
 all:
 	echo "Usage: make kernel|clean|bochs|qemu|tools"
 

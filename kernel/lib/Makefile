@@ -10,13 +10,13 @@ export LDFLAGS += -r
 all: $(OBJS) link
 
 link:
-	ld $(LDFLAGS) -o lib.o $(SUBOBJS) $(OBJS)
+	$(LD) $(LDFLAGS) -o lib.o $(SUBOBJS) $(OBJS)
 
 %.s.o: %.s
 	nasm $(ASFLAGS) $< -o $@
 
 %.c.o: %.c
-	gcc $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 
 clean:
 	rm *.o

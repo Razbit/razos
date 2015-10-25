@@ -17,13 +17,13 @@ all: $(OBJS)
 	$(MAKE) -C syscall
 	mv syscall/syscall.o ./syscall.o
 
-	ld $(LDFLAGS) -o kern.o $(SUBOBJS) $(OBJS)
+	$(LD) $(LDFLAGS) -o kern.o $(SUBOBJS) $(OBJS)
 
 %.s.o: %.s
 	nasm $(ASFLAGS) $< -o $@
 
 %.c.o: %.c
-	gcc $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 
 clean:
 	rm *.o

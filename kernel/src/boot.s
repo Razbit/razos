@@ -6,22 +6,22 @@
     ;;
     ;; Razbit 2014-2015
 
-SECTION .text
-
 MBOOT_PAGE_ALIGN    equ 1<<0    ; Load kernel and modules on a page boundary
 MBOOT_MEM_INFO      equ 1<<1    ; Provide the kernel with memory info
 MBOOT_HEADER_MAGIC  equ 0x1BADB002
 MBOOT_HEADER_FLAGS  equ MBOOT_PAGE_ALIGN | MBOOT_MEM_INFO
 MBOOT_CHECKSUM      equ -(MBOOT_HEADER_MAGIC + MBOOT_HEADER_FLAGS)
 
-
 [BITS 32]                       ; All instructions should be 32-bit.
+
+SECTION .multiboot
 
 mboot:
     dd MBOOT_HEADER_MAGIC       ; GRUB will search for this value on each
     dd MBOOT_HEADER_FLAGS       ; How GRUB should load your file / settings
     dd MBOOT_CHECKSUM           ; To ensure that the above values are correct
 
+SECTION .text
 
 [GLOBAL start]                  ; Kernel entry point
 [GLOBAL end_of_image]           ; End of kernel image

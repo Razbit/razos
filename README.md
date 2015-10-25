@@ -13,7 +13,11 @@ have much time..~~
 Now this project has changed; it is no longer a weekend project but rather the diploma work of Itara20 and me.. So, now there actually are goals (discussed later).
 
 #Setting up the developing environment
-We are using a Ubuntu/Debian-based Linux as the host system. QEMU and Bochs (mostly QEMU) are used for running the RazOS system. The compiler we use is GCC, and NASM is used as the assembler.
+##Making cross-compiler
+Start by making sure you have GCC-5.2.0 installed. Then see the file cross-compiler for a quick how-to build a cross-GCC.
+
+http://wiki.osdev.org/Building_GCC
+http://wiki.osdev.org/GCC_Cross-Compiler
 
 ##Setting up NASM
 ```shell
