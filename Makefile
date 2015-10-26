@@ -3,13 +3,19 @@ export CC = i686-elf-gcc
 export LD = i686-elf-ld
 
 all:
-	echo "Usage: make kernel|clean|bochs|qemu|tools"
+	echo "Usage: make kernel|rlibc|clean|bochs|qemu|tools"
 
+.PHONY: kernel
 kernel:
 	$(MAKE) -C kernel
 
+.PHONY: rlibc
+rlibc:
+	$(MAKE) -C rlibc
+
 clean:
 	$(MAKE) clean -C kernel
+	$(MAKE) clean -C rlibc
 
 bochs:
 	sudo ./update_image.sh
@@ -22,4 +28,3 @@ qemu:
 tools:
 	$(MAKE) tools -C tools
 
-.PHONY: kernel
