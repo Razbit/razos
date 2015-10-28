@@ -35,12 +35,11 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 	pit_set_freq(100);
 
 	paging_init(mb);
-	task_init();
-	syscall_init();
-
 	/* kmalloc(), kfree() available from this point on */
-	sti();
-	char* mem = kmalloc(12);
+	task_init();
+	syscall_init();	
+
+	kprintf("RazOS kernel initialized, starting init..\n");
 
 	kprintf("\n==HALTED==");
 
