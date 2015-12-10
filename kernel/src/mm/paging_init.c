@@ -99,8 +99,10 @@ void paging_set_allocatable_start(uint32_t* addr)
 void paging_init(struct multiboot_info* mb)
 {
 	extern uint32_t end_of_image; /* In linker.ld, boot.s */
+	uint32_t initrd_end = *(uint32_t*)(mb->mods_addr+4);
 
 	paging_set_allocatable_start(&end_of_image);
+	paging_set_allocatable_start((uint32_t*)initrd_end);
 
 	size_t pages_registered = register_avail_mem(mb);
 	kprintf("%u MiB available useful memory\n", \

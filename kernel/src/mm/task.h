@@ -9,6 +9,7 @@
 
 #include <sys/types.h>
 #include "../syscall/syscall.h"
+#include "../fs/vfs.h"
 
 #include "paging.h"
 
@@ -92,6 +93,8 @@ struct task_t
 			struct task_t* next;
 		} dead;
 	} wait_queue;
+
+	struct fildes_t files[32]; /* Files used by the process */
 };
 
 extern struct task_t* cur_task;

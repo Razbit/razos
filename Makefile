@@ -13,6 +13,11 @@ kernel:
 rlibc:
 	$(MAKE) -C rlibc
 
+.PHONY: tools
+tools:
+	$(MAKE) -C tools
+
+.PHONY: clean
 clean:
 	$(MAKE) clean -C kernel
 	$(MAKE) clean -C rlibc
@@ -24,7 +29,3 @@ bochs:
 qemu:
 	sudo ./update_image.sh
 	qemu-system-x86_64 -fda floppy.img
-
-tools:
-	$(MAKE) tools -C tools
-

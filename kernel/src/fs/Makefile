@@ -1,4 +1,4 @@
-CSOURCES = fs.c initrd.c
+CSOURCES = vfs.c ramfs.c
 ASMSOURCES = 
 SUBOBJS = 
 

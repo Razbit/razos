@@ -1,0 +1,24 @@
+/* This file is a part of the RazOS project
+ *
+ * fcntl.h -- File control options
+ *
+ * Razbit 2015 */
+
+#ifndef FCNTL_H
+#define FCNTL_H
+
+/* Mask for access modes */
+#define O_ACCMODE 0x03
+
+/* Access modes used by open/fcntl */
+#define O_RDONLY 0x00
+#define O_WRONLY 0x01
+#define O_RDWR   0x02
+
+/* Flags for open/fcntl (unused atm) */
+#define O_CREAT  0x10 /* Create file if it doesn't exist */
+#define O_TRUNC  0x20 /* Set length of file to 0 at write */
+#define O_APPEND 0x40 /* Append to file when writing */
+
+
+#endif /* FCNTL_H */

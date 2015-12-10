@@ -15,6 +15,11 @@
 #include "mm/task.h"
 #include "syscall/syscall.h"
 
+#include <fcntl.h>
+#include <unistd.h>
+#include "fs/vfs.h"
+#include "fs/ramfs.h"
+
 #include <kassert.h>
 #include <sys/types.h>
 #include <asm/system.h>
@@ -31,7 +36,6 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 
 	kprintf("Stack is at 0x%p\n", esp);
 
-
 	pit_set_freq(100);
 
 	paging_init(mb);
@@ -39,6 +43,8 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 	task_init();
 	syscall_init();	
 
+	/* open_vfs, close_vfs, creat_vfs, read_vfs, write_vfs, lseek_vfs */
+    
 	kprintf("RazOS kernel initialized, starting init..\n");
 
 	kprintf("\n==HALTED==");
