@@ -19,6 +19,7 @@
 #include <unistd.h>
 #include "fs/vfs.h"
 #include "fs/ramfs.h"
+#include "fs/initrd.h"
 
 #include <kassert.h>
 #include <sys/types.h>
@@ -39,12 +40,14 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 	pit_set_freq(100);
 
 	paging_init(mb);
+
 	/* kmalloc(), kfree() available from this point on */
 	task_init();
-	syscall_init();	
-
+	syscall_init();
+	init_initrd((void*)(*(uint32_t*)mb->mods_addr));
 	/* open_vfs, close_vfs, creat_vfs, read_vfs, write_vfs, lseek_vfs */
-    
+
+	
 	kprintf("RazOS kernel initialized, starting init..\n");
 
 	kprintf("\n==HALTED==");
