@@ -7,6 +7,8 @@
 #ifndef FCNTL_H
 #define FCNTL_H
 
+#include <sys/types.h>
+
 /* Mask for access modes */
 #define O_ACCMODE 0x03
 
@@ -20,5 +22,9 @@
 #define O_TRUNC  0x20 /* Set length of file to 0 at write */
 #define O_APPEND 0x40 /* Append to file when writing */
 
+
+int open(const char* name, int oflag);
+int creat(const char* name, int mode);
+int close(int fd);
 
 #endif /* FCNTL_H */

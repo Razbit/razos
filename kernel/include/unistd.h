@@ -7,9 +7,15 @@
 #ifndef UNISTD_H
 #define UNISTD_H
 
-/* lseek -- where to start (plus offset) */
+#include <sys/types.h>
+
+/* lseek -- where to start (plus offset) (whence) */
 #define SEEK_SET 0 /* Start from beginning of the file */
 #define SEEK_CUR 1 /* Start from current position in the file */
 #define SEEK_END 2 /* Start at EOF */
+
+off_t lseek(int fd, off_t offset, int whence);
+ssize_t read(int fd, void* buf, size_t size);
+ssize_t write(int fd, const void* buf, size_t size);
 
 #endif /* UNISTD_H */
