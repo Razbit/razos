@@ -23,14 +23,14 @@ typedef off_t (*lseek_t)(int, off_t, int);
 
 struct vfs_node_t
 {
-    char name[64];
+	char name[64];
 	uint32_t flags; 
-    ino_t inode;
+	ino_t inode;
 	size_t size;
 	
-    read_t read;
-    write_t write;
-    open_t open;
+	read_t read;
+	write_t write;
+	open_t open;
 	creat_t creat;
 	close_t close;
 	lseek_t lseek;
@@ -60,4 +60,5 @@ off_t lseek_vfs(int fd, off_t offset, int whence);
 
 /* creat() from all fs implementations here */
 int creat_ramfs(struct vfs_node_t*, uint32_t);
+
 #endif /* VFS_H */

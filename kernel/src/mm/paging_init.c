@@ -31,7 +31,7 @@ static size_t register_avail_mem_region(struct memory_map* region)
 	{
 		uint32_t addr = region->base_addr_low + offset;
 
-		/* Can't allcate before the and of the kernel.......... */
+		/* Can't allocate before the end of the kernel.......... */
 		if (addr < kernel_end)
 			continue;
 

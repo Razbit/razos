@@ -55,11 +55,19 @@ int open_vfs(const char* name, int oflag)
 	/* Find the corresponding VFS node for the file */
 	struct vfs_node_t* node = NULL;
 	struct vfs_node_t* ptr = vfs_root;
-	while (ptr != NULL && strncmp(name, &(ptr->name[0]), 64) != 0)
+	
+	if (vfs_root != NULL)
 	{
-		ptr = ptr->next;
+		while (ptr != NULL)
+		{			
+			if (strncmp(name, &(ptr->name[0]), strlen(name)) == 0)
+				break;
+			else
+				ptr = ptr->next;
+		}
 	}
-
+    
+	/* File doesn't exist yet -> create it. */
 	if (ptr == NULL)
 	{
 		int ret = creat_vfs(name, VFS_FILE);
@@ -70,54 +78,54 @@ int open_vfs(const char* name, int oflag)
 	
 	node = ptr;
 
-    /* Use fs-provided open(), if available */
-    if (node->open != NULL)
-        node->open(node, oflag);
+	/* Use fs-provided open(), if available */
+	if (node->open != NULL)
+		node->open(node, oflag);
 
     
-    /* Find an empty fildes from the task struct, fill it and
-     * return the index */
-    int i = 3; /* 0, 1, 2 reserved for stdin/out/err */
-    while (1)
-    {
-	    if (i == 32) /* No free file descriptors.. */
-	    {
-		    return -1;
-	    }
+	/* Find an empty fildes from the task struct, fill it and
+	 * return the index */
+	int i = 3; /* 0, 1, 2 reserved for stdin/out/err */
+	while (1)
+	{
+		if (i == 32) /* No free file descriptors.. */
+		{
+			return -1;
+		}
 	    
-	    if (cur_task->files[i].vfs_node != NULL)
-	    {
-		    i++;
-		    continue;
-	    }
+		if (cur_task->files[i].vfs_node != NULL)
+		{
+			i++;
+			continue;
+		}
 
-	    break;
-    }
+		break;
+	}
 
-    /* Now i is  the first free index. Populate the fildes */
-    cur_task->files[i].vfs_node = node;
-    cur_task->files[i].at = 0;
-    cur_task->files[i].oflag = oflag;
+	/* Now i is  the first free index. Populate the fildes */
+	cur_task->files[i].vfs_node = node;
+	cur_task->files[i].at = 0;
+	cur_task->files[i].oflag = oflag;
 
-    return i;
+	return i;
 }
 
 int close_vfs(int fd)
 {
 	struct vfs_node_t* node = cur_task->files[fd].vfs_node;
 	
-    if (node->close != NULL)
-    {
-        int ret = node->close(fd);
-        if (ret < 0)
-	        return -1;
-    }
+	if (node->close != NULL)
+	{
+		int ret = node->close(fd);
+		if (ret < 0)
+			return -1;
+	}
 
-    cur_task->files[fd].vfs_node = NULL;
-    cur_task->files[fd].at = 0;
-    cur_task->files[fd].oflag = 0;
+	cur_task->files[fd].vfs_node = NULL;
+	cur_task->files[fd].at = 0;
+	cur_task->files[fd].oflag = 0;
 
-    return 0;
+	return 0;
 }
 
 int creat_vfs(const char* name, uint32_t mode)
@@ -128,6 +136,7 @@ int creat_vfs(const char* name, uint32_t mode)
 	if (node == NULL)
 	{
 		node = (struct vfs_node_t*)kmalloc(sizeof(struct vfs_node_t));
+		vfs_root = node;
 	}
 	else
 	{
@@ -153,36 +162,36 @@ int creat_vfs(const char* name, uint32_t mode)
 	else
 		node->creat = NULL;
 		
-    if (node->creat != NULL)
-    {
-	    int ret = node->creat(node, mode);
-	    if (ret < 0)
-		    return -1;
-    }
+	if (node->creat != NULL)
+	{
+		int ret = node->creat(node, mode);
+		if (ret < 0)
+			return -1;
+	}
 
-    /* Find an empty fildes from the task struct, fill it and
-     * return the index */
-    int i = 3; /* 0, 1, 2 reserved for stdin/out/err */
-    while (1)
-    {
-	    if (i == 32) /* No free file descriptors.. */
-	    {
-		    return -1;
-	    }
+	/* Find an empty fildes from the task struct, fill it and
+	 * return the index */
+	int i = 3; /* 0, 1, 2 reserved for stdin/out/err */
+	while (1)
+	{
+		if (i == 32) /* No free file descriptors.. */
+		{
+			return -1;
+		}
 	    
-	    if (cur_task->files[i].vfs_node != NULL)
-	    {
-		    i++;
-		    continue;
-	    }
+		if (cur_task->files[i].vfs_node != NULL)
+		{
+			i++;
+			continue;
+		}
 
-	    break;
-    }
+		break;
+	}
 
-    /* Now i is  the first free index. Populate the fildes */
-    cur_task->files[i].vfs_node = node;
+	/* Now i is  the first free index. Populate the fildes */
+	cur_task->files[i].vfs_node = node;
 
-    return i;
+	return i;
 }
 
 off_t lseek_vfs(int fd, off_t offset, int whence)
@@ -209,6 +218,7 @@ off_t lseek_vfs(int fd, off_t offset, int whence)
 		default:
 			return (off_t)-1;
 		}
+		
 		return cur_task->files[fd].at;
 	}
 }
