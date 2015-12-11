@@ -36,7 +36,7 @@ int kputs(char *c)
 
 int kprintf(const char* fmt, ...)
 {
-	char str[1024];
+	char str[4096];
 
 	va_list args;
 	va_start(args, fmt);

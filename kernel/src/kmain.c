@@ -44,8 +44,25 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 	/* kmalloc(), kfree() available from this point on */
 	task_init();
 	syscall_init();
+
+	/* Load initrd files to the ramfs */
 	init_initrd((void*)(*(uint32_t*)mb->mods_addr));
+	
 	/* open_vfs, close_vfs, creat_vfs, read_vfs, write_vfs, lseek_vfs */
+
+	/* Example code for initrd usage. run mk-initrd README.md first.
+	   int fd = open_vfs("README.md", O_RDONLY);
+	   size_t size = lseek_vfs(fd, 0, SEEK_END);
+	   lseek_vfs(fd, 0, SEEK_SET);
+	   char* buf = (char*)kmalloc(size);
+	   if (buf)
+	   {
+	   kprintf("File size: %u\n", size);
+	   read_vfs(fd, buf, size);
+	   kprintf("%s\n", buf);
+	   }
+	   close_vfs(fd);
+	*/
 
 	
 	kprintf("RazOS kernel initialized, starting init..\n");

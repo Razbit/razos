@@ -23,8 +23,7 @@ void init_initrd(void* loc)
 	uint32_t nfiles = *((uint32_t*)loc);
 	struct initrd_node_t* node = (struct initrd_node_t*)(loc+4);
 
-	char* testbuf = (char*)kmalloc(512);
-	int i = 0;
+	uint32_t i = 0;
 	for (; i < nfiles; i++)
 	{
 		size_t size = node[i].size;
