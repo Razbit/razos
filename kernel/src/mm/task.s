@@ -28,12 +28,12 @@ sched_begin:
     mov es, ax
     mov fs, ax
     mov gs, ax
-
+	
     mov ecx, 0xFFC00000         ; user stack end: paging.h
     mov edx, 0x10000000         ; task entry point
-
+	
     sti                         ; Now the PIT may call sched_switch
-    sysexit 					; Enter the user world
+    ;sysexit 	                ; Enter the user world
 
 sched_switch:
     ;; save old task state

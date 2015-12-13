@@ -16,7 +16,7 @@
 [EXTERN _init]
 [EXTERN _fini]
 
-SECTION .text
+SECTION .start
 
     ;; Entry of the user program.
     ;; Loader puts *argv, *envp, argc, argv, envc, envp on stack
@@ -34,6 +34,7 @@ _start:
 
     call _exit
     
+SECTION .text
 _exit:
     pop ebx
     call _fini

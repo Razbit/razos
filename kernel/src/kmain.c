@@ -21,6 +21,8 @@
 #include "fs/ramfs.h"
 #include "fs/initrd.h"
 
+#include "loader/exec.h"
+
 #include <kassert.h>
 #include <sys/types.h>
 #include <asm/system.h>
@@ -44,7 +46,7 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 	/* kmalloc(), kfree() available from this point on */
 	task_init();
 	syscall_init();
-
+	
 	/* Load initrd files to the ramfs */
 	init_initrd((void*)(*(uint32_t*)mb->mods_addr));
 	
@@ -64,8 +66,19 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 	   close(fd);
 	*/
 
-	
 	kprintf("RazOS kernel initialized, starting init..\n");
+
+	int ret = do_execve("init", 0, 0);
+	kprintf("execve returned %i\n", ret);
+	char* buf = 0x10000000;
+	int i = 0;
+	kprintf("debug: ");
+	for (; i < 100; i++)
+		kprintf("%x ", (uint8_t)buf[i]);
+	kprintf(".\n");
+	//for(;;);
+	if (ret == 0)
+		sched_begin();
 
 	kprintf("\n==HALTED==");
 
