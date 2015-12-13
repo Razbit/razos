@@ -28,4 +28,4 @@ bochs:
 
 qemu:
 	sudo ./update_image.sh
-	qemu-system-x86_64 -fda floppy.img
+	qemu-system-x86_64 -fda floppy.img -m 512 -d cpu_reset

@@ -17,10 +17,10 @@
 #define O_WRONLY 0x01
 #define O_RDWR   0x02
 
-/* Flags for open/fcntl (unused atm) */
+/* Flags for open/fcntl */
 #define O_CREAT  0x10 /* Create file if it doesn't exist */
-#define O_TRUNC  0x20 /* Set length of file to 0 at write */
-#define O_APPEND 0x40 /* Append to file when writing */
+#define O_TRUNC  0x20 /* Set length of file to 0 at write (not impl)*/
+#define O_APPEND 0x40 /* Append to file when writing (not impl)*/
 
 
 int open(const char* name, int oflag);

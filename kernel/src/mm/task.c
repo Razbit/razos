@@ -84,7 +84,7 @@ void task_init()
 	tss.ss0 = GDT_KERNEL_DATA;
 	tss.esp0 = KERNEL_STACK_END;
 
-	/* Pointer to io perm bitmap is beyond the and of the segment */
+	/* Pointer to io perm bitmap is beyond the end of the segment */
 	tss.iopb = sizeof(tss);
 
 	/* load tss selector */
@@ -95,6 +95,7 @@ void task_init()
 
 	/* Create user stack */
 	uint32_t *user_stack_page_table = kmalloc_pa(PAGE_SIZE);
+	memset(user_stack_page_table, 0, PAGE_SIZE);
 	init_task->page_dir[1022] = \
 		virt_to_phys(user_stack_page_table) | PE_PRESENT | PE_RW | PE_USER;
 	user_stack_page_table[1023] = \
@@ -152,6 +153,8 @@ struct task_t* task_fork_inner()
 	memcpy(&new_task->fpu_state, &cur_task->fpu_state, \
 	       sizeof(new_task->fpu_state));
 	memcpy(new_task->kstack, cur_task->kstack, PAGE_SIZE);
+	memcpy(&new_task->files, &cur_task->files, \
+	       sizeof(new_task->files));
 
 	copy_user_pages(new_task);
 

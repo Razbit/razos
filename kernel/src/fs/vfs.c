@@ -70,10 +70,15 @@ int open_vfs(const char* name, int oflag)
 	/* File doesn't exist yet -> create it. */
 	if (ptr == NULL)
 	{
-		int ret = creat_vfs(name, VFS_FILE);
-		cur_task->files[ret].at = 0;
-		cur_task->files[ret].oflag = oflag;
-		return ret;
+		if (oflag & O_CREAT)
+		{
+			int ret = creat_vfs(name, VFS_FILE);
+			cur_task->files[ret].at = 0;
+			cur_task->files[ret].oflag = oflag;
+			return ret;
+		}
+		else
+			return -1;
 	}
 	
 	node = ptr;
