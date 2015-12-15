@@ -63,7 +63,7 @@ static void create_skel_page_dir(struct task_t* task)
 		task_page_dir[i] = cur_page_dir[i];
 
 	task->page_dir = task_page_dir;
-	task->page_dir_phys = virt_to_phys(task_page_dir);
+	task->page_dir_phys = virt_to_phys((uint32_t)task_page_dir);
 	task->page_dir[1023] = task->page_dir_phys | PE_PRESENT | PE_RW;
 
 	uint32_t* kstack_page_table = kmalloc_pa(PAGE_SIZE);
@@ -72,7 +72,7 @@ static void create_skel_page_dir(struct task_t* task)
 
 	task->kstack = kmalloc_pa(PAGE_SIZE);
 	kstack_page_table[1023] = \
-		virt_to_phys(task->kstack) | PE_PRESENT | PE_RW;
+		virt_to_phys((uint32_t)task->kstack) | PE_PRESENT | PE_RW;
 }
 
 /* Initialize tasking */
@@ -87,23 +87,26 @@ void task_init()
 	/* Pointer to io perm bitmap is beyond the end of the segment */
 	tss.iopb = sizeof(tss);
 
+	kprintf("Load TSS at 0x%p\n", &tss);
+
 	/* load tss selector */
 	__asm__ __volatile__("mov %0, %%eax; ltr %%ax" :: "r"(GDT_TSS | 3) : "%eax");
 
-	struct task_t* init_task = alloc_empty_task();
-	create_skel_page_dir(init_task);
+	cur_task = alloc_empty_task();
+	create_skel_page_dir(cur_task);
+	
+	cur_task->ppid = 0;
+	
+	set_page_directory(cur_task->page_dir_phys);
 
 	/* Create user stack */
-	uint32_t *user_stack_page_table = kmalloc_pa(PAGE_SIZE);
-	memset(user_stack_page_table, 0, PAGE_SIZE);
-	init_task->page_dir[1022] = \
-		virt_to_phys(user_stack_page_table) | PE_PRESENT | PE_RW | PE_USER;
-	user_stack_page_table[1023] = \
-		page_alloc() | PE_PRESENT | PE_RW | PE_USER;
+	kprintf("Allocating stack\n");
+	uint32_t page = page_alloc();
+	page_map(USER_STACK_END, page, PE_PRESENT | PE_USER | PE_RW);
+	
 
-	init_task->ppid = 0;
-
-	cur_task = init_task;
+	kprintf("Tasking initialization succeeded.\n");
+	
 }
 
 static void copy_user_pages(struct task_t* new_task)
@@ -121,7 +124,7 @@ static void copy_user_pages(struct task_t* new_task)
 			(uint32_t*)(CUR_PG_TABLE_BASE + dir_i * PAGE_SIZE);
 		uint32_t* new_page_table = kmalloc_pa(PAGE_SIZE);
 
-		new_task->page_dir[dir_i] = virt_to_phys(new_page_table) \
+		new_task->page_dir[dir_i] = virt_to_phys((uint32_t)new_page_table) \
 			| (cur_page_dir[dir_i] & PE_FLAG_MASK);
 
 		/* Copy available pages */

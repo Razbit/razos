@@ -20,7 +20,7 @@ struct gdt_entry_t
 	uint8_t granularity; /* 0..3: Segment limit bits 16..19; 4..5: zero;
 	                      * 6: Operand size (16/32) 7: Byte/kbyte */
 	uint8_t high_base;	 /* Base address bits 24..31 */
-};
+} __attribute__((__packed__));
 
 /* The GDT table entries */
 static struct gdt_entry_t gdt[6];

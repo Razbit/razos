@@ -6,6 +6,7 @@
 
 #include <sys/types.h>
 #include <string.h>
+#include <console.h>
 
 #include "../mm/paging.h"
 #include "../mm/task.h"
@@ -18,7 +19,7 @@
  * make sure that we do the free-ing in do_exec(). */
 int load_elf(void* data)
 {
-	set_page_directory(cur_task->page_dir_phys);
+	
 	
 	/* Parse elf */
 	Elf32_Ehdr* elfhdr = data;
@@ -51,15 +52,16 @@ int load_elf(void* data)
 		Elf32_Word size = 0;
 		for (; size < phdr->p_memsz; size += PAGE_SIZE)
 		{
+			kprintf("load_elf: allocating space for code at 0x%p\n", phdr->p_vaddr+size);
 			uint32_t page = page_alloc();
 			if (phdr->p_flags & PF_W)
 			{
-				page_map(phdr->p_vaddr, page, \
+				page_map(phdr->p_vaddr+size, page, \
 				         PE_PRESENT | PE_USER | PE_RW);
 			}
 			else
 			{
-				page_map(phdr->p_vaddr, page, PE_PRESENT | PE_USER);
+				page_map(phdr->p_vaddr+size, page, PE_PRESENT | PE_USER);
 			}
 		}
 		

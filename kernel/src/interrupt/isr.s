@@ -85,6 +85,7 @@ idt_init_asm:
     ;; page fault
 BEGIN_ISR 14
     mov eax, cr2
+    jmp $
     push eax
     push .msg
     call panic
@@ -97,15 +98,15 @@ END_ISR 14
 BEGIN_ISR 32
     ACK_IRQ
 
-    ;push ebp
-    ;push dword 0
-    ;push dword 0
-    ;mov ebp, esp
+    push ebp
+    push dword 0
+    push dword 0
+    mov ebp, esp
 
-    ;call sched_switch
+    call sched_switch
 
-    ;add esp, 8
-    ;pop ebp
+    add esp, 8
+    pop ebp
 
     iret
 END_ISR 32

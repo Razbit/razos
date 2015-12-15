@@ -7,9 +7,9 @@ OBJS += $(patsubst %.s, %.s.o,$(ASMSOURCES))
 
 
 all: $(OBJS)
-	cp $(ARCH)/crti.s.o ./crti.s.o
-	cp $(ARCH)/crtn.s.o ./crtn.s.o
-	cp $(ARCH)/crt0.s.o ./crt0.s.o
+	mv $(ARCH)/crti.s.o ./crti.s.o
+	mv $(ARCH)/crtn.s.o ./crtn.s.o
+	mv $(ARCH)/crt0.s.o ./crt0.s.o
 
 %.s.o: %.s
 	nasm $(ASFLAGS) $< -o $@
