@@ -20,7 +20,6 @@
 #define KERNEL_STACK_END   0x0FFFFFFC
 #define USER_MEMORY_BEGIN  0x10000000
 #define USER_CODE_BEGIN    0x10000000
-#define USER_CODE_END      0x10400000
 #define USER_STACK_BEGIN   0xFF800000
 #define USER_STACK_END     0xFFBFFFFC
 #define CUR_PG_DIR         0xFFFFF000
@@ -33,6 +32,7 @@
 
 /* Bit 31 in cr0 enables paging */
 #define FL_PAGING_ENABLED (1 << 31)
+
 
 /* Set page_dir as current page directory */
 void set_page_directory(uint32_t page_dir);

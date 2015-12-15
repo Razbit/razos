@@ -22,6 +22,7 @@ static struct tss_t tss;
 struct task_t* cur_task;
 static struct task_t* tasks[1024];
 
+
 struct task_t* get_task(pid_t pid)
 {
 	if (pid > countof(tasks))
@@ -42,6 +43,7 @@ static struct task_t* alloc_empty_task()
 			panic("Tasking: could not allocate space for task_t\n");
 		tasks[pid]->state = TASK_STATE_READY;
 		tasks[pid]->pid = pid;
+		tasks[pid]->stack_begin = USER_STACK_END;
 		tasks[pid]->wait_queue.live.head = NULL;
 		tasks[pid]->wait_queue.live.tail = NULL;
 		return tasks[pid];
@@ -58,21 +60,13 @@ static void create_skel_page_dir(struct task_t* task)
 	if (!task_page_dir)
 		panic("Tasking: could not allocate space for page directory\n");
 
-	/* Map kernel code, heap to same locations */
-	for (size_t i = 0; i < KERNEL_STACK_BEGIN/(4*1024*1024); i++)
+	/* Map kernel code, heap and stack to same locations */
+	for (size_t i = 0; i < KERNEL_STACK_END/(4*1024*1024); i++)
 		task_page_dir[i] = cur_page_dir[i];
 
 	task->page_dir = task_page_dir;
 	task->page_dir_phys = virt_to_phys((uint32_t)task_page_dir);
 	task->page_dir[1023] = task->page_dir_phys | PE_PRESENT | PE_RW;
-
-	uint32_t* kstack_page_table = kmalloc_pa(PAGE_SIZE);
-	task->page_dir[KERNEL_STACK_BEGIN/(4*1024*1024)] = \
-		virt_to_phys((uint32_t)kstack_page_table | PE_PRESENT | PE_RW);
-
-	task->kstack = kmalloc_pa(PAGE_SIZE);
-	kstack_page_table[1023] = \
-		virt_to_phys((uint32_t)task->kstack) | PE_PRESENT | PE_RW;
 }
 
 /* Initialize tasking */
@@ -90,7 +84,8 @@ void task_init()
 	kprintf("Load TSS at 0x%p\n", &tss);
 
 	/* load tss selector */
-	__asm__ __volatile__("mov %0, %%eax; ltr %%ax" :: "r"(GDT_TSS | 3) : "%eax");
+	__asm__ __volatile__("mov %0, %%eax; ltr %%ax" \
+	                     :: "r"(GDT_TSS | 3) : "%eax");
 
 	cur_task = alloc_empty_task();
 	create_skel_page_dir(cur_task);
@@ -99,11 +94,16 @@ void task_init()
 	
 	set_page_directory(cur_task->page_dir_phys);
 
-	/* Create user stack */
-	kprintf("Allocating stack\n");
-	uint32_t page = page_alloc();
-	page_map(USER_STACK_END, page, PE_PRESENT | PE_USER | PE_RW);
+	/* Create kernel stack */
+	uint32_t alloc = KERNEL_STACK_END;
+	for (; alloc > KERNEL_STACK_BEGIN; alloc -= PAGE_SIZE)
+		page_map(alloc, page_alloc(), PE_PRESENT | PE_RW);
+    
 	
+	/* Create user stack */
+	kprintf("Allocating user stack\n");
+	page_map(USER_STACK_END, page_alloc(), PE_PRESENT | PE_USER | PE_RW);
+	cur_task->stack_begin -= PAGE_SIZE;
 
 	kprintf("Tasking initialization succeeded.\n");
 	

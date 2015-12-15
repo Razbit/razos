@@ -19,8 +19,6 @@
  * make sure that we do the free-ing in do_exec(). */
 int load_elf(void* data)
 {
-	
-	
 	/* Parse elf */
 	Elf32_Ehdr* elfhdr = data;
 
@@ -39,8 +37,7 @@ int load_elf(void* data)
 	Elf32_Phdr* phdr;
 	for (i = 0, offset = elfhdr->e_phoff; \
 	     i < elfhdr->e_phnum; \
-	     i++, offset += sizeof(Elf32_Phdr)
-		)
+	     i++, offset += sizeof(Elf32_Phdr))
 	{
 		phdr = (Elf32_Phdr*)(data + offset);
 		if (phdr->p_type != PT_LOAD)
@@ -52,16 +49,20 @@ int load_elf(void* data)
 		Elf32_Word size = 0;
 		for (; size < phdr->p_memsz; size += PAGE_SIZE)
 		{
-			kprintf("load_elf: allocating space for code at 0x%p\n", phdr->p_vaddr+size);
-			uint32_t page = page_alloc();
+
 			if (phdr->p_flags & PF_W)
 			{
-				page_map(phdr->p_vaddr+size, page, \
+				kprintf("load_elf: Allocate RW at 0x%p\n", \
+				        phdr->p_vaddr+size);
+				page_map(phdr->p_vaddr+size, page_alloc(), \
 				         PE_PRESENT | PE_USER | PE_RW);
 			}
 			else
 			{
-				page_map(phdr->p_vaddr+size, page, PE_PRESENT | PE_USER);
+				page_map(phdr->p_vaddr+size, page_alloc(), \
+				         PE_PRESENT | PE_USER);
+				kprintf("load_elf: Allocate RX at 0x%p\n", \
+				        phdr->p_vaddr+size);
 			}
 		}
 		

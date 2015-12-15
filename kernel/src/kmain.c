@@ -66,24 +66,19 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 	   close(fd);
 	*/
 
-	kprintf("RazOS kernel initialized, starting init..\n");
+	kputs("RazOS kernel initialized, starting init..\n");
 
 	int ret = do_execve("init", 0, 0);
-	kprintf("execve returned %i\n", ret);
-	char* buf = 0x10000000;
-	int i = 0;
-	kprintf("debug: ");
-	for (; i < 100; i++)
-		kprintf("%x ", (uint8_t)buf[i]);
-	kprintf(".\n");
-	//for(;;);
+	kprintf("Execve returned %i\n", ret);
 	if (ret == 0)
+	{
+		kputs("Starting scheduler..\n");
 		sched_begin();
-
-	kprintf("\n==HALTED==");
+	}
+	
+	kputs("\n==HALTED==");
 
 	for(;;);
 
 	return 0xDEADBABE;
 }
-

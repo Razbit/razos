@@ -16,6 +16,6 @@ void exit(uint32_t status)
 
 int main()
 {
-	console_log("Hello\n");
+	console_log("Hello from Userworld!\n");
 	return 1;
 }

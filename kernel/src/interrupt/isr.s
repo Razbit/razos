@@ -15,6 +15,7 @@
     ;; C-side interrupt handlers
 [EXTERN sched_switch]           ; task.s
 [EXTERN kb_handler]             ; kb.c
+[EXTERN pagefault_handler]      ; pagefault.c
 
     ;; Some quite heavy macro-magic
     ;; Have a hard stare at this and you'll figure it out
@@ -85,13 +86,10 @@ idt_init_asm:
     ;; page fault
 BEGIN_ISR 14
     mov eax, cr2
-    jmp $
     push eax
-    push .msg
-    call panic
+    
+    call pagefault_handler 		; handler(addr, error, eip)
     iret
-
-    .msg db "page fault at 0x%x, error code %x", 0
 END_ISR 14
 
     ;; PIT

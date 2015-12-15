@@ -29,7 +29,6 @@ _start:
     call _init
     
     call main
-    
     push eax
 
     call _exit
@@ -37,8 +36,10 @@ _start:
 SECTION .text
 _exit:
     pop ebx
+
     call _fini
     push ebx
+
     call exit
 
     
@@ -55,7 +56,7 @@ _exit:
     pop ecx
 %endmacro
     
-    ;; No parameters, syscall num on stored on stack
+    ;; No parameters, syscall num on stack
     ;; In razos.h as uint32_t __syscall0(num)
 __syscall0:
     mov eax, [esp+0+4]
