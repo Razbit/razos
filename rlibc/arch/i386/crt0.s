@@ -10,9 +10,10 @@
 [GLOBAL __syscall1]
 [GLOBAL __syscall2]
 [GLOBAL __syscall3]
+[GLOBAL exit]
 
 [EXTERN main]
-[EXTERN exit]
+[EXTERN _exit]
 [EXTERN _init]
 [EXTERN _fini]
 
@@ -31,16 +32,16 @@ _start:
     call main
     push eax
 
-    call _exit
+    call exit
     
 SECTION .text
-_exit:
-    pop ebx
+exit:
+    mov ebx, [esp + 4]
 
-    call _fini
+    ;call _fini					; Uncomment when writing to BSS works
     push ebx
 
-    call exit
+    call _exit
 
     
     ;; Syscall interface
