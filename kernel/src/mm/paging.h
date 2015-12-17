@@ -59,6 +59,9 @@ uint32_t virt_to_phys(uint32_t virt);
 /* Return non-zero if page is present AND mapped to USER */
 int page_mapped_to_user(uint32_t virt);
 
+/* Return page table and page flags */
+uint32_t page_flags(uint32_t virt);
+
 /* Figure out the beginning of allocatable memory */
 void paging_set_allocatable_start(uint32_t* addr);
 

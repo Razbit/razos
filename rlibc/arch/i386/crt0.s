@@ -38,7 +38,7 @@ SECTION .text
 exit:
     mov ebx, [esp + 4]
 
-    ;call _fini					; Uncomment when writing to BSS works
+    call _fini
     push ebx
 
     call _exit

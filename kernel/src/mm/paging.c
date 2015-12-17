@@ -38,6 +38,8 @@ void set_page_directory(uint32_t page_dir)
 	__asm__ __volatile__("mov %%cr0, %0" : "=r"(cr0) :: "memory");
 	cr0 |= FL_PAGING_ENABLED;
 	__asm__ __volatile__("mov %0, %%cr0" :: "r"(cr0) : "memory");
+
+	kprintf("Set page dir at 0x%p\n", page_dir);
 }
 
 
@@ -78,7 +80,7 @@ uint32_t page_alloc()
 		 * next_free_page = *0; */
 		__asm__ __volatile__("mov (0), %0"
 		                     : "=r"(next_free_page)
-				     :
+		                     :
 			);
 		/* TODO: Do not bend the rules */
 		page_temp_unmap();
@@ -194,4 +196,19 @@ int page_mapped_to_user(uint32_t virt)
 		return 0;
 
 	return 1;
+}
+
+/* Return page table and page flags */
+uint32_t page_flags(uint32_t virt)
+{
+	uint32_t dir_index = (virt / PAGE_SIZE) / 1024;
+	uint32_t base_index = virt / PAGE_SIZE;
+
+	uint32_t* page_dir = CUR_PG_DIR;
+	uint32_t* page_table_base = CUR_PG_TABLE_BASE;
+	
+	uint32_t flags = (page_dir[dir_index] & PE_FLAG_MASK) << 16;
+	flags |= (page_table_base[base_index] & PE_FLAG_MASK);
+
+	return flags;
 }

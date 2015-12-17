@@ -115,7 +115,6 @@ void paging_init(struct multiboot_info* mb)
 	recursively_map_page_directory(page_dir);
 
 	set_page_directory((uint32_t)page_dir);
-	kprintf("page dir at 0x%p\n", page_dir);
 
 	kernel_page_init(kernel_end, KERNEL_STACK_BEGIN);
 }

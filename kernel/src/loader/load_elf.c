@@ -52,17 +52,16 @@ int load_elf(void* data)
 
 			if (phdr->p_flags & PF_W)
 			{
-				kprintf("load_elf: Allocate RW at 0x%p\n", \
-				        phdr->p_vaddr+size);
 				page_map(phdr->p_vaddr+size, page_alloc(), \
 				         PE_PRESENT | PE_USER | PE_RW);
 			}
 			else
 			{
 				page_map(phdr->p_vaddr+size, page_alloc(), \
-				         PE_PRESENT | PE_USER);
-				kprintf("load_elf: Allocate RX at 0x%p\n", \
-				        phdr->p_vaddr+size);
+				         PE_PRESENT | PE_USER | PE_RW);
+				/* Code segment writable so the page table is writable
+				 * TODO: figure out how to make the page table writable
+				 *       without the code segment being writable */
 			}
 		}
 		
