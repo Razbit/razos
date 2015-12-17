@@ -19,9 +19,9 @@ struct idt_entry_t
 	uint16_t low_base;	/* Low 16 bits of the addr to jump to */
 	uint16_t selector;	/* Kernel segment selector */
 	uint8_t zero;		/* Always zero */
-	uint8_t flags;		/* 0..4: always 0x0E; 5..6: Ring; 7: Present? */
+	uint8_t flags;		/* 0..3: always 0xE; 4: 0; 5..6: Ring; 7: Present? */
 	uint16_t high_base; /* Upper 16 bits of the address */
-};
+} __attribute__((__packed__));
 
 static struct idt_entry_t idt[256];
 
@@ -40,8 +40,7 @@ void interrupt_register_isr(uint8_t int_no, void* handler)
 	entry.low_base = (uint32_t)handler & 0xFFFF;
 	entry.selector = GDT_KERNEL_CODE;
 	entry.zero = 0;
-	entry.flags = (1 << 7); /* Present */
-	entry.flags |= 0xE;		/* Interrupt gate */
+	entry.flags = 0xEE; /* Is 32-interrupt gate, dpl=3, is present */
 	entry.high_base = ((uint32_t)handler >> 16) & 0xFFFF;
 
 	idt[int_no] = entry;
@@ -68,5 +67,6 @@ void idt_init()
 
 	idt_ptr.size = sizeof(idt) - 1;
 	idt_ptr.base = idt;
+	kprintf("Load idt (%u bytes) at 0x%x\n", idt_ptr.size, idt_ptr.base);
 	idt_load(); /* isr.s */
 }

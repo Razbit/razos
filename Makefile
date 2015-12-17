@@ -21,6 +21,11 @@ tools:
 clean:
 	$(MAKE) clean -C kernel
 	$(MAKE) clean -C rlibc
+.PHONY: init
+init:
+	$(MAKE) -C rlibc
+	mv rlibc/rlibc ./init
+	tools/mk-initrd init
 
 bochs:
 	sudo ./update_image.sh

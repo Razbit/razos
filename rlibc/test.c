@@ -9,13 +9,13 @@ void console_log(const char* str)
 	__syscall2(SYS_CONSOLE_LOG, (uint32_t)str, len);
 }
 
-void exit(uint32_t status)
+__attribute__ ((__noreturn__)) void _exit(uint32_t status)
 {
 	__syscall1(SYS_EXIT, status);
 }
 
-int main()
+uint32_t main()
 {
-	console_log("Hello\n");
+	console_log("Hello from Userworld!\n");
 	return 1;
 }

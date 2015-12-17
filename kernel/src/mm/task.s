@@ -23,17 +23,16 @@
 %define task_page_dir_phys(task) [(task) + 0x210]
 
 sched_begin:
-    mov ax, USER_DATA
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-
-    mov ecx, 0xFFC00000         ; user stack end: paging.h
+    mov eax, USER_DATA
+    mov ds, eax
+    mov es, eax
+    mov fs, eax
+    mov gs, eax
+    
+    mov ecx, 0xFFBFFFFC         ; user stack end: paging.h
     mov edx, 0x10000000         ; task entry point
-
     sti                         ; Now the PIT may call sched_switch
-    sysexit 					; Enter the user world
+    sysexit 	                ; Enter the user world
 
 sched_switch:
     ;; save old task state

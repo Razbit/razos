@@ -94,6 +94,7 @@ struct task_t
 		} dead;
 	} wait_queue;
 
+	uint32_t stack_begin; /* Lowest address of the stack */
 	struct fildes_t files[32]; /* Files used by the process */
 };
 

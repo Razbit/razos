@@ -19,7 +19,9 @@
 #define KERNEL_STACK_BEGIN 0x0FC00000
 #define KERNEL_STACK_END   0x0FFFFFFC
 #define USER_MEMORY_BEGIN  0x10000000
-#define USER_STACK_END     0xFFC00000
+#define USER_CODE_BEGIN    0x10000000
+#define USER_STACK_BEGIN   0xFF800000
+#define USER_STACK_END     0xFFBFFFFC
 #define CUR_PG_DIR         0xFFFFF000
 #define CUR_PG_TABLE_BASE  0xFFC00000
 
@@ -30,6 +32,7 @@
 
 /* Bit 31 in cr0 enables paging */
 #define FL_PAGING_ENABLED (1 << 31)
+
 
 /* Set page_dir as current page directory */
 void set_page_directory(uint32_t page_dir);
@@ -55,6 +58,9 @@ uint32_t virt_to_phys(uint32_t virt);
 
 /* Return non-zero if page is present AND mapped to USER */
 int page_mapped_to_user(uint32_t virt);
+
+/* Return page table and page flags */
+uint32_t page_flags(uint32_t virt);
 
 /* Figure out the beginning of allocatable memory */
 void paging_set_allocatable_start(uint32_t* addr);

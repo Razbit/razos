@@ -1,6 +1,6 @@
 CSOURCES = gdt.c console.c kmain.c vga.c panic.c
 ASMSOURCES = gdt.s
-SUBOBJS = interrupt.o mm.o syscall.o fs.o
+SUBOBJS = interrupt.o mm.o syscall.o fs.o loader.o
 
 OBJS = $(patsubst %.c, %.c.o,$(CSOURCES))
 OBJS += $(patsubst %.s, %.s.o,$(ASMSOURCES))
@@ -19,6 +19,9 @@ all: $(OBJS)
 
 	$(MAKE) -C fs
 	mv fs/fs.o ./fs.o
+
+	$(MAKE) -C loader
+	mv loader/loader.o ./loader.o
 
 	$(LD) $(LDFLAGS) -o kern.o $(SUBOBJS) $(OBJS)
 
