@@ -3,7 +3,7 @@ export CC = i686-elf-gcc
 export LD = i686-elf-ld
 
 all:
-	echo "Usage: make kernel|rlibc|clean|bochs|qemu|tools"
+	echo "Usage: make kernel|rlibc|init|clean|bochs|qemu|tools"
 
 .PHONY: kernel
 kernel:

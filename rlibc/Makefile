@@ -1,4 +1,4 @@
-CSOURCES = test.c
+CSOURCES = test.c unistd.c fcntl.c do_exit.c
 ASMSOURCES = 
 SUBOBJS = 
 

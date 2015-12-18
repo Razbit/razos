@@ -13,7 +13,7 @@
 [GLOBAL exit]
 
 [EXTERN main]
-[EXTERN _exit]
+[EXTERN do_exit]
 [EXTERN _init]
 [EXTERN _fini]
 
@@ -41,7 +41,7 @@ exit:
     call _fini
     push ebx
 
-    call _exit
+    call do_exit
 
     
     ;; Syscall interface

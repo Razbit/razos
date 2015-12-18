@@ -14,12 +14,16 @@
 
 /* Syscalls */
 #define SYS_EXIT 0
-#define SYS_YIELD 1
+#define SYS_SCHED_YIELD 1
 #define SYS_FORK 2
 #define SYS_WAIT 3
 
-#define SYS_REGDUMP 4
-#define SYS_CONSOLE_LOG 5
+#define SYS_READ 4
+#define SYS_WRITE 5
+#define SYS_OPEN 6
+#define SYS_CLOSE 7
+#define SYS_CREAT 8
+#define SYS_LSEEK 9
 
 /* In arch/../crt0.s */
 uint32_t __syscall0(uint32_t num);

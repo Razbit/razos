@@ -7,8 +7,6 @@
 #ifndef FCNTL_H
 #define FCNTL_H
 
-#include <sys/types.h>
-
 /* Mask for access modes */
 #define O_ACCMODE 0x03
 

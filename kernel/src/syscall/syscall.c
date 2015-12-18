@@ -13,27 +13,30 @@
 #include <api/razos.h>
 
 /* Include all syscall headers here */
-#include "sys_exit.h"
-#include "sys_yield.h"
-#include "sys_fork.h"
-#include "sys_wait.h"
-#include "sys_regdump.h"
-#include "sys_console_log.h"
+#include "sys_tasking.h" /* exit, sched_yield, fork, wait */
+#include "sys_fs.h"      /* open, close, creat, read, write, lseek */
 
-/* Add the syscall here AND into <api/razos.h> */
+/* Add the syscall here AND into razos_kernel_headerds/api/razos.h */
 syscall_t syscall_table[] =
 {
 	[SYS_EXIT] = &sys_exit,
-	[SYS_YIELD] = &sys_yield,
+	[SYS_SCHED_YIELD] = &sys_sched_yield,
 	[SYS_FORK] = &sys_fork,
 	[SYS_WAIT] = &sys_wait,
-	[SYS_REGDUMP] = &sys_regdump,
-	[SYS_CONSOLE_LOG] = &sys_console_log
+	[SYS_READ] = &sys_read,
+	[SYS_WRITE] = &sys_write,
+	[SYS_OPEN] = &sys_open,
+	[SYS_CLOSE] = &sys_close,
+	[SYS_CREAT] = &sys_creat,
+	[SYS_LSEEK] = &sys_lseek
 };
 
 /* Make sure buffer is available to user */
 int valid_user_buffer(uint32_t ptr, size_t len)
 {
+	if (ptr == NULL)
+		return 0;
+	
 	if ((0xFFFFFFFF - len) < ptr)
 		return 0;
 
