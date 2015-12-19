@@ -7,11 +7,7 @@
 #ifndef UNISTD_H
 #define UNISTD_H
 
-/* TODO: Iiro, tee naille typedeffeille taikoja :D  */
-#ifndef SIZE_T
-#define SIZE_T
-typedef unsigned int size_t;
-#endif
+#include <decl_size_t.h>
 
 #ifndef SSIZE_T
 #define SSIZE_T
