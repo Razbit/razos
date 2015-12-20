@@ -1,6 +1,6 @@
-CSOURCES = test.c unistd.c fcntl.c do_exit.c stdlib.c
+CSOURCES = test.c do_exit.c
 ASMSOURCES = 
-SUBOBJS = 
+SUBOBJS = fcntl.o stdlib.o unistd.o
 
 OBJS = $(patsubst %.c, %.c.o,$(CSOURCES))
 OBJS += $(patsubst %.s, %.s.o,$(ASMSOURCES))
@@ -22,8 +22,11 @@ CRTN = $(PWD)/arch/crtn.s.o
 
 all: $(OBJS)
 	$(MAKE) -C arch
+	$(MAKE) -C fcntl
+	$(MAKE) -C stdlib
+	$(MAKE) -C unistd
 
-	$(LD) $(_LDFLAGS) -Tuser.ld -o rlibc $(CRT0) $(CRTI) $(CRTBEGIN) $(OBJS) $(CRTEND) $(CRTN)
+	$(LD) $(_LDFLAGS) -Tuser.ld -o rlibc $(CRT0) $(CRTI) $(CRTBEGIN) $(OBJS) $(SUBOBJS) $(CRTEND) $(CRTN)
 
 %.s.o: %.s
 	nasm $(ASFLAGS) $< -o $@
@@ -34,3 +37,6 @@ all: $(OBJS)
 clean:
 	rm *.o
 	$(MAKE) clean -C arch
+	$(MAKE) clean -C fcntl
+	$(MAKE) clean -C stdlib
+	$(MAKE) clean -C unistd

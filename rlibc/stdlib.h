@@ -49,6 +49,7 @@ void *bsearch(const void *key, const void *base, size_t nitems, size_t size,
 
 void qsort(void *base, size_t nitems, size_t size, int (*compar)(const void *, const void*));
 
+int atoi (const char *str);
 
 void exit(int status); /* int arch/../crt0.s */
 

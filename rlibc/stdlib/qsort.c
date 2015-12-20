@@ -1,65 +1,8 @@
 /* This file is a part of the RazOS project
  *
- * Razbit 2014 */
+ * Itara20 2015 */
 
 #include <stdlib.h>
-
-static unsigned long next = 1; /* For the rand implementation. */
-
-/* Convert C-string to integer */
-div_t div(int numer, int denom)
-{
-    div_t result;
-    result.quot = numer / denom;
-    result.rem  = numer - (denom * result.quot);
-    return result;
-}
-
-ldiv_t ldiv(long numer, long denom)
-{
-    ldiv_t result;
-    result.quot = numer / denom;
-    result.rem  = numer - (denom * result.quot);
-    return result;
-}
-
-int abs(int n)
-{
-    return (n < 0 ? -n : n);
-}
-
-long labs(long n)
-{
-    return (n < 0 ? -n : n);
-}
-
-
-int rand(void)
-{
-	next = next * 1103515245 + 12345;
-	return((unsigned)(next/65536) % 32768);
-}
-
-void srand(unsigned int seed)
-{
-	next = seed;
-}
-
-void *bsearch
-(const void *key, const void *base, size_t nitems, size_t size,
-int (*compar)(const void *, const void *))
-{
-	if (nitems == 0) return NULL;
-	
-	size_t half = nitems/2;
-	const char *middle = base + half*size;
-	int pos = compar(middle, key);
-
-	if	(pos > 0) return bsearch(key, base, half, size, compar);
-	else if (pos < 0) return bsearch(key, middle+size, half, size, compar);
-	
-        return (void*)middle;
-}
 
 static void swap(void *va, void *vb, size_t s)
 {

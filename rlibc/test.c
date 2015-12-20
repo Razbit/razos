@@ -1,8 +1,10 @@
 #include <api/razos.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 int main()
 {
-	return 1;
+	exit(2);
+//	return 1;
 }
