@@ -5,6 +5,7 @@
  * Razbit 2015 */
 
 #include <sys/types.h>
+#include <asm/system.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <console.h> /* For now, a better terminal on the way */
@@ -41,10 +42,15 @@ int init_stdin()
 
 static ssize_t read_stdin(int fd, void* buf, size_t size)
 {
+	sti(); /* Enable interrupts so keyboard input can be taken */
+	struct vfs_node_t* node = cur_task->files[fd].vfs_node;
+	
+	while (node->size < size) /* Wait for user */
+		(void*)0;
+	
 	lseek_vfs(fd, read_at, SEEK_SET);
 	size_t read = read_ramfs(fd, buf, size);
 	
-	struct vfs_node_t* node = cur_task->files[fd].vfs_node;
 	node->size -= read;
 	read_at += read;
 
