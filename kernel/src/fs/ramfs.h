@@ -20,5 +20,10 @@ struct ramfs_data_t
 /* Pointers to ramfs file data are stored here. VFS-supplied inode is
  * the index in the array */
 extern struct ramfs_data_t* ramfs_nodes[1024];
+extern uint32_t ramfs_inodes;
+
+ssize_t read_ramfs(int, void*, size_t);
+ssize_t write_ramfs(int, const void*, size_t);
+int creat_ramfs(struct vfs_node_t*, uint32_t);
 
 #endif /* RAMFS_H */

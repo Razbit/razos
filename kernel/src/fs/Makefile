@@ -1,4 +1,4 @@
-CSOURCES = vfs.c ramfs.c initrd.c
+CSOURCES = vfs.c ramfs.c initrd.c stdout.c
 ASMSOURCES = 
 SUBOBJS = 
 

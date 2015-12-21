@@ -12,6 +12,9 @@
 #define VFS_FILE  0x02
 #define VFS_PIPE  0x04
 
+/* Inode offsets for different filesystems. */
+#define RAMFS_OFFSET 0x0 /* Inodes 0..1023 reserved for ramfs */
+
 struct vfs_node_t;
 
 typedef ssize_t (*read_t)(int, void*, size_t);
@@ -57,8 +60,5 @@ int open_vfs(const char* name, int oflag);
 int creat_vfs(const char* name, uint32_t mode);
 int close_vfs(int fd);
 off_t lseek_vfs(int fd, off_t offset, int whence);
-
-/* creat() from all fs implementations here */
-int creat_ramfs(struct vfs_node_t*, uint32_t);
 
 #endif /* VFS_H */

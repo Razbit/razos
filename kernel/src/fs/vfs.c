@@ -6,6 +6,7 @@
 
 #include "vfs.h"
 #include "../mm/task.h"
+#include "ramfs.h"
 
 #include <sys/types.h>
 #include <fcntl.h>
@@ -157,15 +158,18 @@ int creat_vfs(const char* name, uint32_t mode)
 	node->next = NULL;
 	strncpy(&(node->name[0]), name, 63);
 	node->name[63] = '\0';
-	node->inode = inodes++;
 	node->size = 0;
 
-	/* One day, when we have multiple file systems, we'll have to figure
-	 * out onto which fs we put this file on. Now use just ramfs */
 	if (mode & VFS_FILE)
+	{
+		node->inode = RAMFS_OFFSET + ramfs_inodes++;
 		node->creat = &creat_ramfs;
+	}
 	else
+	{
 		node->creat = NULL;
+		node->inode = inodes++;
+	}
 		
 	if (node->creat != NULL)
 	{

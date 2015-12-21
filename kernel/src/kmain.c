@@ -16,6 +16,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include "fs/initrd.h"
+#include "fs/stdout.h"
 
 #include "loader/exec.h"
 
@@ -42,6 +43,8 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 	/* kmalloc(), kfree() available from this point on */
 	task_init();
 	syscall_init();
+
+	init_stdout(); /* stdio initializers MUST BE before initrd init */
 	
 	/* Load initrd files to the ramfs */
 	init_initrd((void*)(*(uint32_t*)mb->mods_addr));

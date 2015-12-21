@@ -16,8 +16,9 @@
 #include "ramfs.h"
 
 struct ramfs_data_t* ramfs_nodes[] = {NULL};
+uint32_t ramfs_inodes = 0;
 
-static ssize_t read_ramfs(int fd, void* buf, size_t size)
+ssize_t read_ramfs(int fd, void* buf, size_t size)
 {
 	if (size == 0)
 		return 0;
@@ -33,7 +34,8 @@ static ssize_t read_ramfs(int fd, void* buf, size_t size)
 	size_t offset = cur_task->files[fd].at % 0x100;
 	size_t readable = node->size - cur_task->files[fd].at;
 
-	struct ramfs_data_t* curnode = ramfs_nodes[node->inode];
+	struct ramfs_data_t* curnode = \
+		ramfs_nodes[node->inode - RAMFS_OFFSET];
 	size_t i = 0;
 	for (i = 0; i < start_node; i++)
 	{
@@ -54,6 +56,7 @@ static ssize_t read_ramfs(int fd, void* buf, size_t size)
 				goto exit;
 			*(uint8_t*)(buf+read) = curnode->data[offset];
 			read++;
+			cur_task->files[fd].at++;
 		}
 
 		curnode = curnode->next;
@@ -64,7 +67,7 @@ exit:
 	return read;
 }
 
-static ssize_t write_ramfs(int fd, const void* buf, size_t size)
+ssize_t write_ramfs(int fd, const void* buf, size_t size)
 {
 	if (size == 0)
 		return 0;
@@ -79,7 +82,8 @@ static ssize_t write_ramfs(int fd, const void* buf, size_t size)
 	size_t start_node = cur_task->files[fd].at / 0xFF;
 	size_t offset = cur_task->files[fd].at % 0x100;
 
-	struct ramfs_data_t* curnode = ramfs_nodes[node->inode];
+	struct ramfs_data_t* curnode = \
+		ramfs_nodes[node->inode - RAMFS_OFFSET];
 	size_t i = 0;
 	for (i = 0; i < start_node; i++)
 	{
@@ -119,7 +123,7 @@ static ssize_t write_ramfs(int fd, const void* buf, size_t size)
 int creat_ramfs(struct vfs_node_t* node, uint32_t mode)
 {
 	(void)mode;
-	/* Set up function pointers */
+	/* Set up function pointers. Creat is set in creat_vfs */
 	node->read = &read_ramfs;
 	node->write = &write_ramfs;
 	node->open = NULL;
@@ -128,12 +132,12 @@ int creat_ramfs(struct vfs_node_t* node, uint32_t mode)
 
 	/* Create the ramfs node */
 	/* The inodes 0..1023 are reserved for ramfs use */
-	ramfs_nodes[node->inode] = \
+	ramfs_nodes[node->inode - RAMFS_OFFSET] = \
 		(struct ramfs_data_t*)kmalloc(sizeof(struct ramfs_data_t));
-	if (ramfs_nodes[node->inode] == NULL)
+	if (ramfs_nodes[node->inode - RAMFS_OFFSET] == NULL)
 		return -1;
 	
-	memset(&(ramfs_nodes[node->inode]->data[0]), 0, 256);
+	memset(&(ramfs_nodes[node->inode - RAMFS_OFFSET]->data[0]), 0, 256);
 
 	return 1;
 }
