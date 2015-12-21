@@ -16,6 +16,8 @@ double frexp(double x, int *exp);
 
 double ldexp(double x, int exp);
 
+double trunc(double x);
+
 double floor(double x);
 
 double ceil(double x);
