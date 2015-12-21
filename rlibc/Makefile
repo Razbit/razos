@@ -26,6 +26,7 @@ all: $(OBJS)
 	$(MAKE) -C stdlib
 	$(MAKE) -C unistd
 	$(MAKE) -C math
+	$(MAKE) -C string
 
 	$(LD) $(_LDFLAGS) -Tuser.ld -o rlibc $(CRT0) $(CRTI) $(CRTBEGIN) $(OBJS) $(SUBOBJS) $(CRTEND) $(CRTN)
 
@@ -42,3 +43,5 @@ clean:
 	$(MAKE) clean -C stdlib
 	$(MAKE) clean -C unistd
 	$(MAKE) clean -C math
+	$(MAKE) clean -C string
+

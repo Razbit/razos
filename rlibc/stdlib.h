@@ -9,8 +9,8 @@
 
 /* Macros */
 #include <decl_size_t.h>
+#include <decl_null.h>
 
-#define NULL ((void *) 0)
 #define EXIT_FAILURE 1
 #define EXIT_SUCCESS 0
 #define RAND_MAX 32767
