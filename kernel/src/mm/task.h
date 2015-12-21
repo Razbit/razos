@@ -102,6 +102,7 @@ extern struct task_t* cur_task;
 
 /* Initialize tasking */
 void task_init();
+void task_init_stdio();
 
 /* Internals of fork() begin here. In task.s */
 struct task_t* task_fork();

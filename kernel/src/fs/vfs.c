@@ -86,7 +86,11 @@ int open_vfs(const char* name, int oflag)
 
 	/* Use fs-provided open(), if available */
 	if (node->open != NULL)
-		node->open(node, oflag);
+	{
+		int ret = node->open(node, oflag);
+		if (ret >= 0 && ret <= 2) /* Return if we opened stdio */
+			return ret;
+	}
 
     
 	/* Find an empty fildes from the task struct, fill it and

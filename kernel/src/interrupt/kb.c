@@ -9,6 +9,11 @@
 #include <sys/types.h>
 #include <portio.h>
 #include <console.h>
+#include <ctype.h>
+
+#include <fcntl.h>
+#include <unistd.h>
+#include "../mm/task.h"
 
 #include "kb.h"
 
@@ -27,14 +32,41 @@ static const char sc_to_ascii[] =
 	0, /* rshift */
 	'*', /* numpad * */
 	0, /* lalt */
-	' ',
-	0, /* capslock */
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* F1 - F10 */
-	0, /* numlock */
-	0, /* scroll lock */
-	/* next line is from numpad */
-	'7', '8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '0', '.'
+	' '
 };
+
+/* Modify ascii to incorporate effects of pressing shift.
+ * Table begins at 0x27, ' -> " */
+static const char shift_lookup[] =
+{
+	'"', 0, 0, 0, 0, '<', '_', '>', '?',    /* ' .. / */
+	')', '!', '@', '#', '$', '%', '^', '&', /* 0 .. 7 */
+	'*', '(', 0, ':', 0, '+', 0, 0,         /* 8 .. ? */
+	0, 0, 0, 0, 0, 0, 0, 0,                 /* @ .. G */
+	0, 0, 0, 0, 0, 0, 0, 0,                 /* H .. O */
+	0, 0, 0, 0, 0, 0, 0, 0,                 /* P .. W */
+	0, 0, 0, '{', '|', '}', 0, 0,           /* X .. _ */
+	'~', 'A', 'B', 'C', 'D', 'E', 'F', 'G', /* ` .. g */
+	'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', /* h .. o */
+	'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', /* p .. w */
+	'X', 'Y', 'Z'                           /* x .. z */
+};
+
+/* tempfl */
+#define TFL_E0 0x01
+#define TFL_E1 0x02
+#define TFL_1D 0x04
+#define TFL_2A 0x08
+#define TFL_45 0x10
+#define TFL_9D 0x20
+
+static int stdin_fd;
+
+int init_kb()
+{
+	stdin_fd = open("stdin", O_WRONLY);
+	return stdin_fd;
+}
 
 /* Handle a keyboard event */
 void kb_handler()
@@ -42,71 +74,145 @@ void kb_handler()
 	uint8_t scancode = inb(0x60); /* KB's data buffer */
 	uint8_t ascii = 0;
 	uint8_t keycode = 0;
-	static uint16_t flags;
+	static uint16_t flags = 0;
+	static uint8_t tempfl;
 
 	if (scancode == 0xE0)
 	{
-		flags |= NUMPAD;
+		tempfl |= TFL_E0;
 		return;
 	}
 
 	if (scancode == 0xE1)
 	{
-		flags |= PAUSE;
+		tempfl |= TFL_E1;
 		return;
 	}
 
 	if (scancode & 0x80)
+	{
 		flags |= RELEASE;
+	}
 
 	/* Modifier keys */
 	switch (scancode)
 	{
+	case 0x1C:
+		ascii = '\n';
+		/* fallthrough: key release won't send ascii code */
+	case 0x9C:
+		if (tempfl & TFL_E0)
+		{
+			flags |= NUMPAD;
+			keycode = NUM_RET;
+		}
+		else
+		{
+			keycode = KEY_RET;
+		}
+		break;
+		
 	case 0x1D:
-		if (flags & PAUSE)
+		if (tempfl & TFL_E1) /* E1, 1D */
+		{
+			tempfl |= TFL_1D;
 			return;
-		if (flags & NUMPAD)
+		}
+		if (tempfl & TFL_E0) /* E0, 1D -> rctrl */
 		{
 			flags |= RCONTROL;
 			keycode = KEY_RCTRL;
 		}
-		else
+		else /* 1D -> lctrl */
 		{
 			flags |= LCONTROL;
+			keycode = KEY_LCTRL;
+		}
+		break;
+
+	case 0x9D:
+		/* part of pause-sequence */
+		if ((tempfl & (TFL_E1 | TFL_1D | TFL_45)) == \
+		    (TFL_E1 | TFL_1D | TFL_45))
+		{
+			tempfl |= TFL_9D;
+			return;
+		}
+		else /* ctrl release */
+		{
+			if (tempfl & TFL_E0)
+			{
+				flags &= ~RCONTROL;
+				keycode = KEY_RCTRL;
+			}
+			else
+			{
+				flags &= ~LCONTROL;
+				keycode = KEY_LCTRL;
+			}
+			flags &= ~CONTROL;
+		}
+		break;
+
+	case 0x2A:
+		if (tempfl & TFL_E0) /* part of print screen -sequence */
+		{
+			tempfl |= TFL_2A;
+			return;
+		}
+		else
+		{
+			flags |= LSHIFT;
 			keycode = scancode;
 		}
 		break;
-	case 0x9D:
-		if (flags & PAUSE)
-			return;
-		if (flags & NUMPAD)
+		
+	case 0xAA: /* lshift release */
+		flags &= ~LSHIFT;
+		flags &= ~SHIFT;
+		keycode = KEY_LSHIFT;
+		break;
+		
+	case 0x35:
+		if (tempfl & TFL_E0)
 		{
-			flags &= ~RCONTROL;
-			keycode = KEY_RCTRL;
+			keycode = NUM_SLASH;
+			flags |= NUMPAD;
+			ascii = '/';
 		}
 		else
 		{
-			flags &= ~LCONTROL;
-			keycode = scancode;
+			keycode = KEY_SLASH;
+			ascii = '/';
 		}
-		flags &= ~CONTROL; break;
-	case 0x2A:
-		flags |= LSHIFT;
-		keycode = scancode; break;
+		break;		
+		
 	case 0x36:
 		flags |= RSHIFT;
-		keycode = scancode; break;
-	case 0xAA:
-		flags &= ~LSHIFT;
-		flags &= ~SHIFT;
-		keycode = scancode; break;
+		keycode = KEY_RSHIFT;
+		break;
+
 	case 0xB6:
 		flags &= ~RSHIFT;
 		flags &= ~SHIFT;
-		keycode = scancode; break;
+		keycode = KEY_RSHIFT;
+		break;
 
+	case 0x37:
+		if ((tempfl & TFL_E0) && (tempfl & TFL_2A)) /* E0 2A E0 37 */
+		{
+			keycode = KEY_PRSCR;
+		}
+		else
+		{
+			keycode = NUM_ASTER;
+			flags |= NUMPAD;
+			ascii = '*';
+		}
+		break;
+		
 	case 0x38:
-		if (flags & NUMPAD)
+		if (tempfl & TFL_E0)
 		{
 			flags |= RALT;
 			keycode = KEY_RALT;
@@ -114,11 +220,12 @@ void kb_handler()
 		else
 		{
 			flags |= LALT;
-			keycode = scancode;
+			keycode = KEY_LALT;
 		}
 		break;
+
 	case 0xB8:
-		if (flags & NUMPAD)
+		if (tempfl & TFL_E0)
 		{
 			flags &= ~RALT;
 			keycode = KEY_RALT;
@@ -126,66 +233,208 @@ void kb_handler()
 		else
 		{
 			flags &= ~LALT;
-			keycode = scancode;
+			keycode = KEY_LALT;
 		}
-		flags &= ~ALT; break;
-
-	case 0x37:
-		if (flags & NUMPAD)
-			keycode = KEY_PRSCR;
-		else
-		{
-			ascii = '*';
-			keycode = NUM_ASTER;
-		}
-		break;
-	case 0xB7:
-		if (flags & NUMPAD)
-			keycode = KEY_PRSCR;
-		else
-		{
-			ascii = '*';
-			keycode = NUM_ASTER;
-		}
+		flags &= ~ALT;
 		break;
 
 	case 0x3A:
-		flags ^= CAPS_LOCK;
-		keycode = scancode; break;
+		flags ^= CAPS_LOCK; /* Toggle caps lock */
+		keycode = KEY_CAPSL;
+		break;
+
 	case 0x45:
-		if (flags & PAUSE)
-			return;
-		flags ^= NUM_LOCK;
-		keycode = scancode; break;
-	case 0x46:
-		flags ^= SCROLL_LOCK;
-		keycode = scancode; break;
-	case 0xC5:
-		if (flags & PAUSE)
+		if ((tempfl & TFL_E1) && (tempfl & TFL_1D))
 		{
-			/* Pause was pressed.. God, what a series of scancodes! */
+			tempfl |= TFL_45;
+			return;
+		}
+		else /* Toggle num lock */
+		{
+			flags ^= NUM_LOCK;
+			keycode = KEY_NUML;
+		}
+		break;
+
+	case 0xC5:
+		if ((tempfl & (TFL_E1 | TFL_1D | TFL_45 | TFL_9D)) == \
+		    (TFL_E1 | TFL_1D | TFL_45 | TFL_9D))
+		{
 			keycode = KEY_PAUSE;
 		}
 		break;
+
+	case 0x46:
+		flags ^= SCROLL_LOCK; /* Toggle scroll lock */
+		keycode = KEY_SCRL;
+		break;
+
+	case 0x47:
+		if ((tempfl & TFL_E0) || !(flags & NUM_LOCK))
+		{
+			keycode = KEY_HOME;
+		}
+		else
+		{
+			flags |= NUMPAD;
+			keycode = NUM_7;
+			ascii = '7';
+		}
+		break;
+
+	case 0x48:
+		if ((tempfl & TFL_E0) || !(flags & NUM_LOCK))
+		{
+			keycode = KEY_UP;
+		}
+		else
+		{
+			flags |= NUMPAD;
+			keycode = NUM_8;
+			ascii = '8';
+		}
+		break;
+
+	case 0x49:
+		if ((tempfl & TFL_E0) || !(flags & NUM_LOCK))
+		{
+			keycode = KEY_PGUP;
+		}
+		else
+		{
+			flags |= NUMPAD;
+			keycode = NUM_9;
+			ascii = '9';
+		}
+		break;
+
+	case 0x4A:
+		flags |= NUMPAD;
+		keycode = NUM_MINUS;
+		ascii = '-';
+		break;
+
+	case 0x4B:
+		if ((tempfl & TFL_E0) || !(flags & NUM_LOCK))
+		{
+			keycode = KEY_LEFT;
+		}
+		else
+		{
+			flags |= NUMPAD;
+			keycode = NUM_4;
+			ascii = '4';
+		}
+		break;
+
+	case 0x4C:
+		flags |= NUMPAD;
+		keycode = NUM_5;
+		ascii = '5';
+		break;
+
+	case 0x4D:
+		if ((tempfl & TFL_E0) || !(flags & NUM_LOCK))
+		{
+			keycode = KEY_RIGHT;
+		}
+		else
+		{
+			flags |= NUMPAD;
+			keycode = NUM_6;
+			ascii = '6';
+		}
+		break;
+
+	case 0x4E:
+		flags |= NUMPAD;
+		keycode = NUM_PLUS;
+		ascii = '+';
+		break;
+		
+	case 0x4F:
+		if ((tempfl & TFL_E0) || !(flags & NUM_LOCK))
+		{
+			keycode = KEY_END;
+		}
+		else
+		{
+			flags |= NUMPAD;
+			keycode = NUM_1;
+			ascii = '1';
+		}
+		break;
+
+	case 0x50:
+		if ((tempfl & TFL_E0) || !(flags & NUM_LOCK))
+		{
+			keycode = KEY_DOWN;
+		}
+		else
+		{
+			flags |= NUMPAD;
+			keycode = NUM_2;
+			ascii = '2';
+		}
+		break;
+
+	case 0x51:
+		if ((tempfl & TFL_E0) || !(flags & NUM_LOCK))
+		{
+			keycode = KEY_PGDOWN;
+		}
+		else
+		{
+			flags |= NUMPAD;
+			keycode = NUM_3;
+			ascii = '3';
+		}
+		break;
+
+	case 0x52:
+		if ((tempfl & TFL_E0) || !(flags & NUM_LOCK))
+		{
+			keycode = KEY_INS;
+		}
+		else
+		{
+			flags |= NUMPAD;
+			keycode = NUM_0;
+			ascii = '0';
+		}
+		break;
+
+	case 0x53:
+		if ((tempfl & TFL_E0) || !(flags & NUM_LOCK))
+		{
+			keycode = KEY_DEL;
+			ascii = 0x7F;
+		}
+		else
+		{
+			flags |= NUMPAD;
+			keycode = NUM_DOT;
+			ascii = '.';
+		}
+		break;
+
 	default:
-		/* The ASCII code for the key, if available */
-		if (scancode <= 0x53)
+		/* Get the ASCII code for the key, if available */
+		if (scancode <= 0x39)
 			ascii = sc_to_ascii[scancode];
 		else
 			ascii = 0;
-
-		/* Numpad return */
-		if ((scancode == 0x1C) && (flags & NUMPAD))
-			ascii = '\n';
+		
 		keycode = scancode;
 	}
 
+
 	/* Set the rest of the flags */
-	if (flags & RSHIFT || flags & LSHIFT)
+	if ((flags & RSHIFT) || (flags & LSHIFT))
 		flags |= SHIFT;
-	if (flags & RALT || flags & LALT)
+	if ((flags & RALT) || (flags & LALT))
 		flags |= ALT;
-	if (flags & RCONTROL || flags & LCONTROL)
+	if ((flags & RCONTROL) || (flags & LCONTROL))
 		flags |= CONTROL;
 
 	/* Construct the packet */
@@ -195,11 +444,28 @@ void kb_handler()
 	packet <<= 8;
 	packet |= (uint32_t)ascii;
 
-	/* TODO: Send the kb event packet here */
-	kprintf("%p\n", packet);
+	/* Make ascii code to match the flags */
+	if ((ascii > 0) && (ascii < 0x7F))
+	{
+		/* If shift is pressed, modify the ascii */
+		if ((ascii >= 0x27) && (flags & SHIFT) && !(flags & NUMPAD))
+		{
+			ascii = shift_lookup[ascii-0x27];
+		}
+		if (flags & CAPS_LOCK)
+		{
+			if (islower(ascii))
+				ascii = toupper(ascii);
+			else if (isupper(ascii))
+				ascii = tolower(ascii);
+		}
+	}
 
+	if (ascii > 0)
+		write(stdin_fd, &ascii, 1);
+
+	tempfl = 0;
 	flags &= ~NUMPAD;
-	flags &= ~PAUSE;
 	flags &= ~RELEASE;
 }
 

@@ -9,6 +9,7 @@
 #include "gdt.h"
 #include "interrupt/idt.h"
 #include "interrupt/pit.h"
+#include "interrupt/kb.h"
 #include "mm/paging.h"
 #include "mm/task.h"
 #include "syscall/syscall.h"
@@ -16,7 +17,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include "fs/initrd.h"
-#include "fs/stdout.h"
+#include "fs/stdio_vfs.h"
 
 #include "loader/exec.h"
 
@@ -44,15 +45,21 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 	task_init();
 	syscall_init();
 
-	init_stdout(); /* stdio initializers MUST BE before initrd init */
+	init_stdin();
+	init_stdout();
+	init_stderr();
+
+	task_init_stdio();
+
+	init_kb();
 	
 	/* Load initrd files to the ramfs */
 	init_initrd((void*)(*(uint32_t*)mb->mods_addr));
 	
 	/* open, close, creat, read, write, lseek can now access initrd */
-
+	
 	kputs("RazOS kernel initialized, starting init..\n");
-
+	
 	int ret = do_execve("init", 0, 0);
 	kprintf("Execve returned %i\n", ret);
 	if (ret == 0)

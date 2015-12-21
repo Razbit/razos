@@ -11,6 +11,8 @@
 #include <util.h>
 #include <string.h>
 #include <kmalloc.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "../gdt.h"
 #include "kernel_page.h"
@@ -104,9 +106,18 @@ void task_init()
 	kprintf("Allocating user stack\n");
 	page_map(USER_STACK_END, page_alloc(), PE_PRESENT | PE_USER | PE_RW);
 	cur_task->stack_begin -= PAGE_SIZE;
-
-	kprintf("Tasking initialization succeeded.\n");
 	
+	kprintf("Tasking initialization succeeded.\n");
+}
+
+void task_init_stdio()
+{
+	int stdin_fd = open("stdin", O_RDWR);
+	int stdout_fd = open("stdout", O_WRONLY);
+	int stderr_fd = open("stderr", O_WRONLY);
+
+	kprintf("Standard io opened as %i %i %i\n", \
+	        stdin_fd, stdout_fd, stderr_fd);
 }
 
 static void copy_user_pages(struct task_t* new_task)
