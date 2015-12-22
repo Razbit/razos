@@ -1,0 +1,5 @@
+- Fork causes triplefault (eip 0x001021d3, task_fork.return:popa)
+    -> Stack corrupted when parent executes popa
+        -> child's kstack different
+- task->kstack? wtf is this
+

@@ -3,16 +3,35 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wait.h>
+#include <sched.h>
 
 int main()
 {
 	char str[] = "Hello FS from user-space!\n\0";
 	write(STDOUT_FILENO, &(str[0]) , strlen(str));
 
-	char buf[10];
-	read(STDIN_FILENO, &(buf[0]), 2);
-	write(STDIN_FILENO, "\n", 1);
-	write(STDOUT_FILENO, &(buf[0]), 2);
+/*	pid_t pid = fork();
+	if (pid == 0)
+	{
+		write(STDOUT_FILENO, "child\n", strlen("child\n"));
+	}
+	else
+	{
+		write(STDOUT_FILENO, "parent\n", strlen("parent\n"));
+	}
 
-	return 1;
+	for(;;);
+	return 1;*/
+
+	if (fork())
+	{
+		wait(NULL);
+		return 1;
+	}
+	else
+	{
+		sched_yield();
+		return 2;
+	}
 }

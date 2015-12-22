@@ -166,7 +166,7 @@ struct task_t* task_fork_inner()
 
 	memcpy(&new_task->fpu_state, &cur_task->fpu_state, \
 	       sizeof(new_task->fpu_state));
-	memcpy(new_task->kstack, cur_task->kstack, PAGE_SIZE);
+	//memcpy(new_task->kstack, cur_task->kstack, PAGE_SIZE);
 	memcpy(&new_task->files, &cur_task->files, \
 	       sizeof(new_task->files));
 

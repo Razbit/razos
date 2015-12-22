@@ -1,4 +1,4 @@
-CSOURCES = test.c do_exit.c
+CSOURCES = test.c do_exit.c wait.c sched.c
 ASMSOURCES = 
 SUBOBJS = fcntl.o stdlib.o unistd.o math.o errno.o
 
