@@ -87,8 +87,12 @@ idt_init_asm:
 BEGIN_ISR 14
     mov eax, cr2
     push eax
+
+    ;; stack: [esp+8]: faulting eip
+    ;;        [esp+4]: error code
+    ;;        [esp]:   addr
     
-    call pagefault_handler 		; handler(addr, error, eip)
+    call pagefault_handler      ; handler(addr, error, eip)
     iret
 END_ISR 14
 
