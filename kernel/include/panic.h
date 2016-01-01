@@ -9,6 +9,6 @@
 
 #include <stdarg.h>
 
-void panic(const char* msg, ...);
+void panic(const char* msg, ...) __attribute__ ((noreturn));
 
 #endif /* PANIC_H */
