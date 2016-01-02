@@ -147,7 +147,7 @@ static void copy_user_pages(struct task_t* new_task)
 	{
 		if (!cur_page_dir[dir_i])
 			continue;
-		kputs("Copying user page table\n");
+
 		uint32_t* cur_page_table = \
 			(uint32_t*)(CUR_PG_TABLE_BASE + dir_i * PAGE_SIZE);
 		uint32_t* new_page_table = kmalloc_pa(PAGE_SIZE);
@@ -156,33 +156,22 @@ static void copy_user_pages(struct task_t* new_task)
 			| (cur_page_dir[dir_i] & PE_FLAG_MASK);
 
 		/* Copy available pages */
-		void* cur_virt = (void*)(dir_i * PAGE_SIZE * 1024);
 		for(size_t tab_i = 0; tab_i < 1024; tab_i++)
 		{
 			uint32_t cur_entry = cur_page_table[tab_i];
-			
+			void* cur_virt = \
+				(void*)((dir_i*PAGE_SIZE*1024)*(tab_i*PAGE_SIZE));
 			if (!(cur_entry & PE_PRESENT))
-			{
-				cur_virt += 0x1000;
 				continue;
-			}
+
 			kprintf("Copying user page in dir %u at %u (0x%x)\n", \
 			        dir_i, tab_i, cur_virt);
 			
 			uint32_t new_page = page_alloc();
-			void* new_page_mapping = page_temp_map(new_page);
-			
-			/* same as memcpy(). Increments cur_virt, new_page_mapping
-			 * by 0x1000 */
-			__asm__ __volatile__(
-				"cld\n\t"
-				"rep\n\t"
-				"movsb"
-				:
-				: "c" (PAGE_SIZE), "S" (cur_virt), "D" (new_page_mapping)
-				:);
-
+			void* new_page_mapping = page_temp_map(new_page);			
+			memcpy(new_page_mapping, cur_virt, PAGE_SIZE);
 			page_temp_unmap();
+
 			new_page_table[tab_i] = new_page | (cur_entry & PE_FLAG_MASK);
 		}
 	}
@@ -197,19 +186,7 @@ struct task_t* task_fork_inner()
 	memcpy(&new_task->fpu_state, &cur_task->fpu_state, \
 	       sizeof(new_task->fpu_state));
 	
-	/* Same as memcpy(new_task->kstack, cur_task->kstack, PAGE_SIZE) */
-	__asm__ __volatile__(
-				"cld\n\t"
-				"rep\n\t"
-				"movsb"
-				:
-				: "c" (PAGE_SIZE), "S" (cur_task->kstack), \
-				  "D" (new_task->kstack)
-				  :);
-	
-	/* rep movsb increases these */
-	cur_task->kstack -= 0x1000;
-	new_task->kstack -= 0x1000;
+	memcpy(new_task->kstack, cur_task->kstack, PAGE_SIZE);
 
 	memcpy(&new_task->files, &cur_task->files, \
 	       sizeof(new_task->files));
