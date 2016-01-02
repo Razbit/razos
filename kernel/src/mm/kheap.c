@@ -2,7 +2,7 @@
  *
  * kheap.c -- kernel heap system
  *
- * Razbit 2015 */
+ * Razbit 2015, 2016 */
 
 #include <sys/types.h>
 #include <console.h>
@@ -80,7 +80,7 @@ void* do_kmalloc(size_t size, size_t align)
 		}
 
 		size_t padding_amount = 0;
-		if (((size_t)curnode % align) != 0)
+		if (((size_t)(curnode+sizeof(struct kheap_node_t)) % align) != 0)
 		{
 			padding_amount = align - ((size_t)curnode % align);
 		}
@@ -94,11 +94,14 @@ void* do_kmalloc(size_t size, size_t align)
 		/* If we reach this, we have found a decent node */
 
 		struct kheap_node_t* padding = curnode;
-		if (padding_amount != 0 && padding_amount != sizeof(struct kheap_node_t))
+		if (padding_amount != 0 \
+		    && padding_amount != sizeof(struct kheap_node_t))
 		{
 			/* Set the padding node */
-			curnode = (void*)curnode + padding_amount - sizeof(struct kheap_node_t);
-			padding->size = padding_amount - 2*sizeof(struct kheap_node_t);
+			curnode = (void*)curnode + padding_amount \
+				- sizeof(struct kheap_node_t);
+			padding->size = padding_amount \
+				- 2 * sizeof(struct kheap_node_t);
 			padding->status = KMALLOC_FREE;
 			padding->next = curnode;
 			curnode->prev = padding;
@@ -113,7 +116,7 @@ void* do_kmalloc(size_t size, size_t align)
 			if (padding->next != NULL)
 			{
 				padding->size = (size_t)padding->next - (size_t)padding \
-						- sizeof(struct kheap_node_t);
+					- sizeof(struct kheap_node_t);
 				padding->next->prev = padding;
 			}
 			else
@@ -249,7 +252,7 @@ void* ksbrk(size_t increment)
 
 static void print_kheap_node_t(struct kheap_node_t* node)
 {
-	kprintf("%p\t%u\t\t%u\t\t%s\t%p\t%p\n", node,			\
+	kprintf("%p\t%u\t%u\t\t%s\t%x\t%x\n", node,			\
 	        node->size, node->size + sizeof(struct kheap_node_t),	\
 	        node->status == KMALLOC_FREE ? "free" : "used",		\
 	        node->prev, node->next);
@@ -260,11 +263,14 @@ void dump_kheap()
 	kprintf("**KERNEL HEAP DUMP**\n");
 	struct kheap_node_t* ptr = (void*)kheap_start;
 	kprintf("KHEAP: SIZE: %p START: %p\n", kheap_size, kheap_start);
-	kprintf("NODE\t\tSIZE\t\tWITH STRUCT\tSTATUS\tPREV\t\tNEXT\n");
+	int i = 0;
 	while (ptr != NULL)
 	{
+		if (i % 20 == 0)
+			kprintf("NODE\t\tSIZE\tWITH NODE\tSTATUS\tPREV\tNEXT\n");
 		print_kheap_node_t(ptr);
 		ptr = ptr->next;
+		i++;
 	}
 	kprintf("\n");
 }

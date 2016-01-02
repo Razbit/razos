@@ -14,13 +14,24 @@ int main()
 	pid_t pid = fork();
 	if (pid == 0)
 	{
-		write(STDOUT_FILENO, "child\n", strlen("child\n"));
+		write(STDOUT_FILENO, "child: ", strlen("child: "));
+		char c = pid+0x30;
+		write(STDOUT_FILENO, &c, 1);
+		c = '\n';
+		write(STDOUT_FILENO, &c, 1);
+		sched_yield();
+		write(STDOUT_FILENO, "yielded", strlen("yielded"));
+		return 2;
 	}
 	else
 	{
-		write(STDOUT_FILENO, "parent\n", strlen("parent\n"));
-	}
+		write(STDOUT_FILENO, "parent: ", strlen("parent: "));
+		char c = pid+0x30;
+		write(STDOUT_FILENO, &c, 1);
+		c = '\n';
+		write(STDOUT_FILENO, &c, 1);
 
-	for(;;);
-	return 1;
+		wait(NULL);
+		return 1;
+	}
 }
