@@ -7,17 +7,16 @@
 #ifndef STDLIB_H
 #define STDLIB_H
 
-/* Macros */
-#include <decl_size_t.h>
-#include <decl_null.h>
+#define _NEED_NULL
+#define _NEED_SIZE_T
+#define _NEED_WCHAR_T
+#include <sys/types.h>
 
 #define EXIT_FAILURE 1
 #define EXIT_SUCCESS 0
 #define RAND_MAX 32767
 
 /* Types */
-typedef int wchar_t;
-
 typedef struct
 {
     int quot;

@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include <string.h>
 #include <kmalloc.h>
 #include <console.h>
@@ -51,7 +52,7 @@ ssize_t write_vfs(int fd, const void* buf, size_t size)
 		return -1;
 }
 
-int open_vfs(const char* name, int oflag)
+int open_vfs(const char* name, int oflag, mode_t mode)
 {
 	/* Find the corresponding VFS node for the file */
 	struct vfs_node_t* node = NULL;
@@ -73,7 +74,7 @@ int open_vfs(const char* name, int oflag)
 	{
 		if (oflag & O_CREAT)
 		{
-			int ret = creat_vfs(name, VFS_FILE);
+			int ret = creat_vfs(name, mode);
 			cur_task->files[ret].at = 0;
 			cur_task->files[ret].oflag = oflag;
 			return ret;
@@ -87,7 +88,7 @@ int open_vfs(const char* name, int oflag)
 	/* Use fs-provided open(), if available */
 	if (node->open != NULL)
 	{
-		int ret = node->open(node, oflag);
+		int ret = node->open(node, oflag, mode);
 		if (ret >= 0 && ret <= 2) /* Return if we opened stdio */
 			return ret;
 	}
@@ -138,7 +139,7 @@ int close_vfs(int fd)
 	return 0;
 }
 
-int creat_vfs(const char* name, uint32_t mode)
+int creat_vfs(const char* name, mode_t mode)
 {
 	struct vfs_node_t* node = vfs_root;
 	
@@ -157,22 +158,36 @@ int creat_vfs(const char* name, uint32_t mode)
 			(struct vfs_node_t*)kmalloc(sizeof(struct vfs_node_t));
 		node = node->next;
 	}
+
+	/* Yeah, this is rather stupid since we ain't got no users xD */
+	/* If access mode is unspecified, use 0-rwx-rwx-rwx */
+	if (mode & S_IPERM == 0)
+		mode |= (S_IRWXU | S_IRWXG | S_IRWXO);
+
+	node->status.st_mode = mode;
+	node->status.st_uid = 0;
+	node->status.st_gid = 0;
 	
-	node->flags = mode;
 	node->next = NULL;
 	strncpy(&(node->name[0]), name, 63);
 	node->name[63] = '\0';
-	node->size = 0;
+	node->status.st_size = 0;
 
-	if (mode & VFS_FILE)
+	/* if this is a regular file or type not specified */
+	if ((mode & S_IFREG) || (mode & S_IFMT) == 0)
 	{
-		node->inode = RAMFS_OFFSET + ramfs_inodes++;
+		/* Create it in ramfs (for now, with dirs and mounts this
+		 * will be better ) */
+		node->status.st_dev = DEVID_RAMFS;
+		node->status.st_rdev = DEVID_RAMFS;
+		node->status.st_ino = ramfs_inodes++;
 		node->creat = &creat_ramfs;
 	}
 	else
 	{
-		node->creat = NULL;
-		node->inode = inodes++;
+		/* There is no *default* but ramfs, so just fail if we somehow
+		 * come here.. */
+		return -1;
 	}
 		
 	if (node->creat != NULL)
@@ -203,6 +218,8 @@ int creat_vfs(const char* name, uint32_t mode)
 
 	/* Now i is  the first free index. Populate the fildes */
 	cur_task->files[i].vfs_node = node;
+	cur_task->files[i].at = 0;
+	cur_task->files[i].oflag = O_WRONLY;
 
 	return i;
 }
@@ -226,7 +243,7 @@ off_t lseek_vfs(int fd, off_t offset, int whence)
 			cur_task->files[fd].at += offset;
 			break;
 		case SEEK_END:
-			cur_task->files[fd].at = node->size + offset;
+			cur_task->files[fd].at = node->status.st_size + offset;
 			break;
 		default:
 			return (off_t)-1;

@@ -5,8 +5,9 @@
 #ifndef H_STRING
 #define H_STRING
 
-#include <decl_size_t.h>
-#include <decl_null.h>
+#define _NEED_NULL
+#define _NEED_SIZE_T
+#include <sys/types.h>
 
 /* Set [num] bytes of memory starting from [ptr] to [value] */
 void* memset(void* ptr, char value, int num);

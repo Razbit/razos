@@ -1,13 +1,13 @@
 /* This file is a part of the RazOS project
  *
- * ramfs.h -- RAM File System, the (currently) only
- * filesystem implementation (not to be confused with initrd)
+ * ramfs.h -- RAM File System
  *
- * Razbit 2015 */
+ * Razbit 2015, 2016 */
 
 #include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include <string.h>
 #include <kmalloc.h>
 #include "../mm/task.h"
@@ -32,15 +32,12 @@ ssize_t read_ramfs(int fd, void* buf, size_t size)
 
 	size_t start_node = cur_task->files[fd].at / 0xFF;
 	size_t offset = cur_task->files[fd].at % 0x100;
-	size_t readable = node->size - cur_task->files[fd].at;
+	size_t readable = node->status.st_size - cur_task->files[fd].at;
 
-	struct ramfs_data_t* curnode = \
-		ramfs_nodes[node->inode - RAMFS_OFFSET];
-	size_t i = 0;
-	for (i = 0; i < start_node; i++)
-	{
+	struct ramfs_data_t* curnode = ramfs_nodes[node->status.st_ino];
+
+	for (size_t i = 0; i < start_node; i++)
 		curnode = curnode->next;
-	}
 
 	/* Now that we know where are we gonna read at, we read */
 	if (size > readable)
@@ -82,13 +79,10 @@ ssize_t write_ramfs(int fd, const void* buf, size_t size)
 	size_t start_node = cur_task->files[fd].at / 0xFF;
 	size_t offset = cur_task->files[fd].at % 0x100;
 
-	struct ramfs_data_t* curnode = \
-		ramfs_nodes[node->inode - RAMFS_OFFSET];
-	size_t i = 0;
-	for (i = 0; i < start_node; i++)
-	{
+	struct ramfs_data_t* curnode = ramfs_nodes[node->status.st_ino];
+
+	for (size_t i = 0; i < start_node; i++)
 		curnode = curnode->next;
-	}
 
 	/* Now that we know where are we gonna write at, we write */
 	size_t written = 0;
@@ -98,7 +92,7 @@ ssize_t write_ramfs(int fd, const void* buf, size_t size)
 		{
 			curnode->data[offset] = *(uint8_t*)(buf+written);
 			written++;
-			node->size++;
+			node->status.st_size++;
 			cur_task->files[fd].at++;
 			if (written >= size)
 				break;
@@ -131,13 +125,12 @@ int creat_ramfs(struct vfs_node_t* node, uint32_t mode)
 	node->lseek = NULL;
 
 	/* Create the ramfs node */
-	/* The inodes 0..1023 are reserved for ramfs use */
-	ramfs_nodes[node->inode - RAMFS_OFFSET] = \
+	ramfs_nodes[node->status.st_ino] = \
 		(struct ramfs_data_t*)kmalloc(sizeof(struct ramfs_data_t));
-	if (ramfs_nodes[node->inode - RAMFS_OFFSET] == NULL)
+	if (ramfs_nodes[node->status.st_ino] == NULL)
 		return -1;
 	
-	memset(&(ramfs_nodes[node->inode - RAMFS_OFFSET]->data[0]), 0, 256);
+	memset(&(ramfs_nodes[node->status.st_ino]->data[0]), 0, 256);
 
 	return 1;
 }

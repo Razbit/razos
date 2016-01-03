@@ -1,13 +1,11 @@
 /* This file is a part of the RazOS project
  *
- * Razbit 2014 */
+ * Razbit 2016 */
 
 #ifndef STDBOOL_H
 #define STDBOOL_H
 
-#define bool _Bool;
-#define true 1
-#define false 0
-#define __bool_true_false_are_defined 1
+#define _NEED_BOOL
+#include <sys/types.h>
 
 #endif /* STDBOOL_H */

@@ -8,28 +8,27 @@
 #define VFS_H
 
 #include <sys/types.h>
+#include <sys/stat.h>
 
-#define VFS_FILE  0x02
-#define VFS_PIPE  0x04
+/* Device IDs, for st_dev in stat structure */
+#define DEVID_RAMFS 1
+#define DEVID_PIPE  2
+#define DEVID_STDIO 3
 
-/* Inode offsets for different filesystems. */
-#define RAMFS_OFFSET 0x0 /* Inodes 0..1023 reserved for ramfs */
 
 struct vfs_node_t;
 
 typedef ssize_t (*read_t)(int, void*, size_t);
 typedef ssize_t (*write_t)(int, const void*, size_t);
-typedef int (*open_t)(struct vfs_node_t*, int);
-typedef int (*creat_t)(struct vfs_node_t*, uint32_t);
+typedef int (*open_t)(struct vfs_node_t*, int, mode_t);
+typedef int (*creat_t)(struct vfs_node_t*, mode_t);
 typedef int (*close_t)(int);
 typedef off_t (*lseek_t)(int, off_t, int);
 
 struct vfs_node_t
 {
 	char name[64];
-	uint32_t flags; 
-	ino_t inode;
-	size_t size;
+	struct stat status;
 	
 	read_t read;
 	write_t write;
@@ -50,14 +49,12 @@ struct fildes_t
 
 /* Root of the filesystem */
 extern struct vfs_node_t* vfs_root;
-extern uint32_t inodes;
 
-/* Pretty much standard read, write, open, close and lseek,
- * these deal with vfs_nodes instead of fds though */
+/* Standard read, write, open, creat, close and lseek */
 ssize_t read_vfs(int fd, void* buf, size_t size);
 ssize_t write_vfs(int fd, const void* buf, size_t size);
-int open_vfs(const char* name, int oflag);
-int creat_vfs(const char* name, uint32_t mode);
+int open_vfs(const char* name, int oflag, mode_t mode);
+int creat_vfs(const char* name, mode_t mode);
 int close_vfs(int fd);
 off_t lseek_vfs(int fd, off_t offset, int whence);
 

@@ -2,7 +2,7 @@ SUBOBJS = kern.o lib.o
 
 export PWD = $(shell pwd)
 export CFLAGS = -std=gnu99 -ffreestanding -O2 -Wall -Wextra -c -g \
-	-I$(PWD)/include -I$(PWD)/../razos_kernel_headers
+	-I$(PWD)/include -I$(PWD)/../razos_kernel_headers -D_RAZOS_KERNEL
 export LDFLAGS =
 export ASFLAGS = -felf
 

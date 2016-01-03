@@ -16,12 +16,12 @@
 #include "stdio_vfs.h"
 
 static ssize_t write_stderr(int fd, const void* buf, size_t size);
-static int open_stderr(struct vfs_node_t* node, int oflag);
+static int open_stderr(struct vfs_node_t* node, int oflag, mode_t mode);
 	
 /* Initialize stderr. We use modified ramfs nodes in the background */
 int init_stderr()
 {
-	int fd = open_vfs("stderr", O_RDWR | O_CREAT);
+	int fd = open_vfs("stderr", O_RDWR | O_CREAT, S_IFREG);
 
 	/* Now that we have a file in ramfs, let's modify the vfs_node */
 	struct vfs_node_t* node = cur_task->files[fd].vfs_node;
@@ -37,16 +37,22 @@ int init_stderr()
 
 static ssize_t write_stderr(int fd, const void* buf, size_t size)
 {
+	(void)fd;
+	
 	size_t i = 0;
 	for (; i < size; i++)
 	{
 		kputchar(((char*)buf)[i]);
 	}
+
+	return (ssize_t)size;
 }
 
 /* Only used for when opening as fd 2 */
-static int open_stderr(struct vfs_node_t* node, int oflag)
+static int open_stderr(struct vfs_node_t* node, int oflag, mode_t mode)
 {
+	(void)mode;
+	
 	/* If fildes 2 isn't free anymore, we use the vfs-provided open() */
 	if (cur_task->files[STDERR_FILENO].vfs_node != NULL)
 		return -1;

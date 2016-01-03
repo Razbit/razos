@@ -45,8 +45,9 @@ uint32_t sys_open(struct registers_t* regs)
 {
 	const char* name = (const char*)REG_ARG1(regs);
 	int oflag = (int)REG_ARG2(regs);
+	mode_t mode = (mode_t)REG_ARG3(regs);
 
-	return open_vfs(name, oflag);
+	return open_vfs(name, oflag, mode);
 }
 
 uint32_t sys_close(struct registers_t* regs)
@@ -58,7 +59,7 @@ uint32_t sys_close(struct registers_t* regs)
 uint32_t sys_creat(struct registers_t* regs)
 {
 	const char* name = (const char*)REG_ARG1(regs);
-	int mode = (int)REG_ARG2(regs);
+	mode_t mode = (mode_t)REG_ARG2(regs);
 
 	return creat_vfs(name, mode);
 }

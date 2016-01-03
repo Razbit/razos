@@ -10,7 +10,7 @@
 #include <api/razos.h>
 
 
-int creat(const char* name, int mode)
+int creat(const char* name, mode_t mode)
 {
 	return (int)__syscall2(SYS_CREAT, (uint32_t)name, (uint32_t)mode);
 }
