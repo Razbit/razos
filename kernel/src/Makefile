@@ -36,3 +36,5 @@ clean:
 	$(MAKE) clean -C interrupt
 	$(MAKE) clean -C mm
 	$(MAKE) clean -C syscall
+	$(MAKE) clean -C fs
+	$(MAKE) clean -C loader

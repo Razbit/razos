@@ -1,6 +1,6 @@
 CSOURCES = test.c do_exit.c wait.c sched.c
 ASMSOURCES = 
-SUBOBJS = fcntl.o stdlib.o unistd.o math.o errno.o
+SUBOBJS = fcntl.o stdlib.o unistd.o math.o errno.o stat.o
 
 OBJS = $(patsubst %.c, %.c.o,$(CSOURCES))
 OBJS += $(patsubst %.s, %.s.o,$(ASMSOURCES))
@@ -28,6 +28,7 @@ all: $(OBJS)
 	$(MAKE) -C math
 	$(MAKE) -C string
 	$(MAKE) -C errno
+	$(MAKE) -C stat
 
 	$(LD) $(_LDFLAGS) -Tuser.ld -o rlibc $(CRT0) $(CRTI) $(CRTBEGIN) $(OBJS) $(SUBOBJS) $(CRTEND) $(CRTN)
 
@@ -46,4 +47,5 @@ clean:
 	$(MAKE) clean -C math
 	$(MAKE) clean -C string
 	$(MAKE) clean -C errno
+	$(MAKE) clean -C stat
 

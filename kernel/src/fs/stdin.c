@@ -5,13 +5,13 @@
  * Razbit 2015 */
 
 #include <sys/types.h>
-#include <asm/system.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <console.h> /* For now, a better terminal on the way */
 #include <kmalloc.h>
 
 #include "../mm/task.h"
+#include "../mm/sched.h"
 
 #include "vfs.h"
 #include "ramfs.h"
@@ -42,11 +42,12 @@ int init_stdin()
 
 static ssize_t read_stdin(int fd, void* buf, size_t size)
 {
-	sti(); /* Enable interrupts so keyboard input can be taken */
 	struct vfs_node_t* node = cur_task->files[fd].vfs_node;
-	
-	while (node->status.st_size < size); /* Wait for user */
-	
+
+	/* Wait for user input */
+	while (node->status.st_size < size)
+		sched_switch();
+
 	lseek_vfs(fd, read_at, SEEK_SET);
 	size_t read = read_ramfs(fd, buf, size);
 	
@@ -85,14 +86,12 @@ static ssize_t write_stdin(int fd, const void* buf, size_t size)
 static int open_stdin(struct vfs_node_t* node, int oflag, mode_t mode)
 {
 	(void)mode;
+	(void)oflag;
+	(void)node;
 
-	/* If fildes 0 isn't free anymore, we use the vfs-provided open() */
+	/* If STDIN_FILENO is not free, get the first free fd */
 	if (cur_task->files[STDIN_FILENO].vfs_node != NULL)
-		return -1;
-
-	cur_task->files[STDIN_FILENO].vfs_node = node;
-	cur_task->files[STDIN_FILENO].at = 0;
-	cur_task->files[STDIN_FILENO].oflag = oflag;
+		return get_free_fd(3);
 
 	return STDIN_FILENO;
 }

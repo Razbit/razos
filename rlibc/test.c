@@ -5,32 +5,33 @@
 #include <string.h>
 #include <wait.h>
 #include <sched.h>
+#include <sys/stat.h>
+
+#define puts(msg) write(STDOUT_FILENO, msg, strlen(msg))
+#define putc(chr) write(STDOUT_FILENO, &chr, 1);
 
 int main()
 {
-	char str[] = "Hello FS from user-space!\n\0";
-	write(STDOUT_FILENO, &(str[0]) , strlen(str));
-
+	char str[] = "Hello FS from user-space!\n";
+	puts(str);
+    	
 	pid_t pid = fork();
 	if (pid == 0)
 	{
-		write(STDOUT_FILENO, "child: ", strlen("child: "));
+		puts("child: ");
 		char c = pid+0x30;
-		write(STDOUT_FILENO, &c, 1);
-		c = '\n';
-		write(STDOUT_FILENO, &c, 1);
-		sched_yield();
-		write(STDOUT_FILENO, "yielded", strlen("yielded"));
+		putc(c);
+		puts("\n");
+
 		return 2;
 	}
 	else
 	{
-		write(STDOUT_FILENO, "parent: ", strlen("parent: "));
+		puts("parent: ");
 		char c = pid+0x30;
-		write(STDOUT_FILENO, &c, 1);
-		c = '\n';
-		write(STDOUT_FILENO, &c, 1);
-
+		putc(c);
+		puts("\n");
+		
 		wait(NULL);
 		return 1;
 	}

@@ -7,6 +7,7 @@
 #include "vfs.h"
 #include "../mm/task.h"
 #include "ramfs.h"
+#include "fifofs.h"
 
 #include <sys/types.h>
 #include <fcntl.h>
@@ -75,56 +76,53 @@ int open_vfs(const char* name, int oflag, mode_t mode)
 		if (oflag & O_CREAT)
 		{
 			int ret = creat_vfs(name, mode);
-			cur_task->files[ret].at = 0;
-			cur_task->files[ret].oflag = oflag;
+			if (ret < 0)
+				return -1;
 			return ret;
 		}
 		else
 			return -1;
 	}
-	
+
 	node = ptr;
 
+	int fd = 3; /* 0, 1, 2 reserved for stdin/out/err */
 	/* Use fs-provided open(), if available */
 	if (node->open != NULL)
 	{
-		int ret = node->open(node, oflag, mode);
-		if (ret >= 0 && ret <= 2) /* Return if we opened stdio */
-			return ret;
+		fd = node->open(node, oflag, mode);
 	}
-
-    
-	/* Find an empty fildes from the task struct, fill it and
-	 * return the index */
-	int i = 3; /* 0, 1, 2 reserved for stdin/out/err */
-	while (1)
+	else
 	{
-		if (i == 32) /* No free file descriptors.. */
-		{
-			return -1;
-		}
-	    
-		if (cur_task->files[i].vfs_node != NULL)
-		{
-			i++;
-			continue;
-		}
-
-		break;
+		/* Find an empty fildes from the task struct */
+		fd = get_free_fd(fd);
 	}
 
-	/* Now i is  the first free index. Populate the fildes */
-	cur_task->files[i].vfs_node = node;
-	cur_task->files[i].at = 0;
-	cur_task->files[i].oflag = oflag;
+	if (fd >= 0)
+	{
+		/* Populate the fildes */
+		cur_task->files[fd].vfs_node = node;
+		cur_task->files[fd].at = 0;
+		cur_task->files[fd].oflag = oflag;
 
-	return i;
+		return fd;
+	}
+	else
+	{
+		return -1;
+	}
 }
 
 int close_vfs(int fd)
 {
 	struct vfs_node_t* node = cur_task->files[fd].vfs_node;
-	
+
+	if (node == NULL)
+	{
+		/* TODO: set errno to EBADF */
+		return -1;
+	}
+
 	if (node->close != NULL)
 	{
 		int ret = node->close(fd);
@@ -147,6 +145,9 @@ int creat_vfs(const char* name, mode_t mode)
 	if (node == NULL)
 	{
 		node = (struct vfs_node_t*)kmalloc(sizeof(struct vfs_node_t));
+		if (node == NULL)
+			return -1;
+
 		vfs_root = node;
 	}
 	else
@@ -156,6 +157,9 @@ int creat_vfs(const char* name, mode_t mode)
 
 		node->next = \
 			(struct vfs_node_t*)kmalloc(sizeof(struct vfs_node_t));
+		if (node->next == NULL)
+			return -1;
+
 		node = node->next;
 	}
 
@@ -167,21 +171,29 @@ int creat_vfs(const char* name, mode_t mode)
 	node->status.st_mode = mode;
 	node->status.st_uid = 0;
 	node->status.st_gid = 0;
-	
+
 	node->next = NULL;
 	strncpy(&(node->name[0]), name, 63);
 	node->name[63] = '\0';
 	node->status.st_size = 0;
 
+	/* This will be better when we have mounts and dirs, this is
+	 * rather stupid */
 	/* if this is a regular file or type not specified */
 	if ((mode & S_IFREG) || (mode & S_IFMT) == 0)
 	{
-		/* Create it in ramfs (for now, with dirs and mounts this
-		 * will be better ) */
 		node->status.st_dev = DEVID_RAMFS;
 		node->status.st_rdev = DEVID_RAMFS;
 		node->status.st_ino = ramfs_inodes++;
 		node->creat = &creat_ramfs;
+	}
+	else if (mode & S_IFIFO)
+	{
+		/* fifos created on ramfs for now */
+		node->status.st_dev = DEVID_RAMFS;
+		node->status.st_rdev = DEVID_RAMFS;
+		node->status.st_ino = ramfs_inodes++;
+		node->creat = &creat_fifofs;
 	}
 	else
 	{
@@ -189,7 +201,7 @@ int creat_vfs(const char* name, mode_t mode)
 		 * come here.. */
 		return -1;
 	}
-		
+
 	if (node->creat != NULL)
 	{
 		int ret = node->creat(node, mode);
@@ -199,38 +211,28 @@ int creat_vfs(const char* name, mode_t mode)
 
 	/* Find an empty fildes from the task struct, fill it and
 	 * return the index */
-	int i = 3; /* 0, 1, 2 reserved for stdin/out/err */
-	while (1)
-	{
-		if (i == 32) /* No free file descriptors.. */
-		{
-			return -1;
-		}
-	    
-		if (cur_task->files[i].vfs_node != NULL)
-		{
-			i++;
-			continue;
-		}
-
-		break;
-	}
+	int fd = get_free_fd(3);
 
 	/* Now i is  the first free index. Populate the fildes */
-	cur_task->files[i].vfs_node = node;
-	cur_task->files[i].at = 0;
-	cur_task->files[i].oflag = O_WRONLY;
+	cur_task->files[fd].vfs_node = node;
+	cur_task->files[fd].at = 0;
+	cur_task->files[fd].oflag = O_WRONLY;
 
-	return i;
+	return fd;
 }
 
 off_t lseek_vfs(int fd, off_t offset, int whence)
 {
 	struct vfs_node_t* node = cur_task->files[fd].vfs_node;
 
+	/* FIFO not seekable */
+	if (node->status.st_mode & S_IFIFO)
+		return cur_task->files[fd].at;
+
 	/* If there is some fs-special functionality, use that */
 	if (node->lseek != NULL)
 		return node->lseek(fd, offset, whence);
+
 	/* Otherwise we go default */
 	else
 	{
@@ -248,8 +250,29 @@ off_t lseek_vfs(int fd, off_t offset, int whence)
 		default:
 			return (off_t)-1;
 		}
-		
+
 		return cur_task->files[fd].at;
 	}
 }
 
+/* Find first free file descriptor, starting from fd */
+int get_free_fd(int fd)
+{
+	while (1)
+	{
+		if (fd == 32) /* No free file descriptors.. */
+		{
+			return -1;
+		}
+
+		if (cur_task->files[fd].vfs_node != NULL)
+		{
+			fd++;
+			continue;
+		}
+
+		break;
+	}
+
+	return fd;
+}

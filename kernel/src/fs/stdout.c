@@ -51,14 +51,12 @@ static ssize_t write_stdout(int fd, const void* buf, size_t size)
 static int open_stdout(struct vfs_node_t* node, int oflag, mode_t mode)
 {
 	(void)mode;
+	(void)oflag;
+	(void)node;
 	
-	/* If fildes 1 isn't free anymore, we use the vfs-provided open() */
+	/* If STDOUT_FILENO is not free, get the first free fd */
 	if (cur_task->files[STDOUT_FILENO].vfs_node != NULL)
-		return -1;
-
-	cur_task->files[STDOUT_FILENO].vfs_node = node;
-	cur_task->files[STDOUT_FILENO].at = 0;
-	cur_task->files[STDOUT_FILENO].oflag = oflag;
+		return get_free_fd(3);
 
 	return STDOUT_FILENO;
 }

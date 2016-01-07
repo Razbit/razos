@@ -43,6 +43,8 @@ struct stat
 int stat(const char* path, struct stat* buf);
 int fstat(int fd, struct stat* buf);
 
+int mkfifo(const char* path, mode_t mode);
+
 #endif /* STAT_H */
 #endif /* _NEED_MODE_T_VALUES */
 

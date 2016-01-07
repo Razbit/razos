@@ -30,7 +30,7 @@ void init_initrd(void* loc)
 		off_t offset = node[i].offset + (off_t)loc;
 		char* name = node[i].name;
 
-		int fd = open_vfs(name, O_RDWR | O_CREAT);
+		int fd = open_vfs(name, O_RDWR | O_CREAT, S_IFREG);
 		write_vfs(fd, (void*)offset, size);
 		close_vfs(fd);
 	}

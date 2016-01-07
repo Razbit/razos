@@ -52,14 +52,12 @@ static ssize_t write_stderr(int fd, const void* buf, size_t size)
 static int open_stderr(struct vfs_node_t* node, int oflag, mode_t mode)
 {
 	(void)mode;
+	(void)oflag;
+	(void)node;
 	
-	/* If fildes 2 isn't free anymore, we use the vfs-provided open() */
+	/* If STDERR_FILENO is not free, get the first free fd */
 	if (cur_task->files[STDERR_FILENO].vfs_node != NULL)
-		return -1;
-
-	cur_task->files[STDERR_FILENO].vfs_node = node;
-	cur_task->files[STDERR_FILENO].at = 0;
-	cur_task->files[STDERR_FILENO].oflag = oflag;
+		return get_free_fd(3);
 
 	return STDERR_FILENO;
 }

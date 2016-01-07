@@ -24,14 +24,18 @@
 #define O_ACCMODE 0x03
 
 /* Access modes used by open/fcntl */
-#define O_RDONLY 0x00
-#define O_WRONLY 0x01
-#define O_RDWR   0x02
+#define O_RDONLY 0x01
+#define O_WRONLY 0x02
+#define O_RDWR   (O_RDONLY | O_WRONLY)
 
 /* Flags for open/fcntl */
-#define O_CREAT  0x10 /* Create file if it doesn't exist */
-#define O_TRUNC  0x20 /* Set length of file to 0 at write (not impl)*/
-#define O_APPEND 0x40 /* Append to file when writing (not impl)*/
+#define O_CREAT    0x0010 /* Create file if it doesn't exist */
+#define O_EXCL     0x0020 /* Exclusive use */
+#define O_NOCTTY   0x0040 /* Do not assign a controlling terminal */
+#define O_TRUNC    0x0080 /* Set length of file to 0 at write */
+#define O_APPEND   0x0100 /* Append to file when writing */
+#define O_NONBLOCK 0x0200 /* Non-blocking mode */
+
 
 /* Function prototypes */
 int open(const char* name, int oflag, ...);
