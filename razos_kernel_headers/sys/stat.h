@@ -62,27 +62,27 @@ int mkfifo(const char* path, mode_t mode);
 
 
 /* File mode */
-#define S_IPERM  0x0000FFFF /* Permission mask */
+#define S_IPERM  07777 /* Permission mask */
 
-#define S_IRUSR  0x00000400 /* User read perm */
-#define S_IWUSR  0x00000200 /* User write perm */
-#define S_IXUSR  0x00000100 /* User exec perm */
+#define S_IRUSR  00400 /* User read perm */
+#define S_IWUSR  00200 /* User write perm */
+#define S_IXUSR  00100 /* User exec perm */
 
-#define S_IRGRP  0x00000040 /* Group read perm */
-#define S_IWGRP  0x00000020 /* Group write perm */
-#define S_IXGRP  0x00000010 /* Group exec perm */
+#define S_IRGRP  00040 /* Group read perm */
+#define S_IWGRP  00020 /* Group write perm */
+#define S_IXGRP  00010 /* Group exec perm */
 
-#define S_IROTH  0x00000004 /* Others read perm */
-#define S_IWOTH  0x00000002 /* Others write perm */
-#define S_IXOTH  0x00000001 /* Others exec perm */
+#define S_IROTH  00004 /* Others read perm */
+#define S_IWOTH  00002 /* Others write perm */
+#define S_IXOTH  00001 /* Others exec perm */
 
 #define S_IRWXU  (S_IRUSR | S_IWUSR | S_IXUSR)
 #define S_IRWXG  (S_IRGRP | S_IWGRP | S_IXGRP)
 #define S_IRWXO  (S_IROTH | S_IWOTH | S_IXOTH)
 
-#define S_ISUID  0x00004000 /* Set UID at execution */
-#define S_ISGID  0x00002000 /* Set GID at execution */
-#define S_ISVTX  0x00001000 /* Sticky bit: deletion and renaming only
+#define S_ISUID  04000 /* Set UID at execution */
+#define S_ISGID  02000 /* Set GID at execution */
+#define S_ISVTX  01000 /* Sticky bit: deletion and renaming only
                              * by file owner, dir owner or root */
 
 /* Test macros for mode_t */

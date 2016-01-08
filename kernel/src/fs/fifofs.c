@@ -225,7 +225,7 @@ int creat_fifofs(struct vfs_node_t* node, mode_t mode)
 	node->read = &read_fifofs;
 	node->write = &write_fifofs;
 	node->open = &open_fifofs;
-	node->close = NULL; /* TODO: needed. remove us from fifo users */
+	node->close = &close_fifofs;
 	node->lseek = NULL;
 
 	fifofs_nodes[node->status.st_ino] = \
