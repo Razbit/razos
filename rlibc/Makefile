@@ -1,4 +1,4 @@
-CSOURCES = test.c do_exit.c wait.c sched.c
+CSOURCES = test.c do_exit.c wait.c sched.c setup_rlibc.c
 ASMSOURCES = 
 SUBOBJS = fcntl.o stdlib.o unistd.o math.o errno.o stat.o
 

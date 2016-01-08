@@ -1,4 +1,4 @@
-CSOURCES = syscall.c sys_tasking.c sys_fs.c
+CSOURCES = syscall.c sys_tasking.c sys_fs.c sys_setup.c
 ASMSOURCES = syscall.s
 SUBOBJS = 
 OBJS = $(patsubst %.c,%.c.o,$(CSOURCES))

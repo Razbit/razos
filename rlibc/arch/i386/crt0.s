@@ -14,6 +14,7 @@
 
 [EXTERN main]
 [EXTERN do_exit]
+[EXTERN init_rlibc]
 [EXTERN _init]
 [EXTERN _fini]
 
@@ -22,9 +23,9 @@ SECTION .start
     ;; Entry of the user program.
     ;; Loader puts *argv, *envp, argc, argv, envc, envp on stack
 _start:
-    ;; Prepare signals, memory allocation, stdio etc.
-    ;; Uncomment when done.
-    ;; call init_rlibc
+    ;; Prepare signals, memory allocation, stdio, errno etc.
+	;; In setup_rlibc.c
+    call init_rlibc
 
     ;; Global constructors (crti.s)
     call _init

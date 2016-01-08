@@ -192,6 +192,7 @@ struct task_t* task_fork_inner()
 
 	new_task->ppid = cur_task->pid;
 	new_task->syscall_regs = cur_task->syscall_regs;
+	new_task->errno_loc = cur_task->errno_loc; /* vm cloned -> errno loc doesn't change */
 
 	return new_task;
 }

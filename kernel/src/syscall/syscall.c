@@ -15,6 +15,7 @@
 /* Include all syscall headers here */
 #include "sys_tasking.h" /* exit, sched_yield, fork, wait */
 #include "sys_fs.h"      /* open, close, creat, read, write, lseek */
+#include "sys_setup.h"   /* setup kernel */
 
 /* Add the syscall here AND into razos_kernel_headerds/api/razos.h */
 syscall_t syscall_table[] =
@@ -28,7 +29,8 @@ syscall_t syscall_table[] =
 	[SYS_OPEN] = &sys_open,
 	[SYS_CLOSE] = &sys_close,
 	[SYS_CREAT] = &sys_creat,
-	[SYS_LSEEK] = &sys_lseek
+	[SYS_LSEEK] = &sys_lseek,
+	[SYS_SETUP] = &sys_setup
 };
 
 /* Make sure buffer is available to user */
