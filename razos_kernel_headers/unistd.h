@@ -30,9 +30,12 @@ ssize_t read(int fd, void* buf, size_t size);
 ssize_t write(int fd, const void* buf, size_t size);
 int close(int fd);
 
-/* definitions only visible in rlibc */
+/* declarations only visible in rlibc */
 #ifndef _RAZOS_KERNEL
+
 pid_t fork();
+int pipe(int fd[2]);
+
 #endif /* _RAZOS_KERNEL */
 
 #endif /* UNISTD_H */

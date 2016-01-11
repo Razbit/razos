@@ -1,8 +1,8 @@
 /* This file is a part of the RazOS project
  *
- * vfs.h -- The kernel Virtual File System
+ * vfs.c -- The kernel Virtual File System
  *
- * Razbit 2014, 2015 */
+ * Razbit 2014, 2015, 2016 */
 
 #include "vfs.h"
 #include "../mm/task.h"
@@ -15,7 +15,6 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <kmalloc.h>
-#include <console.h>
 
 /* Root of the filesystem */
 struct vfs_node_t* vfs_root = NULL;
@@ -62,8 +61,10 @@ int open_vfs(const char* name, int oflag, mode_t mode)
 	if (vfs_root != NULL)
 	{
 		while (ptr != NULL)
-		{			
-			if (strncmp(name, &(ptr->name[0]), strlen(name)) == 0)
+		{
+			if (ptr->status.st_dev == DEVID_PIPE)
+				ptr = ptr->next;
+			else if (strncmp(name, &(ptr->name[0]), strlen(name)) == 0)
 				break;
 			else
 				ptr = ptr->next;

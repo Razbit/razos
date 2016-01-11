@@ -2,7 +2,7 @@
  *
  * vfs.h -- The kernel Virtual File System
  *
- * Razbit 2014, 2015 */
+ * Razbit 2014, 2015, 2016 */
 
 #ifndef VFS_H
 #define VFS_H

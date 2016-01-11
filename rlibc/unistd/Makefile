@@ -1,4 +1,4 @@
-CSOURCES = close.c lseek.c read.c write.c fork.c
+CSOURCES = close.c lseek.c read.c write.c fork.c pipe.c
 ASMSOURCES = 
 SUBOBJS = 
 
