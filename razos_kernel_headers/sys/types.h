@@ -36,6 +36,9 @@ typedef char __int8_t;
 #define _NEED_INTPTR_T
 #define _NEED_UINTPTR_T
 
+/* From stdarg.h */
+#define _NEED_VA_LIST
+
 /* From all around POSIX */
 #define _NEED_SSIZE_T
 #define _NEED_OFF_T
@@ -210,3 +213,11 @@ typedef __uint32_t pid_t;
 #undef _NEED_PID_T
 #endif /* _NEED_PID_T */
 
+/* va_list */
+#ifdef _NEED_VA_LIST
+#ifndef VA_LIST
+#define VA_LIST
+typedef __builtin_va_list va_list;
+#endif /* VA_LIST */
+#undef _NEED_VA_LIST
+#endif /* _NEED_VA_LIST */

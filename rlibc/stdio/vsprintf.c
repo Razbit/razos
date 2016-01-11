@@ -7,7 +7,57 @@
 #include <ctype.h>
 #include <stdint.h>
 
-#include <vsprintf.h>
+#include <stdio.h>
+
+/* TODO: because of the buffer associated with vsprintf(), we should actually
+ *       use vdprintf() as the base for the printf() family.. */
+/* TODO: printing floats */
+
+/* The basis of printf-family of function is here, the vsprintf().
+ * Following is what this implementation can (will be able to) do.
+ *
+ * Format specifier prototype:
+ * %[flags][width][.prec][len]specifier
+ *
+ * flags: -     Left justify                                        [ok]
+ *        0     Pad left with zeros                                 [ok]
+ *        +     Always print a sign                                 [ok]
+ *        (spc) Write a space if no sign is written                 [ok]
+ *        #     Used w/ specifiers o, x or X the value is           [ok]
+ *              preceded by 0, 0x or 0X respectively.
+ *
+ * width: (num) Min. number of chars to be printed, pad w/ blanks.  [ok]
+ *        *     Width is specified as an int in the argument list.  [ok]
+ *
+ * .prec: (num) For integers (d, i, o, u, x, X): specifies the min. [ok]
+ *              number of digits to be written, padded w/ leading
+ *              zeros if needed. Not truncated. Precision of 0
+ *              means that no character for 0 is printed.
+ *              For s: max number of chars to be printed.           [ok]
+ *              If the period is specified without an explicit
+ *              value, 0 is assumed.
+ *        *     Precision is specified as an int in the arg list.   [ok]
+ *
+ *              d i       u o x X   c    s     p     n
+ * len:   (n/a) int16_t   uint16_t  char char* void* int16_t*       [ok]
+ *        h     int16_t   uint16_t                   int16_t*       [??]
+ *        l     int32_t   uint32_t                   int32_t*       [??]
+ *
+ * spec:  d, i       signed decimal                                 [ok]
+ *        u          unsigned decimal                               [ok]
+ *        o          octal                                          [ok]
+ *        x, X       lower and higher case hexadecimal              [ok]
+ *        f, F       lower and upper case floating point            [  ]
+ *        e, E       lower and upper case scientific notation       [  ]
+ *        g, G       use shorter of %e or %f, lower and upper case  [  ]
+ *        a, A       lower and upper case hex floating-point        [  ]
+ *        c          unsigned char                                  [ok]
+ *        s          C-string                                       [ok]
+ *        p          a pointer                                      [ok]
+ *        n          the number of chars printed so far is stored   [ok]
+ *                   to this location. Nothing printed.
+ *        %          a % character (0x25) is printed.               [ok]
+ */
 
 /* printf flags */
 #define FL_SIGN 0x01

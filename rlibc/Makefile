@@ -29,6 +29,8 @@ all: $(OBJS)
 	$(MAKE) -C string
 	$(MAKE) -C errno
 	$(MAKE) -C stat
+	$(MAKE) -C ctype
+	$(MAKE) -C stdio
 
 	$(LD) $(_LDFLAGS) -Tuser.ld -o rlibc $(CRT0) $(CRTI) $(CRTBEGIN) $(OBJS) $(SUBOBJS) $(CRTEND) $(CRTN)
 
@@ -48,4 +50,6 @@ clean:
 	$(MAKE) clean -C string
 	$(MAKE) clean -C errno
 	$(MAKE) clean -C stat
+	$(MAKE) clean -C ctype
+	$(MAKE) clean -C stdio
 

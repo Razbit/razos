@@ -12,4 +12,6 @@
 
 #include <sys/types.h>
 
+#define offsetof(st, m) __builtin_offsetof(st, m)
+
 #endif /* STDDEF_H */
