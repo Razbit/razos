@@ -22,8 +22,8 @@
 /* Function prototypes */
 
 /* printf -family */
-int fprintf(FILE* stream, const char* fmt, ...);
-int vfprintf(FILE* stream, const char* fmt, va_list arg);
+//int fprintf(FILE* stream, const char* fmt, ...);
+//int vfprintf(FILE* stream, const char* fmt, va_list arg);
 
 int printf(const char* fmt, ...);
 int vprintf(const char* fmt, va_list arg);
@@ -41,10 +41,10 @@ int vdprintf(int fd, const char* fmt, va_list arg);
 
 
 /* The put -family of functions */
-int fputc(int chr, FILE* stream);
-int fputs(const char* str, FILE* stream);
+//int fputc(int chr, FILE* stream);
+//int fputs(const char* str, FILE* stream);
 
-int putc(int chr, FILE* stream);
+//int putc(int chr, FILE* stream);
 int puts(const char* str);
 
 int putchar(int c);
@@ -56,16 +56,16 @@ int dputs(const char* str, int fd);
 
 
 /* The get-family of functinos */
-int fgetc(FILE* stream);
-char* fgets(char* buf, int num, FILE* stream);
+//int fgetc(FILE* stream);
+//char* fgets(char* buf, int num, FILE* stream);
 
-int getc(FILE* stream);
+//int getc(FILE* stream);
 char* gets(char* buf);
 
 int getchar();
 
-ssize_t getdelim(char** lineptr, size_t* n, int delim, FILE* stream);
-ssize_t getline(char** lineptr, size_t* n, FILE* stream);
+//ssize_t getdelim(char** lineptr, size_t* n, int delim, FILE* stream);
+//ssize_t getline(char** lineptr, size_t* n, FILE* stream);
 
 /* rlibc extensions to C99 get -family. Analogous to fgetc/fgets/getdelim/getline.
  * These take POSIX file descriptor instead of FILE stream */
@@ -73,6 +73,6 @@ int dgetc(int fd);
 int dgets(char* buf, int num, int fd);
 
 ssize_t dgetdelim(char** lineptr, size_t* n, int delim, int fd);
-ssize_t dgetdelim(char** lineptr, size_t* n, int fd);
+ssize_t dgetline(char** lineptr, size_t* n, int fd);
 
 #endif /* STDIO_H */
