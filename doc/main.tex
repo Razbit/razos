@@ -1,0 +1,229 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Heavily modified by Razbit from the following template:
+%
+% Masters/Doctoral Thesis 
+% LaTeX Template
+% Version 2.2 (21/11/15)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% Version 2.x major modifications by:
+% Vel (vel@latextemplates.com)
+%
+% This template is based on a template by:
+% Steve Gunn (http://users.ecs.soton.ac.uk/srg/softwaretools/document/templates/)
+% Sunil Patel (http://www.sunilpatel.co.uk/thesis-template/)
+%
+% Template license:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass[
+11pt, % The default document font size, options: 10pt, 11pt, 12pt
+%oneside, % Two side (alternating margins) for binding by default, uncomment to switch to one side
+english,
+singlespacing, % Single line spacing, alternatives: onehalfspacing or doublespacing
+%draft, % Uncomment to enable draft mode (no pictures, no links, overfull hboxes indicated)
+%nolistspacing, % If the document is onehalfspacing or doublespacing, uncomment this to set spacing in lists to single
+%liststotoc, % Uncomment to add the list of figures/tables/etc to the table of contents
+%toctotoc, % Uncomment to add the main table of contents to the table of contents
+parskip, % Uncomment to add space between paragraphs
+nohyperref, % Uncomment to not load the hyperref package
+headsepline, % Uncomment to get a line under the header
+]{MastersDoctoralThesis} % The class file specifying the document structure
+
+\usepackage[utf8]{inputenc} % Required for inputting international characters
+\usepackage[T1]{fontenc} % Output font encoding for international characters
+
+\usepackage{palatino} % Use the Palatino font by default
+
+\usepackage{pageslts}
+\usepackage[titletoc]{appendix}
+
+\usepackage{minted}
+
+\usepackage[backend=bibtex,style=authortitle,natbib=true]{biblatex}
+\addbibresource{bibliography.bib} % The filename of the bibliography
+\usepackage[autostyle=true]{csquotes} % Required to generate language-dependent quotes in the bibliography
+
+%----------------------------------------------------------------------------------------
+%	MARGIN SETTINGS
+%----------------------------------------------------------------------------------------
+
+\geometry{
+	paper=a4paper, % Change to letterpaper for US letter
+	inner=2.5cm, % Inner margin
+	outer=3.8cm, % Outer margin
+	bindingoffset=2cm, % Binding offset
+	top=1.5cm, % Top margin
+	bottom=1.5cm, % Bottom margin
+	%showframe,% show how the type block is set on the page
+}
+
+%----------------------------------------------------------------------------------------
+%	THESIS INFORMATION
+%----------------------------------------------------------------------------------------
+
+\thesistitle{UNIX-tyylinen käyttöjärjestelmäydin sekä ISO/IEC 9899:1999 ja POSIX.1-2008 -standardien mukainen C-kirjasto: RazOS} % \ttitle
+
+\author{Pesonen, Eetu \& Rastas, Iiro} % \authorname
+\webpage{http://github.com/razbit/razos} % \webpage
+\keywords{Operating System, UNIX, POSIX, Programming} % \keywordnames
+\newcommand\keywordnamesfi{Käyttöjärjestelmä, UNIX, POSIX, Ohjelmointi}
+\university{Kerttulin Lukio} %  \univname
+\department{ICT -linja} %  \deptname
+\newcommand\nappendices{1} % Number of appendices. \appendices
+
+\abbrevnaming{Lyhennykset}
+\acknowledgementnaming{Kiitokset}
+
+
+\begin{document}
+
+\frontmatter % Use roman page numbering style (i, ii, iii, iv...) for the pre-content pages
+
+\pagestyle{plain} % Default to the plain heading style until the thesis style is called for the body content
+
+%----------------------------------------------------------------------------------------
+%	TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\begin{titlepage}
+\begin{center}
+
+\textsc{\LARGE \univname}\\[1.5cm] % University name
+\textsc{\Large ICT-linjan päättötyö}\\[0.5cm] % Thesis type
+
+\doublespacing
+{\huge \bf{\ttitle}}\\[0.4cm] % Thesis title
+\singlespacing
+
+Eetu Pesonen ja Iiro Rastas \\[0.4cm]
+
+\deptname\\[2cm] % Research group name and department name
+ 
+{\large \today}\\[4cm] % Date
+ 
+\vfill
+\end{center}
+\end{titlepage}
+
+
+%----------------------------------------------------------------------------------------
+%	ABSTRACT PAGE
+%----------------------------------------------------------------------------------------
+
+\begin{abstract}
+\addchaptertocentry{Tiivistelmä} % Add the abstract to the table of contents
+
+\noindent
+\MakeUppercase{\bf{\ttitle}}\\[0.4cm]
+\authorname \\
+\univname \\
+\deptname \\
+\today \\
+Sivumäärä: \pageref{LastPage} (\lastpageref{LastPages})\\
+Liitteitä: \nappendices \\
+Asiasanat: \keywordnamesfi \\
+\HRule
+
+Suomenkielinen tiivistelmä tähän.
+
+\end{abstract}
+
+\clearpage
+
+\begin{abstract}
+\addchaptertocentry{Abstract} % Add the abstract to the table of contents
+
+\noindent
+\MakeUppercase{\bf{UNIX-like operating system kernel and ISO/IEC 9899:1999 and POSIX.1-2008 compliant C-library: RazOS}}\\[0.4cm]
+\authorname \\
+\univname \\
+\deptname \\
+\today \\
+Number of pages: \pageref{LastPage} (\lastpageref{LastPages})\\
+Appendices: \nappendices \\
+Keywords: \keywordnames \\
+\HRule
+
+Ja sama englanniksi
+
+\end{abstract}
+
+
+%----------------------------------------------------------------------------------------
+%	ACKNOWLEDGEMENTS
+%----------------------------------------------------------------------------------------
+
+\begin{acknowledgements}
+\addchaptertocentry{\acknowledgementname} % Add the acknowledgements to the table of contents
+
+Kiitos kahvinkeittimelle ja muille.
+
+\end{acknowledgements}
+
+\clearpage
+
+
+%----------------------------------------------------------------------------------------
+%	LIST OF CONTENTS/FIGURES/TABLES PAGES
+%----------------------------------------------------------------------------------------
+\renewcommand{\contentsname}{Sisällysluettelo}
+\tableofcontents % Prints the main table of contents
+
+
+%----------------------------------------------------------------------------------------
+%	ABBREVIATIONS
+%----------------------------------------------------------------------------------------
+
+\begin{abbreviations}{ll} % Include a list of abbreviations (a table of two columns)
+
+\textbf{API} & \textbf{A}pplication \textbf{P}rogramming \textbf{I}nterface, ohjelmointirajapinta\\
+
+\end{abbreviations}
+
+
+%----------------------------------------------------------------------------------------
+%	THESIS CONTENT - CHAPTERS
+%----------------------------------------------------------------------------------------
+
+\mainmatter % Begin numeric (1,2,3...) page numbering
+
+\pagestyle{thesis} % Return the page headers back to the "thesis" style
+
+% Include the chapters of the thesis as separate files from the Chapters folder
+% Uncomment the lines as you write the chapters
+
+\include{chapters/chapter_1}
+
+
+%----------------------------------------------------------------------------------------
+%	THESIS CONTENT - APPENDICES
+%----------------------------------------------------------------------------------------
+
+\begin{appendices}
+\renewcommand\appendixname{Liite}
+\appendix % Cue to tell LaTeX that the following "chapters" are Appendices
+
+% Include the appendices of the thesis as separate files from the Appendices folder
+% Uncomment the lines as you write the Appendices
+
+\include{appendices/appendix_a}
+
+\end{appendices}
+%----------------------------------------------------------------------------------------
+%	BIBLIOGRAPHY
+%----------------------------------------------------------------------------------------
+
+\printbibliography[title={Kirjallisuus}, heading=bibintoc]
+
+%----------------------------------------------------------------------------------------
+
+\end{document}
