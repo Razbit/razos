@@ -56,6 +56,9 @@ static struct task_t* alloc_empty_task()
 
 static void copy_user_pages(struct task_t* new_task)
 {
+	new_task->uheap_begin = cur_task->uheap_begin;
+	new_task->uheap_end = cur_task->uheap_end;
+	
 	uint32_t* cur_page_dir = (uint32_t*)CUR_PG_DIR;
 
 	/* Copy available page tables */

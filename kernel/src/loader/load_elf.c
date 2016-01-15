@@ -17,7 +17,7 @@
 /* Load an elf program image to memory.
  * We assume that the user-space program area is empty,
  * make sure that we do the free-ing in do_exec(). */
-int load_elf(void* data)
+void* load_elf(void* data)
 {
 	/* Parse elf */
 	Elf32_Ehdr* elfhdr = data;
@@ -31,6 +31,8 @@ int load_elf(void* data)
 		goto bad;
 	if (elfhdr->e_ident[EI_MAG3] != ELFMAG3)
 		goto bad;
+
+	void* ret = USER_CODE_BEGIN;
 	
 	int i;
 	Elf32_Off offset;
@@ -67,10 +69,12 @@ int load_elf(void* data)
 		
 		memcpy((void*)(phdr->p_vaddr), (void*)(data + phdr->p_offset), \
 		       phdr->p_filesz);
+
+		ret = phdr->p_vaddr + phdr->p_memsz;
 	}
 
-	return 1;
+	return ret;
 	
 bad:
-	return -1;
+	return (void*)-1;
 }

@@ -35,6 +35,8 @@ int close(int fd);
 
 pid_t fork();
 int pipe(int fd[2]);
+int brk(void* addr);
+void* sbrk(intptr_t incr);
 
 #endif /* _RAZOS_KERNEL */
 

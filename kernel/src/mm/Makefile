@@ -1,4 +1,4 @@
-CSOURCES = paging.c kernel_page.c paging_init.c kheap.c kmalloc.c task.c pagefault.c
+CSOURCES = paging.c kernel_page.c paging_init.c kheap.c kmalloc.c task.c pagefault.c uvm.c
 ASMSOURCES = task.s
 SUBOBJS = 
 

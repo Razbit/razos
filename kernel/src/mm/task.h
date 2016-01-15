@@ -94,10 +94,12 @@ struct task_t
 		} dead;
 	} wait_queue;
 
-	uint32_t stack_begin; /* Lowest address of the stack */
+	uint32_t stack_begin;      /* Lowest address of the stack */
+	void* uheap_begin;         /* Beginning of user heap */
+	void* uheap_end;           /* End of user heap */
+	
 	struct fildes_t files[32]; /* Files used by the process */
-	int* errno_loc; /* errno is here, set using
-	                 * sys_setup(SET_ERRNO_LOC, errno) */
+	int* errno_loc;            /* errno is here */
 };
 
 extern struct task_t* cur_task;

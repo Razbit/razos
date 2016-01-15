@@ -12,8 +12,9 @@
 
 /* Load an elf program image to memory.
  * We assume that the user-space is empty (no memory allocated),
- * make sure that we do the free-ing in do_execve(). */
-int load_elf(void* data);
+ * make sure that we do the free-ing in do_execve().
+ * Returns end of program image, or (void*)-1 on error */
+void* load_elf(void* data);
 
 
 /* Standard ELF data types */

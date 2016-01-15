@@ -28,6 +28,8 @@
 #define SYS_SETUP 10
 
 #define SYS_PIPE 11
+#define SYS_BRK 12
+#define SYS_SBRK 13
 
 /* In arch/../crt0.s */
 uint32_t __syscall0(uint32_t num);
