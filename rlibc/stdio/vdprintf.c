@@ -86,22 +86,22 @@ static int fd = 0;
 
 static ssize_t wbuf_flush()
 {
-    if (wbuf_size > 0)
-    {
-        ssize_t ret = write(fd, wbuf, wbuf_size);
-        wbuf_size = 0;
-        return ret;
-    }
-    return 0;
+	if (wbuf_size > 0)
+	{
+		ssize_t ret = write(fd, wbuf, wbuf_size);
+		wbuf_size = 0;
+		return ret;
+	}
+	return 0;
 }
 
 static ssize_t wbuf_write(const char c)
 {
-    wbuf[wbuf_size++] = c;
-    nprinted++;
-    if (wbuf_size == 16)
-        return wbuf_flush();
-    return 0;
+	wbuf[wbuf_size++] = c;
+	nprinted++;
+	if (wbuf_size == 16)
+		return wbuf_flush();
+	return 0;
 }
 
 static int atoi_ptr(const char **str)
@@ -131,7 +131,7 @@ static void numstr(long number, int base, int width, int prec, int flags)
 		digs = "0123456789abcdefghijklmnopqrstuvwxyz";
 
 	if (base < 2 || base > 36)
-        return;
+		return;
 
 	if (flags & FL_ZEROPAD)
 		c = '0';
@@ -370,7 +370,7 @@ int vdprintf(int fd_, const char* fmt, va_list arg)
 
 	int slen;
 
-    fd = fd_;
+	fd = fd_;
 
 	/* State-machine: Go through every char in fmt, do things with it */
 	while (*fmt != '\0')
@@ -489,19 +489,19 @@ int vdprintf(int fd_, const char* fmt, va_list arg)
 			case 'u':
 				if (len == 0)
 					numstr((uint32_t)va_arg(arg, int32_t),
-                           10, width, prec, flags);
+					       10, width, prec, flags);
 				else
 					numstr((uint32_t)va_arg(arg, uint32_t),
-                           10, width, prec, flags);
+					       10, width, prec, flags);
 				break;
 
 			case 'o':
 				if (len == 0)
 					numstr((uint32_t)va_arg(arg, int32_t),
-                           8, width, prec, flags);
+					       8, width, prec, flags);
 				else
 					numstr((uint32_t)va_arg(arg, uint32_t),
-                           8, width, prec, flags);
+					       8, width, prec, flags);
 				break;
 
 			case 'x':
@@ -510,10 +510,10 @@ int vdprintf(int fd_, const char* fmt, va_list arg)
 
 				if (len == 0)
 					numstr((uint32_t)va_arg(arg, int32_t),
-                           16, width, prec, flags);
+					       16, width, prec, flags);
 				else
 					numstr((uint32_t)va_arg(arg, uint32_t),
-                           16, width, prec, flags);
+					       16, width, prec, flags);
 				break;
 
 			case 'c':
@@ -559,7 +559,7 @@ int vdprintf(int fd_, const char* fmt, va_list arg)
 					width = 8;
 				}
 				numstr((uint32_t)va_arg(arg, uint32_t), 16,	\
-                       width, prec, flags);
+				       width, prec, flags);
 				break;
 
 			case 'n':
@@ -570,10 +570,10 @@ int vdprintf(int fd_, const char* fmt, va_list arg)
 			case 'f':
 				flags |= FL_SMALL;
 			case 'F':
-                if (prec == -1) /* Default precision is 6. */
-                    prec = 6;
-                floatstr(va_arg(arg, double), width, prec, flags);
-                break;
+				if (prec == -1) /* Default precision is 6. */
+					prec = 6;
+				floatstr(va_arg(arg, double), width, prec, flags);
+				break;
 			}
 
 			fmt++;
@@ -592,6 +592,6 @@ int vdprintf(int fd_, const char* fmt, va_list arg)
 
 	/* Add null termination */
 	wbuf_write('\0');
-    wbuf_flush();
+	wbuf_flush();
 	return nprinted;
 }
