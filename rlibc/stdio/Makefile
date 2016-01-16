@@ -1,4 +1,4 @@
-CSOURCES = vsprintf.c
+CSOURCES = vdprintf.c printf.c
 ASMSOURCES = 
 SUBOBJS = 
 

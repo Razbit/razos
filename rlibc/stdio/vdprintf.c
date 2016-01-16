@@ -1,21 +1,26 @@
 /* This file is a part of the RazOS project
  *
- * Razbit 2014 */
+ * vdprintf.c -- vdprintf, a POSIX-addition to C99
+ *
+ * Razbit 2014, 2016, Itara20 2016 */
 
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdint.h>
 #include <math.h>
+#include <unistd.h>
 
 #include <stdio.h>
 
-/* TODO: because of the buffer associated with vsprintf(), we should actually
- *       use vdprintf() as the base for the printf() family.. */
 /* TODO: printing floats */
 
-/* The basis of printf-family of function is here, the vsprintf().
- * Following is what this implementation can (will be able to) do.
+/* The basis of printf-family of function is here, the vdprintf().
+ * This function is used for all other functions of the printf-family,
+ * for now. It will be replaced by vfprintf because of heavy write()
+ * usage. (syscall at every write -> slow as fuck)
+ * 
+ * Following is what this implementation can do. Aiming for C99..
  *
  * Format specifier prototype:
  * %[flags][width][.prec][len]specifier
@@ -69,6 +74,36 @@
 #define FL_ZEROPAD 0x20
 #define FL_SMALL 0x40
 
+/* When we write using wbuf_write(), we write to this buffer.
+ * After 16 bytes, it gets flushed automagically,
+ * or by manually calling wbuf_flush() */
+
+static size_t wbuf_size = 0;
+static char wbuf[16];
+static size_t nprinted = 0;
+
+static int fd = 0;
+
+static ssize_t wbuf_flush()
+{
+    if (wbuf_size > 0)
+    {
+        ssize_t ret = write(fd, wbuf, wbuf_size);
+        wbuf_size = 0;
+        return ret;
+    }
+    return 0;
+}
+
+static ssize_t wbuf_write(const char c)
+{
+    wbuf[wbuf_size++] = c;
+    nprinted++;
+    if (wbuf_size == 16)
+        return wbuf_flush();
+    return 0;
+}
+
 static int atoi_ptr(const char **str)
 {
 	int i = 0;
@@ -79,7 +114,7 @@ static int atoi_ptr(const char **str)
 	return i;
 }
 
-static char* numstr(char* str, long number, int base, int width, int prec, int flags)
+static void numstr(long number, int base, int width, int prec, int flags)
 {
 /* Convert number [num] of radix [base] */
 /* Not much to explain, just fancy pointer fiddling */
@@ -95,8 +130,8 @@ static char* numstr(char* str, long number, int base, int width, int prec, int f
 	if (flags & FL_SMALL)
 		digs = "0123456789abcdefghijklmnopqrstuvwxyz";
 
-	if (base<2 || base>36)
-		return 0;
+	if (base < 2 || base > 36)
+        return;
 
 	if (flags & FL_ZEROPAD)
 		c = '0';
@@ -154,41 +189,39 @@ static char* numstr(char* str, long number, int base, int width, int prec, int f
 
 	if (!(flags & (FL_LEFT_JUSTIFY+FL_ZEROPAD)))
 		while (width-- > 0)
-			*str++ = ' ';
+			wbuf_write(' ');
 
 	if (sign)
-		*str++ = sign;
+		wbuf_write(sign);
 
 	if (flags & FL_SPECIAL)
 	{
 		if (base == 8)
 		{
-			*str++ = '0';
+			wbuf_write('0');
 		}
 		else if (base == 16)
 		{
-			*str++ = '0';
-			*str++ = digs[33]; /* x or X */
+			wbuf_write('0');
+			wbuf_write(digs[33]); /* x or X */
 		}
 	}
 
-	if (!(flags&FL_LEFT_JUSTIFY))
+	if (!(flags & FL_LEFT_JUSTIFY))
 		while(width-- > 0)
-			*str++ = c;
+			wbuf_write(c);
 
 	while (i < prec--)
-		*str++ = '0';
+		wbuf_write('0');
 
 	while (i-- > 0)
-		*str++ = tmp[i];
+		wbuf_write(tmp[i]);
 
 	while (width-- > 0)
-		*str++ = ' ';
-
-	return str;
+		wbuf_write(' ');
 }
 
-static char* floatstr(char* str, double number, int width, int prec, int flags)
+static void floatstr(double number, int width, int prec, int flags)
 {
 	const int16_t buf_size = 1024;
 	char c, sign;
@@ -287,7 +320,7 @@ static char* floatstr(char* str, double number, int width, int prec, int flags)
 		}
 
 		if (num == 0.0)
-			tmp[i++]='0';
+			tmp[i++] = '0';
 		else
 		{
 			while (num >= 1)
@@ -305,39 +338,39 @@ static char* floatstr(char* str, double number, int width, int prec, int flags)
 
 	if (!(flags & (FL_LEFT_JUSTIFY+FL_ZEROPAD)))
 		while (width-- > 0)
-			*str++ = ' ';
+			wbuf_write(' ');
 
 	if (sign)
-		*str++ = sign;
+		wbuf_write(sign);
 
-	if (!(flags&FL_LEFT_JUSTIFY))
+	if (!(flags & FL_LEFT_JUSTIFY))
 		while(width-- > 0)
-			*str++ = c;
+			wbuf_write(c);
 
 	while (i < prec--)
-		*str++ = '0';
+		wbuf_write('0');
 
 	while (i-- > 0)
-		*str++ = tmp[i];
+		wbuf_write(tmp[i]);
 
 	while (width-- > 0)
-		*str++ = ' ';
-	return str;
+		wbuf_write(' ');
 }
 
-int vsprintf(char* buf, const char* fmt, va_list arg)
+int vdprintf(int fd_, const char* fmt, va_list arg)
 {
 	uint8_t flags = 0;
 	int state = 0;
 	int width = -1;
 	int prec = -1;
 	int len = 0;
-	int *printed;
+	int* printed;
 
-	char *str = buf;
-	char *s;
+	char* s;
 
 	int slen;
+
+    fd = fd_;
 
 	/* State-machine: Go through every char in fmt, do things with it */
 	while (*fmt != '\0')
@@ -347,7 +380,7 @@ int vsprintf(char* buf, const char* fmt, va_list arg)
 		case 0: /* wait for % -char. Until found, keep printing */
 			if(*fmt != '%')
 			{
-				*str++ = *fmt++;
+				wbuf_write(*fmt++);
 				break;
 			}
 			state++;
@@ -356,7 +389,7 @@ int vsprintf(char* buf, const char* fmt, va_list arg)
 		case 1: /* % received; wait for flags */
 			if (*fmt == '%') /* If we got another %, print it */
 			{
-				*str++ = *fmt++;
+				wbuf_write(*fmt++);
 				state = 0;
 				break;
 			}
@@ -455,20 +488,20 @@ int vsprintf(char* buf, const char* fmt, va_list arg)
 				flags |= FL_SIGN;
 			case 'u':
 				if (len == 0)
-					str = numstr(str, (uint32_t)va_arg(arg, int),
-					             10, width, prec, flags);
+					numstr((uint32_t)va_arg(arg, int32_t),
+                           10, width, prec, flags);
 				else
-					str = numstr(str, (uint32_t)va_arg(arg, uint32_t),
-					             10, width, prec, flags);
+					numstr((uint32_t)va_arg(arg, uint32_t),
+                           10, width, prec, flags);
 				break;
 
 			case 'o':
 				if (len == 0)
-					str = numstr(str, (uint32_t)va_arg(arg, int),
-					             8, width, prec, flags);
+					numstr((uint32_t)va_arg(arg, int32_t),
+                           8, width, prec, flags);
 				else
-					str = numstr(str, (uint32_t)va_arg(arg, uint32_t),
-					             8, width, prec, flags);
+					numstr((uint32_t)va_arg(arg, uint32_t),
+                           8, width, prec, flags);
 				break;
 
 			case 'x':
@@ -476,23 +509,23 @@ int vsprintf(char* buf, const char* fmt, va_list arg)
 			case 'X':
 
 				if (len == 0)
-					str = numstr(str, (uint32_t)va_arg(arg, int),
-					             16, width, prec, flags);
+					numstr((uint32_t)va_arg(arg, int32_t),
+                           16, width, prec, flags);
 				else
-					str = numstr(str, (uint32_t)va_arg(arg, uint32_t),
-					             16, width, prec, flags);
+					numstr((uint32_t)va_arg(arg, uint32_t),
+                           16, width, prec, flags);
 				break;
 
 			case 'c':
 				/* pad to right using spaces */
 				if (!(flags & FL_LEFT_JUSTIFY))
 					while (--width > 0)
-						*str++ = ' ';
+						wbuf_write(' ');
 
-				*str++ = (char)va_arg(arg, int);
+				wbuf_write((char)va_arg(arg, int32_t));
 
 				while (--width > 0)
-					*str++ = ' '; /* pad to left using spaces */
+					wbuf_write(' '); /* pad to left using spaces */
 
 				break;
 
@@ -507,14 +540,14 @@ int vsprintf(char* buf, const char* fmt, va_list arg)
 
 				if (!(flags & FL_LEFT_JUSTIFY))
 					while (slen < width--)
-						*str++ = ' ';
+						wbuf_write(' ');
 
 				/* Add string to the output str */
 				int i;
 				for (i = 0; i < slen; i++)
-					*str++ = *s++;
+					wbuf_write(*s++);
 				while (slen < width--)
-					*str++ = ' ';
+					wbuf_write(' ');
 
 				break;
 
@@ -525,13 +558,13 @@ int vsprintf(char* buf, const char* fmt, va_list arg)
 					flags |= FL_ZEROPAD;
 					width = 8;
 				}
-				str = numstr(str, (uint32_t)va_arg(arg, uint32_t), 16,	\
-				             width, prec, flags);
+				numstr((uint32_t)va_arg(arg, uint32_t), 16,	\
+                       width, prec, flags);
 				break;
 
 			case 'n':
 				printed = va_arg(arg, int*);
-				*printed = (str - buf);
+				*printed = nprinted;
 				break;
 			
 			case 'f':
@@ -539,7 +572,7 @@ int vsprintf(char* buf, const char* fmt, va_list arg)
 			case 'F':
                 if (prec == -1) /* Default precision is 6. */
                     prec = 6;
-                str = floatstr(str,va_arg(arg,double),width,prec,flags);
+                floatstr(va_arg(arg, double), width, prec, flags);
                 break;
 			}
 
@@ -558,6 +591,7 @@ int vsprintf(char* buf, const char* fmt, va_list arg)
 	}
 
 	/* Add null termination */
-	*str = '\0';
-	return str-buf;
+	wbuf_write('\0');
+    wbuf_flush();
+	return nprinted;
 }

@@ -7,6 +7,7 @@
 #include <sched.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <stdio.h>
 
 #define puts(msg) write(STDOUT_FILENO, msg, strlen(msg))
 #define putc(chr) write(STDOUT_FILENO, &chr, 1);
@@ -16,18 +17,16 @@
 
 int main()
 {
-	puts("Hello FS from user-space!\n");
-
 	int pipefd[2];
 	pipe(pipefd);
-    	
+
+    printf("Hello from printf! Here should be pi: %f\n", 3.1415927f);
+    
 	pid_t pid = fork();
+
 	if (pid == 0)
 	{
-		puts("child: ");
-		char c = pid+0x30;
-		putc(c);
-		puts("\n");
+        printf("child: %i\n", pid);
 
 		close(pipefd[0]);
 
@@ -40,10 +39,7 @@ int main()
 	}
 	else
 	{
-		puts("parent: ");
-		char c = pid+0x30;
-		putc(c);
-		puts("\n");
+		printf("parent: %i\n", pid);
 		
 		close(pipefd[1]);
 
