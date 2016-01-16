@@ -1,6 +1,6 @@
 CSOURCES = test.c do_exit.c wait.c sched.c setup_rlibc.c
 ASMSOURCES = 
-SUBOBJS = fcntl.o stdlib.o unistd.o math.o errno.o stat.o
+SUBOBJS = fcntl.o stdlib.o unistd.o math.o errno.o stat.o ctype.o stdio.o string.o
 
 OBJS = $(patsubst %.c, %.c.o,$(CSOURCES))
 OBJS += $(patsubst %.s, %.s.o,$(ASMSOURCES))

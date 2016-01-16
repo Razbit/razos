@@ -6,6 +6,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdint.h>
+#include <math.h>
 
 #include <stdio.h>
 
@@ -47,7 +48,7 @@
  *        u          unsigned decimal                               [ok]
  *        o          octal                                          [ok]
  *        x, X       lower and higher case hexadecimal              [ok]
- *        f, F       lower and upper case floating point            [  ]
+ *        f, F       lower and upper case floating point            [ok]
  *        e, E       lower and upper case scientific notation       [  ]
  *        g, G       use shorter of %e or %f, lower and upper case  [  ]
  *        a, A       lower and upper case hex floating-point        [  ]
@@ -184,6 +185,143 @@ static char* numstr(char* str, long number, int base, int width, int prec, int f
 	while (width-- > 0)
 		*str++ = ' ';
 
+	return str;
+}
+
+static char* floatstr(char* str, double number, int width, int prec, int flags)
+{
+	const int16_t buf_size = 1024;
+	char c, sign;
+	char tmp [buf_size];
+	const char* digs = "0123456789";
+	int i, p;
+	double num, frac;
+	
+	if (prec > buf_size)
+		prec = buf_size;
+
+	if (width < 0)
+		width = -width;
+
+	if (flags & FL_ZEROPAD)
+		c = '0';
+	else
+		c = ' ';
+	
+	if (number < 0)
+	{
+		sign = '-';
+		num = -number;
+	}
+	else
+	{
+		num = number;
+		if (flags & FL_PLUS)
+			sign = '+';
+		else
+		{
+			if (flags & FL_SPACE)
+				sign = ' ';
+			else
+				sign = 0;
+		}
+	}
+
+	if (sign != 0)
+		width--;
+	
+	if (isnan(number))
+	{
+		if (flags & FL_SMALL)
+			tmp[2] = 'n', tmp[1] = 'a', tmp[0] = 'n';
+		else
+			tmp[2] = 'N', tmp[1] = 'A', tmp[0] = 'N';
+		
+		width -= 3;
+		i = 3;
+		prec = 0;
+	}
+	else if (isinf(number))
+	{
+		if (flags & FL_SMALL)
+			tmp[2] = 'i', tmp[1] = 'n', tmp[0] = 'f';
+		else
+			tmp[2] = 'I', tmp[1] = 'N', tmp[0] = 'F';
+		
+		width -= 3;
+		i = 3;
+		prec = 0;
+	}
+	else
+	{
+		i = 0;
+		frac = modf(num, &num);
+
+		if (frac == 0)
+		{
+			if (!prec)
+			{
+				if (flags & FL_SPECIAL)
+					tmp[i++] = '.';
+			}
+			else
+			{
+				i += prec;
+				tmp[i--] = '.';
+				for (p = prec; p > 0; p--)
+					tmp[i--] = '0';
+				i += prec + 2;
+			}
+		}
+		else
+		{
+			i += prec;
+			tmp[i--] = '.';
+			for (p = prec; p > 0; p--)
+			{
+				frac *= 10;
+				tmp[i--] = digs[(int)frac];
+				frac = modf(frac,&frac);
+			}
+			i += prec + 2;
+		}
+
+		if (num == 0.0)
+			tmp[i++]='0';
+		else
+		{
+			while (num >= 1)
+			{
+				tmp[i++] = digs[(int)fmod(num, 10.0)];
+				num /= 10.0;
+			}
+		}
+		
+		if (i > prec)
+			prec = i;
+		
+		width -= prec;
+	}
+
+	if (!(flags & (FL_LEFT_JUSTIFY+FL_ZEROPAD)))
+		while (width-- > 0)
+			*str++ = ' ';
+
+	if (sign)
+		*str++ = sign;
+
+	if (!(flags&FL_LEFT_JUSTIFY))
+		while(width-- > 0)
+			*str++ = c;
+
+	while (i < prec--)
+		*str++ = '0';
+
+	while (i-- > 0)
+		*str++ = tmp[i];
+
+	while (width-- > 0)
+		*str++ = ' ';
 	return str;
 }
 
@@ -395,6 +533,14 @@ int vsprintf(char* buf, const char* fmt, va_list arg)
 				printed = va_arg(arg, int*);
 				*printed = (str - buf);
 				break;
+			
+			case 'f':
+				flags |= FL_SMALL;
+			case 'F':
+                if (prec == -1) /* Default precision is 6. */
+                    prec = 6;
+                str = floatstr(str,va_arg(arg,double),width,prec,flags);
+                break;
 			}
 
 			fmt++;

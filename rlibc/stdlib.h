@@ -50,6 +50,10 @@ void qsort(void *base, size_t nitems, size_t size, int (*compar)(const void *, c
 
 int atoi (const char *str);
 
+double strtod(const char *str, char **endptr);
+
+double atof(const char *str);
+
 void exit(int status); /* int arch/../crt0.s */
 
 #endif /* STDLIB_H */

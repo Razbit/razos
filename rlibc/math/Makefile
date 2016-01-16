@@ -1,5 +1,5 @@
-CSOURCES = ceil.c  fabs.c  floor.c  fmod.c  frexp.c  ldexp.c modf.c  sqrt.c  trunc.c
-ASMSOURCES = 
+CSOURCES = fabs.c frexp.c ldexp.c modf.c sqrt.c exp.c log.c pow.c
+ASMSOURCES = fmod.s trunc.s ceil.s floor.s
 SUBOBJS = 
 
 OBJS = $(patsubst %.c, %.c.o,$(CSOURCES))
