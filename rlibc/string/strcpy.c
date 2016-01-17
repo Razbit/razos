@@ -18,7 +18,7 @@ char* strcpy(char* dest, const char* source)
 
 char* strncpy(char* dest, const char* source, size_t num)
 {
-	int i = 0;
+	unsigned int i = 0;
 
 	for (;i < num; i++)
 	{

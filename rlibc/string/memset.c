@@ -4,7 +4,7 @@
 
 #include <string.h>
 
-void* memset(void* ptr, char value, int num)
+void* memset(void* ptr, int value, int num)
 {
 	num--;
 	char* str = ptr;

@@ -5,19 +5,19 @@
 #include <string.h>
 
 
-char* strchr(const char* str, char value)
+char* strchr(const char* str, int value)
 {
 	while (*str != '\0')
 	{
 		if (*str == value)
-			return str;
+			return (char*)str;
 		str++;
 	}
 
 	return NULL;
 }
 
-char* strrchr(const char* str, char value)
+char* strrchr(const char* str, int value)
 {
 	const char* end = str;
 
@@ -27,7 +27,7 @@ char* strrchr(const char* str, char value)
 	while (end >= str)
 	{
 		if (*end == value)
-			return end;
+			return (char*)end;
 		end--;
 	}
 

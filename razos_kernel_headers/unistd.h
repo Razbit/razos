@@ -36,7 +36,7 @@ int dup2(int fd, int fd2);
 /* declarations only visible in rlibc */
 #ifndef _RAZOS_KERNEL
 
-pid_t fork();
+pid_t fork(void);
 int pipe(int fd[2]);
 int brk(void* addr);
 void* sbrk(intptr_t incr);

@@ -13,7 +13,7 @@ char* strpbrk(const char* str1, const char* str2)
 		while (*temp != '\0')
 		{
 			if (*str1 == *temp)
-				return str1;
+				return (char*)str1;
 			temp++;
 		}
 

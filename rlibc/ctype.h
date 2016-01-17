@@ -5,19 +5,19 @@
 #ifndef CTYPE_H
 #define CTYPE_H
 
-int isalnum(char c);
-int isalpha(char c);
-int isdigit(char c);
-int iscntrl(char c);
-int isgrapf(char c);
-int islower(char c);
-int isprint(char c);
-int ispunct(char c);
-int isspace(char c);
-int isupper(char c);
-int isxdigit(char x);
+int isalnum(int c);
+int isalpha(int c);
+int isdigit(int c);
+int iscntrl(int c);
+int isgrapf(int c);
+int islower(int c);
+int isprint(int c);
+int ispunct(int c);
+int isspace(int c);
+int isupper(int c);
+int isxdigit(int x);
 
-int tolower(char c);
-int toupper(char c);
+int tolower(int c);
+int toupper(int c);
 
 #endif /* CTYPE_H */

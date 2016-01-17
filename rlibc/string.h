@@ -10,7 +10,7 @@
 #include <sys/types.h>
 
 /* Set [num] bytes of memory starting from [ptr] to [value] */
-void* memset(void* ptr, char value, int num);
+void* memset(void* ptr, int value, int num);
 /* Copy block of memory of size [num] bytes from [source] to [dest] */
 void* memcpy(void* dest, const void* source, size_t num);
 /* Move block of memory of size [num] bytes from [source] to [dest] */
@@ -34,11 +34,11 @@ int strncmp(const char* str1, const char* str2, size_t num);
 
 /* Return pointer to first occurence of [value] in the block of memory
  * of size [num] pointed by [ptr] */
-void* memchr(const void* ptr, char value, size_t num);
+void* memchr(const void* ptr, int value, size_t num);
 /* Return pointer to first occurence of [value] in the string [str] */
-char* strchr(const char* str, char value);
+char* strchr(const char* str, int value);
 /* Return pointer to last occurence of [value] in the string [str] */
-char* strrchr(const char* str, char value);
+char* strrchr(const char* str, int value);
 /* Return pointer to the first occurrence in [str1] of any of the chars
  * that are part of [str2] */
 char* strpbrk(const char* str1, const char* str2);

@@ -30,7 +30,7 @@ char* strncat(char* dest, const char* source, size_t num)
 
 	/* start now points to the null character terminating the string 'dest'*/
 
-	int i = 0;
+	unsigned int i = 0;
 
 	while ((*source != '\0') && (i < num))
 	{

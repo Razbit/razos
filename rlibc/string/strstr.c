@@ -6,7 +6,7 @@
 
 char* strstr(const char* str1, const char* str2)
 {
-	int i;
+	unsigned int i;
 
 	while (*str1 != '\0')
 	{
@@ -23,7 +23,7 @@ char* strstr(const char* str1, const char* str2)
 		}
 
 		if (i == strlen(str2))
-			return str1;
+			return (char*)str1;
 		else
 			str1++;
 	}

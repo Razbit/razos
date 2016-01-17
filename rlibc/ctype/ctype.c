@@ -4,7 +4,7 @@
 
 #include <ctype.h>
 
-int isalnum(char c)
+int isalnum(int c)
 {
 	if ((c >= 0x41 && c <=0x5A)					\
 	    || (c >= 0x61 && c <= 0x7A)				\
@@ -13,49 +13,49 @@ int isalnum(char c)
 	return 0;
 }
 
-int isalpha(char c)
+int isalpha(int c)
 {
 	if ((c >= 0x41 && c <=0x5A) || (c >= 0x61 && c <= 0x7A))
 		return 1;
 	return 0;
 }
 
-int isdigit(char c)
+int isdigit(int c)
 {
 	if (c >= 0x30 && c <= 0x39)
 		return 1;
 	return 0;
 }
 
-int iscntrl(char c)
+int iscntrl(int c)
 {
 	if (c <= 0x1F || c == 0x7F)
 		return 1;
 	return 0;
 }
 
-int isgrapf(char c)
+int isgrapf(int c)
 {
 	if (c >= 0x21 && c <= 0x7E)
 		return 1;
 	return 0;
 }
 
-int islower(char c)
+int islower(int c)
 {
 	if (c >= 0x61 && c <= 0x7A)
 		return 1;
 	return 0;
 }
 
-int isprint(char c)
+int isprint(int c)
 {
 	if (c >= 0x20 && c <= 0x7E)
 		return 1;
 	return 0;
 }
 
-int ispunct(char c)
+int ispunct(int c)
 {
 	if ((c >= 0x21 && c <= 0x2F)				\
 	    || (c >= 0x3A && c <= 0x40)				\
@@ -65,21 +65,21 @@ int ispunct(char c)
 	return 0;
 }
 
-int isspace(char c)
+int isspace(int c)
 {
 	if ((c >= 0x09 && c <= 0x0D) || c == 0x20)
 		return 1;
 	return 0;
 }
 
-int isupper(char c)
+int isupper(int c)
 {
 	if (c >= 0x41 && c <= 0x5A)
 		return 1;
 	return 0;
 }
 
-int isxdigit(char c)
+int isxdigit(int c)
 {
 	if ((c >= 0x30 && c <= 0x39)				\
 	    || (c >= 0x41 && c <= 0x46)				\
@@ -88,14 +88,14 @@ int isxdigit(char c)
 	return 0;
 }
 
-int tolower(char c)
+int tolower(int c)
 {
 	if (isupper(c))
 		c += 0x20;
 	return c;
 }
 
-int toupper(char c)
+int toupper(int c)
 {
 	if (islower(c))
 		c -= 0x20;

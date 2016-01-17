@@ -4,14 +4,14 @@
 
 #include <string.h>
 
-void* memchr(const void* ptr, char value, size_t num)
+void* memchr(const void* ptr, int value, size_t num)
 {
 	const char* cptr = ptr;
 
 	for (; num > 0; num--)
 	{
 		if (*cptr == value)
-			return cptr;
+			return (char*)cptr;
 		cptr++;
 	}
 
