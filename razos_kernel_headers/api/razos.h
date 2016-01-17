@@ -32,6 +32,8 @@
 #define SYS_BRK 13
 #define SYS_SBRK 14
 
+#define SYS_EXEC 15
+
 /* In arch/../crt0.s */
 uint32_t __syscall0(uint32_t num);
 uint32_t __syscall1(uint32_t num, uint32_t arg1);

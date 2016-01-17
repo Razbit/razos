@@ -1,4 +1,4 @@
-CSOURCES = test.c do_exit.c wait.c sched.c setup_rlibc.c
+CSOURCES = do_exit.c wait.c sched.c setup_rlibc.c
 ASMSOURCES = 
 SUBOBJS = fcntl.o stdlib.o unistd.o math.o errno.o stat.o ctype.o stdio.o string.o
 
@@ -32,7 +32,7 @@ all: $(OBJS)
 	$(MAKE) -C ctype
 	$(MAKE) -C stdio
 
-	$(LD) $(_LDFLAGS) -Tuser.ld -o rlibc $(CRT0) $(CRTI) $(CRTBEGIN) $(OBJS) $(SUBOBJS) $(CRTEND) $(CRTN)
+	$(LD) $(LDFLAGS) -Tuser.ld -o rlibc.o $(CRT0) $(CRTI) $(CRTBEGIN) $(OBJS) $(SUBOBJS) $(CRTEND) $(CRTN)
 
 %.s.o: %.s
 	nasm $(ASFLAGS) $< -o $@
@@ -40,6 +40,11 @@ all: $(OBJS)
 %.c.o: %.c
 	$(CC) $(CFLAGS) $< -o $@
 
+test: test.c.o
+	$(LD) $(_LDLAGS) -Tuser.ld -o test rlibc.o test.c.o
+
+hellow: hellow.c.o
+	$(LD) $(_LDLAGS) -Tuser.ld -o hellow rlibc.o hellow.c.o
 clean:
 	rm *.o
 	$(MAKE) clean -C arch

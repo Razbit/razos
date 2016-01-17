@@ -24,8 +24,11 @@ clean:
 .PHONY: init
 init:
 	$(MAKE) -C rlibc
-	mv rlibc/rlibc ./init
-	tools/mk-initrd init
+	$(MAKE) test -C rlibc
+	$(MAKE) hellow -C rlibc
+	mv rlibc/test ./test
+	mv rlibc/hellow ./hellow
+	tools/mk-initrd test hellow
 
 bochs:
 	sudo ./update_image.sh

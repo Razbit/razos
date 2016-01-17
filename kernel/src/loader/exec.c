@@ -1,6 +1,6 @@
 /* This file is a part of the RazOS project
  *
- * exec.c -- do_execve(), the implementation behind the sys_execve()
+ * exec.c -- exec(), the implementation behind the sys_exec()
  *
  * Razbit 2015 */
 
@@ -16,13 +16,8 @@
 #include "elf.h"
 
 
-int do_execve(char* path, char** argv, char** envp)
+int exec(char* path)
 {
-	/* TODO: argv */
-	/* TODO: envp */
-	/* TODO: mangle syscall registers to set ecx, edx so that we
-	 * return to the new program image's _start with an empty stack. */
-
 	int fd = open(path, O_RDONLY);
 	if (fd < 0)
 		goto bad;
@@ -59,5 +54,7 @@ int do_execve(char* path, char** argv, char** envp)
 	return 0;
 	
 bad:
+	if (buf != NULL)
+		kfree(buf);
 	return -1;
 }

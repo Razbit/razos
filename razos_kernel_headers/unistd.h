@@ -41,6 +41,8 @@ int pipe(int fd[2]);
 int brk(void* addr);
 void* sbrk(intptr_t incr);
 
+int exec(const char* path);
+
 #endif /* _RAZOS_KERNEL */
 
 #endif /* UNISTD_H */

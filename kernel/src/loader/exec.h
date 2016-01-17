@@ -1,12 +1,12 @@
 /* This file is a part of the RazOS project
  *
- * exec.h -- do_execve(), the implementation behind the sys_execve()
+ * exec.h -- exec(), the implementation behind the sys_exec()
  *
- * Razbit 2015 */
+ * Razbit 2015, 2016 */
 
 #ifndef EXEC_H
 #define EXEC_H
 
-int do_execve(char* path, char** argv, char** envp);
+int exec(char* path);
 
 #endif /* EXEC_H */

@@ -60,7 +60,7 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 	
 	kputs("RazOS kernel initialized, starting init..\n");
 	
-	int ret = do_execve("init", 0, 0);
+	int ret = exec("test");
 	kprintf("Execve returned %i\n", ret);
 	if (ret == 0)
 	{
