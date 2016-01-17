@@ -30,6 +30,9 @@ ssize_t read(int fd, void* buf, size_t size);
 ssize_t write(int fd, const void* buf, size_t size);
 int close(int fd);
 
+int dup(int fd);
+int dup2(int fd, int fd2);
+
 /* declarations only visible in rlibc */
 #ifndef _RAZOS_KERNEL
 

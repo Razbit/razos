@@ -30,10 +30,13 @@ int main()
 
 		close(pipefd[0]);
 
-		putsfd(pipefd[1], "Hello, piped world!\n")
+		dup2(pipefd[1], STDOUT_FILENO);
+
+		puts("Hello, piped world!\n");
 
 		sched_yield();
 
+		close(0);
 		close(pipefd[1]);
 		return 2;
 	}

@@ -14,7 +14,8 @@
 
 /* Include all syscall headers here */
 #include "sys_tasking.h" /* exit, sched_yield, fork, wait */
-#include "sys_fs.h"      /* open, close, creat, read, write, lseek */
+#include "sys_fs.h"      /* open, close, creat, read, write, lseek,
+                          * fcntl */
 #include "sys_setup.h"   /* setup kernel */
 #include "sys_pipe.h"    /* pipe() */
 #include "sys_uvm.h"     /* brk, sbrk */
@@ -35,7 +36,8 @@ syscall_t syscall_table[] =
 	[SYS_SETUP] = &sys_setup,
 	[SYS_PIPE] = &sys_pipe,
 	[SYS_BRK] = &sys_brk,
-	[SYS_SBRK] = &sys_sbrk
+	[SYS_SBRK] = &sys_sbrk,
+	[SYS_FCNTL] = &sys_fcntl
 };
 
 /* Make sure buffer is available to user */

@@ -58,6 +58,8 @@ int creat_vfs(const char* name, mode_t mode);
 int close_vfs(int fd);
 off_t lseek_vfs(int fd, off_t offset, int whence);
 
+int do_fcntl(int fd, int cmd, uint32_t arg);
+
 /* Get first free file descriptor starting from fd */
 int get_free_fd(int fd);
 

@@ -15,6 +15,7 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <kmalloc.h>
+#include <limits.h>
 
 /* Root of the filesystem */
 struct vfs_node_t* vfs_root = NULL;
@@ -259,9 +260,12 @@ off_t lseek_vfs(int fd, off_t offset, int whence)
 /* Find first free file descriptor, starting from fd */
 int get_free_fd(int fd)
 {
+	if (fd < 0)
+		return -1;
+	
 	while (1)
 	{
-		if (fd == 32) /* No free file descriptors.. */
+		if (fd == OPEN_MAX) /* No free file descriptors.. */
 		{
 			return -1;
 		}

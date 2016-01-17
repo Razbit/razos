@@ -8,6 +8,7 @@
 #define TASK_H
 
 #include <sys/types.h>
+#include <limits.h>
 #include "../syscall/syscall.h"
 #include "../fs/vfs.h"
 
@@ -98,7 +99,7 @@ struct task_t
 	void* uheap_begin;         /* Beginning of user heap */
 	void* uheap_end;           /* End of user heap */
 	
-	struct fildes_t files[32]; /* Files used by the process */
+	struct fildes_t files[OPEN_MAX]; /* Files used by the process */
 	int* errno_loc;            /* errno is here */
 };
 

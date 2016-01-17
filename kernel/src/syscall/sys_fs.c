@@ -72,3 +72,12 @@ uint32_t sys_lseek(struct registers_t* regs)
 
 	return lseek_vfs(fd, offset, whence);
 }
+
+uint32_t sys_fcntl(struct registers_t* regs)
+{
+	int fd = (int)REG_ARG1(regs);
+	int cmd = (int)REG_ARG2(regs);
+	int arg = (uint32_t)REG_ARG3(regs);
+
+	return do_fcntl(fd, cmd, arg);
+}

@@ -1,4 +1,4 @@
-CSOURCES = vfs.c ramfs.c initrd.c stdout.c stderr.c stdin.c stat.c fifofs.c pipe.c
+CSOURCES = vfs.c ramfs.c initrd.c stdout.c stderr.c stdin.c stat.c fifofs.c pipe.c do_fcntl.c
 ASMSOURCES = 
 SUBOBJS = 
 

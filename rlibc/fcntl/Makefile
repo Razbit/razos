@@ -1,4 +1,4 @@
-CSOURCES = open.c creat.c
+CSOURCES = open.c creat.c fcntl.c
 ASMSOURCES = 
 SUBOBJS = 
 

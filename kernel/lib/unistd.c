@@ -5,6 +5,7 @@
  * Razbit 2015 */
 
 #include <unistd.h>
+#include <fcntl.h>
 
 #include <sys/types.h>
 #include "../src/fs/vfs.h"
@@ -24,3 +25,13 @@ ssize_t write(int fd, const void* buf, size_t size)
 	return write_vfs(fd, buf, size);
 }
 
+int dup(int fd)
+{
+	return fcntl(fd, F_DUPFD, 0);
+}
+
+int dup2(int fd, int fd2)
+{
+	close(fd2);
+	return fcntl(fd, F_DUPFD, fd2);
+}
