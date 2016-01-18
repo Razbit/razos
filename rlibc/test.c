@@ -14,6 +14,7 @@
 #define putsfd(fd, msg) write(fd, msg, strlen(msg));
 #define putcfd(fd, chr) write(fd, &chr, 1);
 
+extern char** environ;
 
 int main()
 {
@@ -25,7 +26,14 @@ int main()
 	{
         printf("child: %i\n", pid);
 
-		exec("hellow");
+        char ** argv = sbrk(128);
+        argv[0] = sbrk(16);
+        argv[1] = NULL;
+        strcpy(argv[0], "world!");
+
+        environ = NULL;
+        
+        execve("hellow", argv, environ);
 
 		return 2;
 	}

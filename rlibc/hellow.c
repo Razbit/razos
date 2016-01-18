@@ -1,10 +1,9 @@
 #include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
 
-#define puts(msg) write(STDOUT_FILENO, msg, strlen(msg))
-
-int main()
+int main(int argc, char* argv[])
 {
-	char str[] = "World";
-	printf("Hello, %s!\n", str);
+	printf("Hello, %s\n", "wolrd!");
 	return 0;
 }

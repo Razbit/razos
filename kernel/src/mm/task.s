@@ -29,7 +29,7 @@ sched_begin:
     mov fs, eax
     mov gs, eax
     
-    mov ecx, 0xFFBFFFFC         ; user stack end: paging.h
+    mov ecx, 0xFFBFFFF0         ; user stack end: paging.h
     mov edx, 0x10000000         ; task entry point
     sti                         ; Now the PIT may call sched_switch
     sysexit 	                ; Enter the user world

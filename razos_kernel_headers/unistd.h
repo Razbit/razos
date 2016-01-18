@@ -41,7 +41,16 @@ int pipe(int fd[2]);
 int brk(void* addr);
 void* sbrk(intptr_t incr);
 
-int exec(const char* path);
+/* exec with full path */
+int execv(const char* path, char* const argv[]);
+int execl(const char* path, const char* arg0, ... /*, (char*)0 */);
+int execve(const char* path, char* const argv[], char* const envp[]);
+int execle(const char* path, const char* arg0, ... \
+           /*, (char*)0, char* const envp[] */ );
+
+/* exec with just the file name, needs PATH env var */
+int execvp(const char* file, char* const argv[]);
+int execlp(const char* file, const char* arg0, ... /*, (char*)0 */);
 
 #endif /* _RAZOS_KERNEL */
 
