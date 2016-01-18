@@ -1,4 +1,4 @@
-CSOURCES = mkfifo.c
+CSOURCES = mkfifo.c stat.c
 ASMSOURCES = 
 SUBOBJS = 
 

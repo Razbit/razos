@@ -5,6 +5,7 @@
  * Razbit 2015 */
 
 #include <sys/types.h>
+#include <sys/stat.h>
 
 #include <api/razos.h>
 #include "syscall.h"
@@ -80,4 +81,12 @@ uint32_t sys_fcntl(struct registers_t* regs)
 	int arg = (uint32_t)REG_ARG3(regs);
 
 	return do_fcntl(fd, cmd, arg);
+}
+
+uint32_t sys_fstat(struct registers_t* regs)
+{
+	int fd = (int)REG_ARG1(regs);
+	struct stat* buf = (struct stat*)REG_ARG2(regs);
+
+	return fstat(fd, buf);
 }

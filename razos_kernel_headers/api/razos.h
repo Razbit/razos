@@ -25,14 +25,15 @@
 #define SYS_CREAT 8
 #define SYS_LSEEK 9
 #define SYS_FCNTL 10
+#define SYS_FSTAT 11
 
-#define SYS_SETUP 11
+#define SYS_SETUP 12
 
-#define SYS_PIPE 12
-#define SYS_BRK 13
-#define SYS_SBRK 14
+#define SYS_PIPE 13
+#define SYS_BRK 14
+#define SYS_SBRK 15
 
-#define SYS_EXECVE 15
+#define SYS_EXECVE 16
 
 /* In arch/../crt0.s */
 uint32_t __syscall0(uint32_t num);

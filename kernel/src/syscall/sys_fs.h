@@ -19,5 +19,6 @@ uint32_t sys_close(struct registers_t* regs);
 uint32_t sys_creat(struct registers_t* regs);
 uint32_t sys_lseek(struct registers_t* regs);
 uint32_t sys_fcntl(struct registers_t* regs);
+uint32_t sys_fstat(struct registers_t* regs);
 
 #endif /* SYS_FS_H */
