@@ -32,7 +32,7 @@ ssize_t read_ramfs(int fd, void* buf, size_t size)
 
 	size_t start_node = cur_task->files[fd].at / 0xFF;
 	size_t offset = cur_task->files[fd].at % 0x100;
-	size_t readable = node->status.st_size - cur_task->files[fd].at;
+	size_t readable = (size_t)node->status.st_size - cur_task->files[fd].at;
 
 	struct ramfs_data_t* curnode = ramfs_nodes[node->status.st_ino];
 

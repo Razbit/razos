@@ -285,3 +285,15 @@ struct task_t* sched_next()
 	
 	panic("No tasks ready to schedule!");
 }
+
+int sched_halted = 0;
+
+void sched_halt()
+{
+	sched_halted = 1;
+}
+
+void sched_cont()
+{
+	sched_halted = 0;
+}

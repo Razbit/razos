@@ -7,8 +7,12 @@
 #ifndef SCHED_H
 #define SCHED_H
 
-/* Both in task.s */
+/* In task.s */
 void sched_begin() __attribute__((__noreturn__));
 void sched_switch();
+
+/* In task.c */
+void sched_halt();
+void sched_cont();
 
 #endif /* SCHED_H */

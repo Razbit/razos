@@ -14,6 +14,7 @@
 
     ;; C-side interrupt handlers
 [EXTERN sched_switch]           ; task.s
+[EXTERN sched_halted]           ; task.c
 [EXTERN kb_handler]             ; kb.c
 [EXTERN pagefault_handler]      ; pagefault.c
 
@@ -100,6 +101,9 @@ END_ISR 14
 BEGIN_ISR 32
     ACK_IRQ
 
+    cmp [sched_halted], dword 1
+    je .skip
+    
     push ebp
     push dword 0
     push dword 0
@@ -110,6 +114,7 @@ BEGIN_ISR 32
     add esp, 8
     pop ebp
 
+.skip:  
     iret
 END_ISR 32
 
