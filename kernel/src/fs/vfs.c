@@ -2,7 +2,7 @@
  *
  * vfs.c -- The kernel Virtual File System
  *
- * Razbit 2014, 2015, 2016 */
+ * Razbit 2014 - 2016 */
 
 #include "vfs.h"
 #include "../mm/task.h"
@@ -167,7 +167,7 @@ int creat_vfs(const char* name, mode_t mode)
 
 	/* Yeah, this is rather stupid since we ain't got no users xD */
 	/* If access mode is unspecified, use 0-rwx-rwx-rwx */
-	if (mode & S_IPERM == 0)
+	if ((mode & S_IPERM) == 0)
 		mode |= (S_IRWXU | S_IRWXG | S_IRWXO);
 
 	node->status.st_mode = mode;

@@ -46,7 +46,7 @@ syscall_t syscall_table[] =
 /* Make sure buffer is available to user */
 int valid_user_buffer(uint32_t ptr, size_t len)
 {
-	if (ptr == NULL)
+	if ((void*)ptr == NULL)
 		return 0;
 	
 	if ((0xFFFFFFFF - len) < ptr)

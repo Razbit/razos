@@ -23,8 +23,8 @@ struct fifofs_hdr_t
 	struct fifofs_data_t* data;
 	size_t write_at;
 	size_t read_at;
-	size_t readers;
-	size_t writers;
+	int readers;
+	int writers;
 };
 
 /* List of fifo files */

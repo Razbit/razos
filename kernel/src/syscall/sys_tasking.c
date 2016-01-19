@@ -25,7 +25,8 @@ uint32_t sys_exit(struct registers_t* regs)
 
 	task_kill(cur_task, status);
 
-	sched_switch(); /* Will never return */
+	sched_switch(); /* We should never return to this process */
+	return 0; /* If we happen to get here somehow */
 }
 
 

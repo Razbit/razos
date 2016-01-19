@@ -91,8 +91,8 @@ static void recursively_map_page_directory(uint32_t* page_dir)
 /* Figure out the beginning of allocatable memory */
 void paging_set_allocatable_start(uint32_t* addr)
 {
-	if (addr > kernel_end)
-		kernel_end = round_up(addr, PAGE_SIZE);
+	if (addr > (uint32_t*)kernel_end)
+		kernel_end = round_up((uint32_t)addr, PAGE_SIZE);
 }
 
 /* Initialize paging */
@@ -108,7 +108,7 @@ void paging_init(struct multiboot_info* mb)
 	kprintf("%u MiB available useful memory\n", \
 	        pages_registered * PAGE_SIZE / 0x100000);
 
-	uint32_t* page_dir = alloc_zeroed_page();
+	uint32_t* page_dir = (uint32_t*)alloc_zeroed_page();
 
 	create_page_tables_for_kernel_space(page_dir);
 	identity_map_kernel(page_dir);

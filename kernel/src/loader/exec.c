@@ -41,20 +41,20 @@ int exec(char* path)
 	
 	void* addr = load_elf(buf);
 	if ((int)addr < 0)
-		goto bad;
+		goto bad2;
 
 	/* User heap area begins at the next page table boundary */
-	cur_task->uheap_begin = (uint32_t)(addr + 1024 * PAGE_SIZE)\
-		& ~(1024 * PAGE_SIZE -1);
+	cur_task->uheap_begin = \
+		(void*)((uint32_t)(addr+1024*PAGE_SIZE) & ~(1024*PAGE_SIZE-1));
 	cur_task->uheap_end = cur_task->uheap_begin;
 	
 	kfree(buf);
 	close(fd);
 
 	return 0;
-	
+
+bad2:
+	kfree(buf);
 bad:
-	if (buf != NULL)
-		kfree(buf);
 	return -1;
 }

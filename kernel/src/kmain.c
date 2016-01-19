@@ -12,6 +12,7 @@
 #include "interrupt/kb.h"
 #include "mm/paging.h"
 #include "mm/task.h"
+#include "mm/sched.h"
 #include "syscall/syscall.h"
 
 #include <fcntl.h>

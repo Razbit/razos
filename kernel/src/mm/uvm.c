@@ -17,9 +17,9 @@
 void* user_page_alloc()
 {
 	/* Make sure there is virtual address space left to allocate */
-	if (cur_task->uheap_end < USER_STACK_BEGIN)
+	if (cur_task->uheap_end < (void*)USER_STACK_BEGIN)
 	{
-		page_map(cur_task->uheap_end, page_alloc(), \
+		page_map((uint32_t)(cur_task->uheap_end), page_alloc(), \
 		         PE_USER | PE_RW | PE_PRESENT);
 		void* ret = cur_task->uheap_end;
 		cur_task->uheap_end += PAGE_SIZE;
@@ -35,8 +35,8 @@ void* user_page_alloc()
 void user_page_free()
 {
 	void* addr = cur_task->uheap_end - PAGE_SIZE;
-	if (page_mapped_to_user(addr))
-		page_unmap(addr);
+	if (page_mapped_to_user((uint32_t)addr))
+		page_unmap((uint32_t)addr);
 	cur_task->uheap_end -= PAGE_SIZE;
 }
 
@@ -44,9 +44,9 @@ void user_page_free()
 int uvm_brk(void* addr)
 {
 	addr = (void*)round_up((uint32_t)addr, PAGE_SIZE);
-	if (addr < USER_MEMORY_BEGIN)
+	if (addr < (void*)USER_MEMORY_BEGIN)
 		goto bad;
-	if (addr >= USER_STACK_BEGIN)
+	if (addr >= (void*)USER_STACK_BEGIN)
 		goto bad;
 	
 	/* cur_task->uheap_next_free tells us the size of the heap */
@@ -109,5 +109,5 @@ void* uvm_sbrk(intptr_t incr)
 
 bad:
 	/* TODO: errno = ENOMEM */
-	return -1;
+	return (void*)-1;
 }

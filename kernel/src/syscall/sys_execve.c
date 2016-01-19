@@ -52,8 +52,8 @@ static char* push(char* sp, uint32_t data, size_t size)
 uint32_t sys_execve(struct registers_t* regs)
 {
 	/* Copy argv, envp to kernel memory */
-	char** argv = REG_ARG2(regs);
-	char** envp = REG_ARG3(regs);
+	char** argv = (char**)REG_ARG2(regs);
+	char** envp = (char**)REG_ARG3(regs);
 
 	int argc = count(argv);
 	int envc = count(envp);
@@ -103,7 +103,7 @@ uint32_t sys_execve(struct registers_t* regs)
 		return -1;
 
 	/* Set up the stack (store envp, argv contents) */
-	char* stack = USER_STACK_END;
+	char* stack = (char*)USER_STACK_END;
 
 	/* Copy the strings, store pointers to them */
 	if (envc > 0)
@@ -119,17 +119,17 @@ uint32_t sys_execve(struct registers_t* regs)
 		}
 		
 		/* env now contains pointers to the env strings on user stack */
-		stack = round_down(stack, sizeof(char*));
+		stack = (char*)round_down((uint32_t)stack, sizeof(char*));
 		stack = push(stack, 0, sizeof(char*)); /* envp 0-terminated */
 		for (int i = envc-1; i >= 0; i--)
-			stack = push(stack, env[i], sizeof(char*));
+			stack = push(stack, (uint32_t)env[i], sizeof(char*));
 		kfree(env);
 	}
 	else
 	{
 		stack = push(stack, 0, sizeof(char*));
 	}
-	env = stack; /* env now contains the address of envp on usr stack */
+	env = (char**)stack; /* env = address of envp on user stack */
 
 	if (argc > 0)
 	{
@@ -143,10 +143,10 @@ uint32_t sys_execve(struct registers_t* regs)
 			args[i] = stack;
 		}
 
-		stack = round_down(stack, sizeof(char*));
+		stack = (char*)round_down((uint32_t)stack, sizeof(char*));
 		stack = push(stack, 0, sizeof(char*)); /* 0-terminated */
 		for (int i = argc-1; i >= 0; i--)
-			stack = push(stack, args[i], sizeof(char*));
+			stack = push(stack, (uint32_t)args[i], sizeof(char*));
 		kfree(args);
 	}
 	else
@@ -154,15 +154,15 @@ uint32_t sys_execve(struct registers_t* regs)
 		stack = push(stack, 0, sizeof(char*));
 	}
 	
-	args = stack;
+	args = (char**)stack;
 	
 	/* Finally, store argc */
 	stack = push(stack, (uint32_t)argc, sizeof(uint32_t));
 
-	REG_ARG2(regs) = args;
-	REG_ARG3(regs) = env;
+	REG_ARG2(regs) = (uint32_t)args;
+	REG_ARG3(regs) = (uint32_t)env;
 	
-	regs->ecx = stack;
+	regs->ecx = (uint32_t)stack;
 	regs->edx = USER_CODE_BEGIN;
 	return (uint32_t)ret;
 }

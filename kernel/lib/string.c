@@ -76,9 +76,7 @@ char* strcpy(char* dest, const char* source)
 
 char* strncpy(char* dest, const char* source, size_t num)
 {
-	int i = 0;
-
-	for (;i < num; i++)
+	for (size_t i = 0; i < num; i++)
 	{
 		*dest++ = *source++;
 		if (*source == '\0')
@@ -114,7 +112,7 @@ char* strncat(char* dest, const char* source, size_t num)
 
 	/* start now points to the null character terminating the string 'dest'*/
 
-	int i = 0;
+	size_t i = 0;
 
 	while ((*source != '\0') && (i < num))
 	{
@@ -187,7 +185,7 @@ void* memchr(const void* ptr, char value, size_t num)
 	for (; num > 0; num--)
 	{
 		if (*cptr == value)
-			return cptr;
+			return (char*)cptr;
 		cptr++;
 	}
 
@@ -199,7 +197,7 @@ char* strchr(const char* str, char value)
 	while (*str != '\0')
 	{
 		if (*str == value)
-			return str;
+			return (char*)str;
 		str++;
 	}
 
@@ -216,7 +214,7 @@ char* strrchr(const char* str, char value)
 	while (end >= str)
 	{
 		if (*end == value)
-			return end;
+			return (char*)end;
 		end--;
 	}
 
@@ -233,7 +231,7 @@ char* strpbrk(const char* str1, const char* str2)
 		while (*temp != '\0')
 		{
 			if (*str1 == *temp)
-				return str1;
+				return (char*)str1;
 			temp++;
 		}
 
@@ -289,7 +287,7 @@ size_t strspn(const char* str1, const char* str2)
 
 char* strstr(const char* str1, const char* str2)
 {
-	int i;
+	size_t i;
 
 	while (*str1 != '\0')
 	{
@@ -301,12 +299,10 @@ char* strstr(const char* str1, const char* str2)
 		{
 			if (str1[i] != str2[i])
 				break;
-
-
 		}
 
 		if (i == strlen(str2))
-			return str1;
+			return (char*)str1;
 		else
 			str1++;
 	}

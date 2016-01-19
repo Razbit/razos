@@ -15,7 +15,7 @@
 /* TODO: highly WIP */
 void pagefault_handler(uint32_t addr, uint32_t error, uint32_t eip)
 {
-	char err[5] = {0};
+	char err[6] = {0};
 	if (error & 0x4)
 		err[0] = 'U';
 	else

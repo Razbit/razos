@@ -116,6 +116,7 @@ static char pop_stdin()
 
 static ssize_t read_stdin(int fd, void* buf, size_t size)
 {
+	(void)fd;
 	size_t read = 0;
 
 	sched_halt(); /* Make sure not to switch tasks now */
@@ -139,6 +140,7 @@ static ssize_t read_stdin(int fd, void* buf, size_t size)
 
 static ssize_t write_stdin(int fd, const void* buf, size_t size)
 {
+	(void)fd;
 	for (size_t i = 0; i < size; i++)
 	{
 		stdin_buf_size += push_stdin(((char*)buf)[i]);

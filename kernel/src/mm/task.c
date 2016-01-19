@@ -124,14 +124,14 @@ static void create_skel_page_dir(struct task_t* task)
 		copy_user_pages(task);
 
 	/* Map kernel code, heap and stack to same locations */
-	for (size_t i = 0; i < KERNEL_STACK_BEGIN/(1024*PAGE_SIZE); i++)
+	for (size_t i = 0; i < KERNEL_STACK_BEGIN / (1024 * PAGE_SIZE); i++)
 		task_page_dir[i] = cur_page_dir[i];
 
-	task->page_dir[KERNEL_STACK_BEGIN/(1024*PAGE_SIZE)] = \
-		virt_to_phys(kstack_page_table) | PE_PRESENT | PE_RW;
+	task->page_dir[KERNEL_STACK_BEGIN / (1024 * PAGE_SIZE)] = \
+		virt_to_phys((uint32_t)kstack_page_table) | PE_PRESENT | PE_RW;
 
 	kstack_page_table[1023] = \
-		virt_to_phys(task->kstack) | PE_PRESENT | PE_RW;
+		virt_to_phys((uint32_t)(task->kstack)) | PE_PRESENT | PE_RW;
 
 	for (int i = 0; i < 1023; i++)
 		kstack_page_table[i] = page_alloc() | PE_PRESENT | PE_RW;

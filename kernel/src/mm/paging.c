@@ -38,8 +38,6 @@ void set_page_directory(uint32_t page_dir)
 	__asm__ __volatile__("mov %%cr0, %0" : "=r"(cr0) :: "memory");
 	cr0 |= FL_PAGING_ENABLED;
 	__asm__ __volatile__("mov %0, %%cr0" :: "r"(cr0) : "memory");
-
-	kprintf("Set page dir at 0x%p\n", page_dir);
 }
 
 
@@ -125,13 +123,13 @@ void page_free(uint32_t addr)
 void page_map(uint32_t virt_page, uint32_t phys_page, uint32_t flags)
 {
 	/* Page directories mapped recursively to themselves */
-	uint32_t* cur_page_dir = CUR_PG_DIR;
+	uint32_t* cur_page_dir = (uint32_t*)CUR_PG_DIR;
 
 	size_t page_dir_index = (virt_page / PAGE_SIZE) / 1024;
 	size_t page_table_index = (virt_page / PAGE_SIZE) % 1024;
 
-	uint32_t* page_table =								\
-		CUR_PG_TABLE_BASE + page_dir_index * PAGE_SIZE;
+	uint32_t* page_table = \
+		(uint32_t*)(CUR_PG_TABLE_BASE + page_dir_index * PAGE_SIZE);
 
 	uint32_t page_dir_entry = cur_page_dir[page_dir_index];
 	if (!(page_dir_entry & PE_PRESENT))
@@ -157,7 +155,7 @@ void page_unmap(uint32_t page)
 /* Return physical address of memory pointed to by virt */
 uint32_t virt_to_phys(uint32_t virt)
 {
-	uint32_t* cur_page_dir = CUR_PG_DIR;
+	uint32_t* cur_page_dir = (uint32_t*)CUR_PG_DIR;
 
 	size_t page_dir_index = (virt / PAGE_SIZE) / 1024;
 	size_t page_table_index = (virt / PAGE_SIZE) % 1024;
@@ -167,8 +165,8 @@ uint32_t virt_to_phys(uint32_t virt)
 	if (!(cur_page_dir[page_dir_index] & PE_PRESENT))
 		return 0;
 
-	uint32_t* page_table =								\
-		CUR_PG_TABLE_BASE + page_dir_index * PAGE_SIZE;
+	uint32_t* page_table = \
+		(uint32_t*)CUR_PG_TABLE_BASE + page_dir_index * PAGE_SIZE;
 
 	uint32_t page_table_entry = page_table[page_table_index];
 
@@ -185,12 +183,12 @@ int page_mapped_to_user(uint32_t virt)
 	uint32_t dir_index = (virt / PAGE_SIZE) / 1024;
 	uint32_t base_index = virt / PAGE_SIZE;
 
-	uint32_t* page_dir = CUR_PG_DIR;
+	uint32_t* page_dir = (uint32_t*)CUR_PG_DIR;
 
 	if (!(page_dir[dir_index] & (PE_PRESENT | PE_USER)))
 		return 0;
 
-	uint32_t* page_table_base = CUR_PG_TABLE_BASE;
+	uint32_t* page_table_base = (uint32_t*)CUR_PG_TABLE_BASE;
 
 	if (!(page_table_base[base_index] & (PE_PRESENT | PE_USER)))
 		return 0;
@@ -204,8 +202,8 @@ uint32_t page_flags(uint32_t virt)
 	uint32_t dir_index = (virt / PAGE_SIZE) / 1024;
 	uint32_t base_index = virt / PAGE_SIZE;
 
-	uint32_t* page_dir = CUR_PG_DIR;
-	uint32_t* page_table_base = CUR_PG_TABLE_BASE;
+	uint32_t* page_dir = (uint32_t*)CUR_PG_DIR;
+	uint32_t* page_table_base = (uint32_t*)CUR_PG_TABLE_BASE;
 	
 	uint32_t flags = (page_dir[dir_index] & PE_FLAG_MASK) << 16;
 	flags |= (page_table_base[base_index] & PE_FLAG_MASK);

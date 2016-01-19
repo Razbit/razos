@@ -54,10 +54,10 @@ static ssize_t read_fifofs(int fd, void* buf, size_t size)
 	
 	/* Data is splitted in 256 byte blocks */
 	/* Offset in the first node */
-	size_t offset = hdr->read_at % 0x100;
+	off_t offset = hdr->read_at % 0x100;
 
 	/* How much we can read */
-	if (size > node->status.st_size)
+	if (size > (size_t)node->status.st_size)
 		size = node->status.st_size;
 
 	/* Read the data to buf */
