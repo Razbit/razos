@@ -56,4 +56,7 @@ char* strtok(char* str, const char* delimiters);
 /* Return length of [str] */
 size_t strlen(const char* str);
 
+/* Get error message string */
+char* strerror(int err);
+
 #endif /* H_STRING */

@@ -1,4 +1,4 @@
-CSOURCES = memchr.c memcmp.c memcpy.c memmove.c memset.c strcat.c strchr.c strcmp.c strcpy.c strlen.c strpbrk.c strspn.c strstr.c strtok.c
+CSOURCES = memchr.c memcmp.c memcpy.c memmove.c memset.c strcat.c strchr.c strcmp.c strcpy.c strlen.c strpbrk.c strspn.c strstr.c strtok.c strerror.c
 ASMSOURCES = 
 SUBOBJS = 
 
