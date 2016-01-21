@@ -48,6 +48,7 @@
 /* File descriptor flags */
 #define FD_MASK    0xF000 /* Mask for the below flags */
 #define FD_CLOEXEC 0x1000 /* Close FD on call to exec() */
+#define O_CLOEXEC  FD_CLOEXEC
 
 /* fcntl commands */
 #define F_DUPFD    0x0001 /* Duplicate FD to lowest-numbered avail */

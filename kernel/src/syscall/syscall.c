@@ -6,6 +6,7 @@
 
 #include <sys/types.h>
 #include <util.h>
+#include <errno.h>
 #include "../mm/paging.h"
 #include "../mm/task.h"
 
@@ -72,7 +73,8 @@ void syscall_dispatch(struct registers_t* regs)
 {
 	if (REG_VECTOR(regs) > countof(syscall_table))
 	{
-		REG_RETURN(regs) = -ENOSYS;
+		errno = ENOSYS;
+		REG_RETURN(regs) = (uint32_t)-1;
 		return;
 	}
 
@@ -80,7 +82,8 @@ void syscall_dispatch(struct registers_t* regs)
 
 	if (!func)
 	{
-		REG_RETURN(regs) = -ENOSYS;
+		errno = ENOSYS;
+		REG_RETURN(regs) = (uint32_t)-1;
 		return;
 	}
 

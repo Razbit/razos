@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <kmalloc.h>
+#include <errno.h>
 
 #include "vfs.h"
 #include "../mm/task.h"
@@ -22,19 +23,7 @@ ino_t pipe_inodes = 0;
 
 static ssize_t read_pipe(int fd, void* buf, size_t size)
 {
-	if (size == 0)
-		return 0;
-	if (buf == NULL)
-		return -1;
-
 	struct vfs_node_t* node = cur_task->files[fd].vfs_node;
-	
-	if (node == NULL)
-	{
-		/* TODO: set errno to EFAULT */
-		return -1;
-	}
-
 	struct pipe_hdr_t* hdr = pipes[node->status.st_ino];
 	struct pipe_data_t* curnode = hdr->data;
 
@@ -45,10 +34,9 @@ static ssize_t read_pipe(int fd, void* buf, size_t size)
 		if (hdr->writers == 0)
 			return 0;
 
-		/* Return -1 and set errno to EAGAIN if O_NONBLOCK is set */
 		if (cur_task->files[fd].oflag & O_NONBLOCK)
 		{
-			/* TODO: set errno to EAGAIN */
+			errno = EAGAIN;
 			return -1;
 		}
 
@@ -95,27 +83,15 @@ exit:
 
 static ssize_t write_pipe(int fd, const void* buf, size_t size)
 {
-	if (size == 0)
-		return 0;
-	if (buf == NULL)
-		return -1;
-
 	struct vfs_node_t* node = cur_task->files[fd].vfs_node;
-	
-	if (node == NULL)
-	{
-		/* TODO: set errno to EFAULT */
-		return -1;
-	}
-
 	struct pipe_hdr_t* hdr = pipes[node->status.st_ino];
 	struct pipe_data_t* curnode = hdr->data;
 
-	/* If there is no reader, according to Oracle we should
+	/* If there is no reader, according to POSIX we should
 	 * set errno to EPIPE and return -1 */
 	if (hdr->readers == 0)
 	{
-		/* TODO: set errno to EPIPE */
+		errno = EPIPE;
 		return -1;
 	}
 	
@@ -144,7 +120,13 @@ static ssize_t write_pipe(int fd, const void* buf, size_t size)
 		curnode->next = \
 			(struct pipe_data_t*)kmalloc(sizeof(struct pipe_data_t));
 		if (curnode->next == NULL)
-			goto exit;
+		{
+			if (written == 0) /* If we couldn't write anything, fail */
+				return -1; /* kmalloc sets errno */
+			else
+				goto exit;
+		}
+
 		curnode = curnode->next;
 		curnode->next = NULL;
 		offset = 0;
@@ -192,9 +174,9 @@ static int close_pipe(int fd)
 /* Create a pipe. fd[0] is the read end, fd[1] is the write end */
 int creat_pipe(int fd[2])
 {
-	if (pipe_inodes > 1023)
+	if (pipe_inodes > 1023) /* 1024 pipes max */
 	{
-		/* TODO: set errno to ENFILE */
+		errno = ENFILE;
 		return -1;
 	}
 	
@@ -206,7 +188,7 @@ int creat_pipe(int fd[2])
 	{
 		node = (struct vfs_node_t*)kmalloc(sizeof(struct vfs_node_t));
 		if (node == NULL)
-			return -1;
+			return -1; /* kmalloc sets errno */
 
 		vfs_root = node;
 	}
@@ -219,7 +201,7 @@ int creat_pipe(int fd[2])
 		node->next = \
 			(struct vfs_node_t*)kmalloc(sizeof(struct vfs_node_t));
 		if (node->next == NULL)
-			return -1;
+			return -1; /* kmalloc sets errno */
 
 		node_backup = node;
 		node = node->next;
@@ -248,7 +230,7 @@ int creat_pipe(int fd[2])
 		kfree(node_backup->next);
 		node_backup->next = NULL;
 		
-		/* TODO: set errno to EMFILE */
+		errno = EMFILE;
 		return -1;
 	}
 
@@ -262,7 +244,7 @@ int creat_pipe(int fd[2])
 		kfree(node_backup->next);
 		node_backup->next = NULL;
 		
-		/* TODO: set errno to EMFILE */
+		errno = EMFILE;
 		return -1;
 	}
 
@@ -274,14 +256,25 @@ int creat_pipe(int fd[2])
 		(struct pipe_hdr_t*)kmalloc(sizeof(struct pipe_hdr_t));
 	if (pipes[node->status.st_ino] == NULL)
 	{
-		return -1;
+		kfree(node_backup->next);
+		node_backup->next = NULL;
+		return -1; /* kmalloc sets errno */
 	}
+
 	pipes[node->status.st_ino]->write_at = 0;
 	pipes[node->status.st_ino]->read_at = 0;	
 	pipes[node->status.st_ino]->writers = 2;
 	pipes[node->status.st_ino]->readers = 2;
 	pipes[node->status.st_ino]->data = \
 		(struct pipe_data_t*)kmalloc(sizeof(struct pipe_data_t));
-
+	if (pipes[node->status.st_ino]->data == NULL)
+	{
+		kfree(pipes[node->status.st_ino]);
+		pipes[node->status.st_ino] = NULL;
+		kfree(node_backup->next);
+		node_backup->next = NULL;
+		return -1; /* kmalloc sets errno */
+	}
+	
 	return 0;
 }

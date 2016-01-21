@@ -8,11 +8,16 @@
 #include <string.h>
 #include <kmalloc.h>
 #include <util.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <limits.h>
+#include <errno.h>
 
 #include "syscall.h"
 #include "sys_execve.h"
 #include "../loader/exec.h"
 #include "../mm/paging.h"
+#include "../mm/task.h"
 
 
 /* Count the argument strings */
@@ -70,7 +75,7 @@ uint32_t sys_execve(struct registers_t* regs)
 		{
 			args[i] = (char*)kmalloc(strlen(argv[i]) + 1);
 			if (args[i] == NULL)
-				return -1;
+				return -1; /* kmalloc sets errno */
 			
 			strcpy(args[i], argv[i]);
 			args[i][strlen(argv[i])] = '\0';
@@ -83,14 +88,14 @@ uint32_t sys_execve(struct registers_t* regs)
 	{
 		env = (char**)kmalloc(envc * sizeof(char*));
 		if (env == NULL)
-			return -1;
-		
+			return -1; /* kmalloc sets errno */
+
 		for(int i = 0; i < envc; i++)
 		{
 			env[i] = (char*)kmalloc(strlen(argv[i]) + 1);
 			if (env[i] == NULL)
-				return -1;
-			
+				return -1; /* kmalloc sets errno */
+
 			strcpy(env[i], envp[i]);
 			env[i][strlen(envp[i])] = '\0';
 		}
@@ -100,7 +105,14 @@ uint32_t sys_execve(struct registers_t* regs)
 	char* path = (char*)REG_ARG1(regs);
 	int ret = exec(path);
 	if (ret < 0)
-		return -1;
+		return -1; /* exec sets errno */
+
+	/* Close files that have O_CLOEXEC set */
+	for (int i = 0; i < OPEN_MAX; i++)
+	{
+		if (cur_task->files[i].oflag & O_CLOEXEC)
+			close(i);
+	}
 
 	/* Set up the stack (store envp, argv contents) */
 	char* stack = (char*)USER_STACK_END;
@@ -129,6 +141,7 @@ uint32_t sys_execve(struct registers_t* regs)
 	{
 		stack = push(stack, 0, sizeof(char*));
 	}
+	
 	env = (char**)stack; /* env = address of envp on user stack */
 
 	if (argc > 0)
@@ -164,5 +177,6 @@ uint32_t sys_execve(struct registers_t* regs)
 	
 	regs->ecx = (uint32_t)stack;
 	regs->edx = USER_CODE_BEGIN;
+	
 	return (uint32_t)ret;
 }

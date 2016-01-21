@@ -2,12 +2,15 @@
  *
  * stdout.c -- standard output
  *
- * Razbit 2015 */
+ * Razbit 2015, 2016 */
 
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <console.h> /* For now, a better terminal on the way */
+#include <string.h>
+#include <kmalloc.h>
+#include <errno.h>
 
 #include "../mm/task.h"
 
@@ -21,29 +24,66 @@ static int open_stdout(struct vfs_node_t* node, int oflag, mode_t mode);
 /* Initialize stdout. We use modified ramfs nodes in the background */
 int init_stdout()
 {
-	int fd = open_vfs("stdout", O_RDWR | O_CREAT, S_IFREG);
+	/* stdin already open? */
+	if (cur_task->files[STDOUT_FILENO].vfs_node != NULL)
+		return STDOUT_FILENO;
 
-	/* Now that we have a file in ramfs, let's modify the vfs_node */
-	struct vfs_node_t* node = cur_task->files[fd].vfs_node;
+	struct vfs_node_t* node = vfs_root;
 
-	node->write = &write_stdout;
+	/* If this is the first file */
+	if (node == NULL)
+	{
+		node = (struct vfs_node_t*)kmalloc(sizeof(struct vfs_node_t));
+		if (node == NULL)
+			return -1;
+
+		vfs_root = node;
+	}
+	else
+	{
+		/* Find the end of vfs */
+		while (node->next != NULL)
+			node = node->next;
+
+		node->next = \
+			(struct vfs_node_t*)kmalloc(sizeof(struct vfs_node_t));
+		if (node->next == NULL)
+			return -1;
+
+		node = node->next;
+	}
+
+	node->status.st_mode = 0;
+	node->status.st_uid = 0;
+	node->status.st_gid = 0;
+	node->status.st_size = 0;
+	node->next = NULL;
+	strcpy(node->name, "stdout");
+
+	node->status.st_dev = DEVID_STDIO;
+	node->status.st_rdev = DEVID_STDIO;
+	node->status.st_ino = STDOUT_FILENO;
+	node->close = NULL;
 	node->read = NULL;
+	node->write = &write_stdout;
+	node->creat = NULL;
 	node->open = &open_stdout;
+	node->lseek = NULL;
 
-	close_vfs(fd);
+	cur_task->files[STDOUT_FILENO].vfs_node = node;
+	cur_task->files[STDOUT_FILENO].at = 0;
+	cur_task->files[STDOUT_FILENO].oflag = O_WRONLY;
 
-	return 1;
+	return STDOUT_FILENO;
 }
 
 static ssize_t write_stdout(int fd, const void* buf, size_t size)
 {
 	(void)fd;
 	
-	size_t i = 0;
-	for (; i < size; i++)
-	{
+	for (size_t i = 0; i < size; i++)
 		kputchar(((char*)buf)[i]);
-	}
+	
 	return (ssize_t)size;
 }
 
@@ -53,10 +93,15 @@ static int open_stdout(struct vfs_node_t* node, int oflag, mode_t mode)
 	(void)mode;
 	(void)oflag;
 	(void)node;
+
+	int ret = STDOUT_FILENO;
 	
 	/* If STDOUT_FILENO is not free, get the first free fd */
 	if (cur_task->files[STDOUT_FILENO].vfs_node != NULL)
-		return get_free_fd(3);
+		ret = get_free_fd(3);
 
-	return STDOUT_FILENO;
+	if (ret < 0)
+		errno = EMFILE;
+	
+	return ret;
 }

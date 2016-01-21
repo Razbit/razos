@@ -7,11 +7,12 @@
 
 #include <sys/types.h>
 #include <util.h>
+#include <errno.h>
 
 #include "paging.h"
 #include "task.h"
 
-
+/* TODO: fail if we run out of physical memory */
 /* Allocate the first available, sequential page for uvm use,
  * return its address */
 void* user_page_alloc()
@@ -27,6 +28,7 @@ void* user_page_alloc()
 	}
 	else
 	{
+		errno = ENOMEM;
 		return NULL;
 	}
 }
@@ -73,7 +75,7 @@ int uvm_brk(void* addr)
 	}
 
 bad:
-	/* TODO: errno = ENOMEM */
+	errno = ENOMEM;
 	return -1;
 }
 
@@ -108,6 +110,6 @@ void* uvm_sbrk(intptr_t incr)
 	return ret;
 
 bad:
-	/* TODO: errno = ENOMEM */
+	errno = ENOMEM;
 	return (void*)-1;
 }

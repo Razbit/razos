@@ -50,8 +50,6 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 	init_stdout();
 	init_stderr();
 
-	task_init_stdio();
-
 	init_kb();
 	
 	/* Load initrd files to the ramfs */

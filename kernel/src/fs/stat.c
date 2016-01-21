@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <limits.h>
+#include <errno.h>
 
 #include "vfs.h"
 #include "../mm/task.h"
@@ -17,7 +18,7 @@ int stat(const char* path, struct stat* buf)
 {
 	if (path == NULL)
 	{
-		/* TODO: errno = ENOENT */
+		errno = ENOENT;
 		return -1;
 	}
 	
@@ -25,7 +26,7 @@ int stat(const char* path, struct stat* buf)
 	
 	if (fd < 0)
 	{
-		/* TODO: errno = EBADF */
+		errno = EBADF;
 		return -1;
 	}
 	
@@ -40,7 +41,7 @@ int fstat(int fd, struct stat* buf)
 {
 	if (fd < 0 || fd >= OPEN_MAX)
 	{
-		/* TODO: errno = EBADF */
+		errno = EBADF;
 		return -1;
 	}
 

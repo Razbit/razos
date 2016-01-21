@@ -180,9 +180,10 @@ void task_init_stdio()
 	        stdin_fd, stdout_fd, stderr_fd);
 }
 
+/* TODO: what if we run out of memory? Now we just panic or PF */
 struct task_t* task_fork_inner()
 {
-	struct task_t* new_task = alloc_empty_task();
+	struct task_t* new_task = alloc_empty_task();	
 	create_skel_page_dir(new_task);
 
 	memcpy(&new_task->fpu_state, &cur_task->fpu_state, \
@@ -195,7 +196,8 @@ struct task_t* task_fork_inner()
 
 	new_task->ppid = cur_task->pid;
 	new_task->syscall_regs = cur_task->syscall_regs;
-	new_task->errno_loc = cur_task->errno_loc; /* vm cloned -> errno loc doesn't change */
+	/* vm cloned -> errno loc doesn't change */
+	new_task->errno_loc = cur_task->errno_loc; 
 
 	return new_task;
 }
@@ -286,6 +288,7 @@ struct task_t* sched_next()
 	panic("No tasks ready to schedule!");
 }
 
+/* Used in isrs.s when calling scheduler */
 int sched_halted = 0;
 
 void sched_halt()

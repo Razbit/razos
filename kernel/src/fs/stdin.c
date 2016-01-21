@@ -11,6 +11,7 @@
 #include <console.h> /* For now, a better terminal on the way */
 #include <string.h>
 #include <kmalloc.h>
+#include <errno.h>
 
 #include "../mm/task.h"
 #include "../mm/sched.h"
@@ -31,6 +32,10 @@ static char stdin_buf[1024] = {'\0'};
 
 int init_stdin()
 {
+	/* stdin already open? */
+	if (cur_task->files[STDIN_FILENO].vfs_node != NULL)
+		return STDIN_FILENO;
+
 	struct vfs_node_t* node = vfs_root;
 
 	/* If this is the first file */
@@ -65,7 +70,7 @@ int init_stdin()
 
 	node->status.st_dev = DEVID_STDIO;
 	node->status.st_rdev = DEVID_STDIO;
-	node->status.st_ino = 0;
+	node->status.st_ino = STDIN_FILENO;
 	node->close = NULL;
 	node->read = &read_stdin;
 	node->write = &write_stdin;
@@ -73,17 +78,11 @@ int init_stdin()
 	node->open = &open_stdin;
 	node->lseek = NULL;
 
-	if (cur_task->files[STDIN_FILENO].vfs_node != NULL)
-	{
-		/* stdin already open? */
-		return -1;
-	}
-
 	cur_task->files[STDIN_FILENO].vfs_node = node;
 	cur_task->files[STDIN_FILENO].at = 0;
 	cur_task->files[STDIN_FILENO].oflag = O_RDWR;
 	
-	return 1;
+	return STDIN_FILENO;
 }
 
 /* Put a char to the buffer */
@@ -159,9 +158,14 @@ static int open_stdin(struct vfs_node_t* node, int oflag, mode_t mode)
 	(void)oflag;
 	(void)node;
 
+	int ret = STDIN_FILENO;
+	
 	/* If STDIN_FILENO is not free, get the first free fd */
 	if (cur_task->files[STDIN_FILENO].vfs_node != NULL)
-		return get_free_fd(3);
+		ret = get_free_fd(3);
 
-	return STDIN_FILENO;
+	if (ret < 0)
+		errno = EMFILE;
+
+	return ret;
 }

@@ -8,6 +8,7 @@
 #include <panic.h>
 #include <string.h>
 #include <util.h>
+#include <errno.h>
 
 #include "paging.h"
 
@@ -41,7 +42,10 @@ void* kernel_page_alloc()
 
 	/* Out of memory */
 	if (allocated_to >= end)
+	{
+		errno = ENOMEM;
 		return NULL;
+	}
 
 	page_map((uint32_t)allocated_to, page_alloc(), PE_PRESENT | PE_RW);
 
@@ -55,7 +59,10 @@ void* kernel_page_alloc_at(uint32_t addr)
 {
 	/* Out of memory */
 	if ((kernel_page_t*)addr >= end)
+	{
+		errno = ENOMEM;
 		return NULL;
+	}
 
 	uint32_t page_start = round_down(addr, PAGE_SIZE);
 	page_map(page_start, page_alloc(), PE_PRESENT | PE_RW);
@@ -67,7 +74,8 @@ void* kernel_page_alloc_at(uint32_t addr)
 void* kernel_page_alloc_zeroed_at(uint32_t addr)
 {
 	void* page = kernel_page_alloc_at(addr);
-	memset(page, 0, PAGE_SIZE);
+	if (page != NULL)
+		memset(page, 0, PAGE_SIZE);
 	return page;
 }
 
@@ -75,7 +83,8 @@ void* kernel_page_alloc_zeroed_at(uint32_t addr)
 void* kernel_page_alloc_zeroed()
 {
 	void* page = kernel_page_alloc();
-	memset(page, 0, PAGE_SIZE);
+	if (page != NULL)
+		memset(page, 0, PAGE_SIZE);
 	return page;
 }
 

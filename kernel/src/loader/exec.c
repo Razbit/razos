@@ -2,13 +2,14 @@
  *
  * exec.c -- exec(), the implementation behind the sys_exec()
  *
- * Razbit 2015 */
+ * Razbit 2015, 2016 */
 
 #include <sys/types.h>
 #include <kmalloc.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <console.h>
+#include <errno.h>
 
 #include "../mm/task.h"
 #include "../mm/paging.h"
@@ -20,14 +21,23 @@ int exec(char* path)
 {
 	int fd = open(path, O_RDONLY);
 	if (fd < 0)
-		goto bad;
+	{
+		errno = ENOENT;
+		return -1;
+	}
+
+	/* TODO: check exec permission, possibly fail with EACCESS.
+	 * Will be implemented when we have meaningful permissions */
 	
 	size_t size = lseek(fd, 0, SEEK_END);
 	lseek(fd, 0, SEEK_SET);
 
 	uint8_t* buf = kmalloc(size);
 	if (buf == NULL)
-		goto bad;
+	{
+		errno = ENOMEM;
+		return -1;
+	}
 
 	/* Clean up the user-space. Leaves stack as-is, so leave a todo */
 	uint32_t page = USER_CODE_BEGIN;
@@ -41,7 +51,11 @@ int exec(char* path)
 	
 	void* addr = load_elf(buf);
 	if ((int)addr < 0)
-		goto bad2;
+	{
+		/* load_elf sets errno */
+		kfree(buf);
+		return -1;
+	}
 
 	/* User heap area begins at the next page table boundary */
 	cur_task->uheap_begin = \
@@ -52,9 +66,4 @@ int exec(char* path)
 	close(fd);
 
 	return 0;
-
-bad2:
-	kfree(buf);
-bad:
-	return -1;
 }

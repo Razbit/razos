@@ -5,6 +5,7 @@
  * Razbit 2016 */
 
 #include <sys/types.h>
+#include <errno.h>
 
 #include <api/razos.h>
 #include "syscall.h"
@@ -23,6 +24,7 @@ uint32_t sys_setup(struct registers_t* regs)
 		return 0;
 		break;
 	default:
-		return -ENOSYS;
+		errno = ENOSYS;
+		return (uint32_t)-1;
 	}
 }

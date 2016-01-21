@@ -8,6 +8,7 @@
 #include <console.h>
 #include <util.h>
 #include <string.h>
+#include <errno.h>
 
 #include "paging.h"
 #include "kernel_page.h"
@@ -34,9 +35,9 @@ static struct kheap_node_t* kheap_last_node = NULL;
  * We align the start address to [align] bytes */
 void* do_kmalloc(size_t size, size_t align)
 {
-	/* Start address is aligned to [align] that is a multiple of 8.
+	/* Start address is aligned to [align] that is a multiple of 16.
 	 * End of the block is aligned so that the entire chunk's end is
-	 * aligned to 8 bytes. */
+	 * aligned to 16 bytes. */
 
 	if (size == 0)
 		return NULL;
@@ -69,6 +70,11 @@ void* do_kmalloc(size_t size, size_t align)
 			{
 				void* prev_end = ksbrk(0);
 				void* new_end = ksbrk(size + PAGE_SIZE - curnode->size);
+				if (prev_end == new_end)
+				{
+					errno = ENOMEM;
+					return NULL;
+				}
 				curnode->size += (size_t)(new_end - prev_end);
 			}
 		}
@@ -188,7 +194,10 @@ int kbrk(void* addr)
 	 * available for kmalloc()'s use. */
 
 	if (addr >= (void*)KHEAP_MAX)
+	{
+		errno = ENOMEM;
 		return -1;
+	}
 
 	/* First allocation? */
 	if (kheap_start == 0)
@@ -240,10 +249,10 @@ void* ksbrk(size_t increment)
 		increment -= PAGE_SIZE;
 
 	/* Allocate memory to the heap, page by page */
-	size_t i = 0;
-	for (i = 0; i < increment; i += PAGE_SIZE)
+	for (size_t i = 0; i < increment; i += PAGE_SIZE)
 	{
-		kernel_page_alloc_zeroed();
+		if (kernel_page_alloc_zeroed() == NULL)
+			break;
 		kheap_size += PAGE_SIZE;
 	}
 

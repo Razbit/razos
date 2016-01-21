@@ -2,12 +2,15 @@
  *
  * stderr.c -- standard error output
  *
- * Razbit 2015 */
+ * Razbit 2015, 2016 */
 
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <console.h> /* For now, a better terminal on the way */
+#include <string.h>
+#include <kmalloc.h>
+#include <errno.h>
 
 #include "../mm/task.h"
 
@@ -21,26 +24,64 @@ static int open_stderr(struct vfs_node_t* node, int oflag, mode_t mode);
 /* Initialize stderr. We use modified ramfs nodes in the background */
 int init_stderr()
 {
-	int fd = open_vfs("stderr", O_RDWR | O_CREAT, S_IFREG);
-
-	/* Now that we have a file in ramfs, let's modify the vfs_node */
-	struct vfs_node_t* node = cur_task->files[fd].vfs_node;
-
-	node->write = &write_stderr;
-	node->read = NULL;
-	node->open = &open_stderr;
-
-	close_vfs(fd);
+	/* stderr already open? */
+	if (cur_task->files[STDERR_FILENO].vfs_node != NULL)
+		return STDERR_FILENO;
 	
-	return 1;
+    struct vfs_node_t* node = vfs_root;
+
+	/* If this is the first file */
+	if (node == NULL)
+	{
+		node = (struct vfs_node_t*)kmalloc(sizeof(struct vfs_node_t));
+		if (node == NULL)
+			return -1;
+
+		vfs_root = node;
+	}
+	else
+	{
+		/* Find the end of vfs */
+		while (node->next != NULL)
+			node = node->next;
+
+		node->next = \
+			(struct vfs_node_t*)kmalloc(sizeof(struct vfs_node_t));
+		if (node->next == NULL)
+			return -1;
+
+		node = node->next;
+	}
+
+	node->status.st_mode = 0;
+	node->status.st_uid = 0;
+	node->status.st_gid = 0;
+	node->status.st_size = 0;
+	node->next = NULL;
+	strcpy(node->name, "stderr");
+
+	node->status.st_dev = DEVID_STDIO;
+	node->status.st_rdev = DEVID_STDIO;
+	node->status.st_ino = STDERR_FILENO;
+	node->close = NULL;
+	node->read = NULL;
+	node->write = &write_stderr;
+	node->creat = NULL;
+	node->open = &open_stderr;
+	node->lseek = NULL;
+
+	cur_task->files[STDERR_FILENO].vfs_node = node;
+	cur_task->files[STDERR_FILENO].at = 0;
+	cur_task->files[STDERR_FILENO].oflag = O_WRONLY;
+
+	return STDERR_FILENO;
 }
 
 static ssize_t write_stderr(int fd, const void* buf, size_t size)
 {
 	(void)fd;
-	
-	size_t i = 0;
-	for (; i < size; i++)
+
+	for (size_t i = 0; i < size; i++)
 	{
 		kputchar(((char*)buf)[i]);
 	}
@@ -54,10 +95,15 @@ static int open_stderr(struct vfs_node_t* node, int oflag, mode_t mode)
 	(void)mode;
 	(void)oflag;
 	(void)node;
+
+	int ret = STDERR_FILENO;
 	
 	/* If STDERR_FILENO is not free, get the first free fd */
 	if (cur_task->files[STDERR_FILENO].vfs_node != NULL)
-		return get_free_fd(3);
+		ret = get_free_fd(3);
 
-	return STDERR_FILENO;
+	if (ret < 0)
+		errno = EMFILE;
+	
+	return ret;
 }

@@ -9,6 +9,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <limits.h>
+#include <errno.h>
 
 #include "vfs.h"
 #include "../mm/task.h"
@@ -19,19 +20,22 @@ int do_fcntl(int fd, int cmd, uint32_t arg)
 	/* If fd is not open */
 	if (fd < 0 || fd >= OPEN_MAX || cur_task->files[fd].vfs_node == NULL)
 	{
-		/* TODO: errno = EBADF */
+		errno = EBADF;
 		return -1;
 	}
 
 	switch(cmd)
 	{
 	case F_DUPFD: /* Duplicate fd to lowest available after arg */
-		; /* For suppressing the error "a label can only be part of a statement
-		   * and a declaration is not a statement */
+		if ((int)arg < 0)
+		{
+			errno = EINVAL;
+			return -1;
+		}
 		int fd2 = get_free_fd((int)arg);
 		if (fd2 < 0)
 		{
-			/* TODO: errno = EINVAL */
+			errno = EMFILE;
 			return -1;
 		}
 		
@@ -57,7 +61,7 @@ int do_fcntl(int fd, int cmd, uint32_t arg)
 		return 0;
 		
 	default:
-		/* TODO: errno = EINVAL */
+		errno = EINVAL;
 		return -1;
 	}
 }

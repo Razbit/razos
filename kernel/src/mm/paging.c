@@ -40,7 +40,7 @@ void set_page_directory(uint32_t page_dir)
 	__asm__ __volatile__("mov %0, %%cr0" :: "r"(cr0) : "memory");
 }
 
-
+/* TODO: fix this pile of crap frame allocator! */
 /* Used in page_alloc() and page_free() */
 void* page_temp_map(uint32_t phys_page)
 {

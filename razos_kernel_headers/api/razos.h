@@ -9,9 +9,6 @@
 
 #include <stdint.h>
 
-#define ENOSYS 1 /* No such syscall */
-#define EFAULT 2 /* Bad address */
-
 /* Syscalls */
 #define SYS_EXIT 0
 #define SYS_SCHED_YIELD 1

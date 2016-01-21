@@ -6,6 +6,7 @@
 
 #include <sys/types.h>
 #include <panic.h>
+#include <errno.h>
 
 #include "../mm/task.h"
 #include "../mm/sched.h"
@@ -53,7 +54,8 @@ uint32_t sys_wait(struct registers_t* regs)
 	if (REG_ARG1(regs) != 0 \
 	    && !valid_user_buffer(REG_ARG1(regs), sizeof(uint32_t)))
 	{
-		return -EFAULT;
+		errno = EFAULT;
+		return (uint32_t)-1;
 	}
 
 	uint32_t* stat_loc = (uint32_t*)REG_ARG1(regs);

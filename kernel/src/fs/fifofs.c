@@ -10,6 +10,8 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <kmalloc.h>
+#include <errno.h>
+
 #include "../mm/task.h"
 #include "../mm/sched.h"
 
@@ -20,16 +22,7 @@ struct fifofs_hdr_t* fifofs_nodes[] = {NULL};
 
 static ssize_t read_fifofs(int fd, void* buf, size_t size)
 {
-	if (size == 0)
-		return 0;
-	if (buf == NULL)
-		return -1;
-
 	struct vfs_node_t* node = cur_task->files[fd].vfs_node;
-
-	if (node == NULL)
-		return -1;
-
 	struct fifofs_hdr_t* hdr = fifofs_nodes[node->status.st_ino];
 	struct fifofs_data_t* curnode = hdr->data;
 
@@ -40,10 +33,9 @@ static ssize_t read_fifofs(int fd, void* buf, size_t size)
 		if (hdr->writers == 0)
 			return 0;
 
-		/* Return -1 and set errno to EAGAIN if O_NONBLOCK is set */
 		if (cur_task->files[fd].oflag & O_NONBLOCK)
 		{
-			/* TODO: set errno to EAGAIN */
+			errno = EAGAIN;
 			return -1;
 		}
 
@@ -90,16 +82,7 @@ exit:
 
 static ssize_t write_fifofs(int fd, const void* buf, size_t size)
 {
-	if (size == 0)
-		return 0;
-	if (buf == NULL)
-		return -1;
-
 	struct vfs_node_t* node = cur_task->files[fd].vfs_node;
-
-	if (node == NULL)
-		return -1;
-
 	struct fifofs_hdr_t* hdr = fifofs_nodes[node->status.st_ino];
 	struct fifofs_data_t* curnode = hdr->data;
 
@@ -107,7 +90,7 @@ static ssize_t write_fifofs(int fd, const void* buf, size_t size)
 	 * set errno to EPIPE and return -1 */
 	if (hdr->readers == 0)
 	{
-		/* TODO: set errno to EPIPE */
+		errno = EPIPE;
 		return -1;
 	}
 	
@@ -136,7 +119,13 @@ static ssize_t write_fifofs(int fd, const void* buf, size_t size)
 		curnode->next = \
 			(struct fifofs_data_t*)kmalloc(sizeof(struct fifofs_data_t));
 		if (curnode->next == NULL)
-			goto exit;
+		{
+			if (written == 0) /* If we couldn't write anything, fail */
+				return -1; /* kmalloc sets errno */
+			else
+				goto exit;
+		}
+
 		curnode = curnode->next;
 		curnode->next = NULL;
 		offset = 0;
@@ -179,10 +168,10 @@ static int open_fifofs(struct vfs_node_t* node, int oflag, mode_t mode)
 		/* Wait until there is a reader */
 		while(hdr->readers < 1)
 		{
-			/* Or fail if we a re in non-blocking mode */
+			/* Or fail if we are in non-blocking mode */
 			if (oflag & O_NONBLOCK)
 			{
-				/* TODO: set errno to ENXIO */
+				errno = ENXIO;
 				return -1;
 			}
 			
@@ -231,14 +220,14 @@ int creat_fifofs(struct vfs_node_t* node, mode_t mode)
 	fifofs_nodes[node->status.st_ino] = \
 		(struct fifofs_hdr_t*)kmalloc(sizeof(struct fifofs_hdr_t));
 	if (fifofs_nodes[node->status.st_ino] == NULL)
-		return -1;
+		return -1; /* kmalloc sets errno */
 
 	fifofs_nodes[node->status.st_ino]->data = \
 		(struct fifofs_data_t*)kmalloc(sizeof(struct fifofs_data_t));
 	if (fifofs_nodes[node->status.st_ino]->data == NULL)
 	{
 		kfree(fifofs_nodes[node->status.st_ino]);
-		return -1;
+		return -1; /* kmalloc sets errno */
 	}
 
 	fifofs_nodes[node->status.st_ino]->write_at = 0;
@@ -254,7 +243,7 @@ int mkfifo(const char* path, mode_t mode)
 {
 	int fd = creat_vfs(path, mode | S_IFIFO);
 	if (fd < 0)
-		return -1;
+		return -1; /* creat sets errno */
 	close_vfs(fd);
 	return 0;
 }
