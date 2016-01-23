@@ -38,6 +38,15 @@ int abs(int n);
 
 long labs(long n);
 
+void *malloc(size_t size);
+
+void free(void *ptr);
+
+void *realloc(void *ptr, size_t size);
+
+void *calloc(size_t nelems, size_t elsize);
+
+//void dump_heap();
 
 int rand(void);
 

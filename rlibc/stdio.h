@@ -18,6 +18,8 @@
 #include <unistd.h>
 #undef _NEED_WHENCE_VALUES
 
+/* Macros */
+#define EOF (-1)
 
 /* Function prototypes */
 
@@ -36,7 +38,7 @@ int vsprintf(char* buf, const char* fmt, va_list arg);
 
 /* ISO C99 extenstions to printf family from POSIX 2008. These take integer
  * file descriptor instead of FILE*. Analogous to fprintf, vfprintf */
-int dprintf(int fd, const char* fmt, ...);
+int dprintf(int fildes, const char *restrict format, ...);
 int vdprintf(int fd, const char* fmt, va_list arg);
 
 
@@ -45,7 +47,7 @@ int vdprintf(int fd, const char* fmt, va_list arg);
 //int fputs(const char* str, FILE* stream);
 
 //int putc(int chr, FILE* stream);
-int puts(const char* str);
+int puts(const char* s);
 
 int putchar(int c);
 
@@ -55,14 +57,14 @@ int dputc(int chr, int fd);
 int dputs(const char* str, int fd);
 
 
-/* The get-family of functinos */
+/* The get-family of functions */
 //int fgetc(FILE* stream);
 //char* fgets(char* buf, int num, FILE* stream);
 
 //int getc(FILE* stream);
 char* gets(char* buf);
 
-int getchar();
+int getchar(void);
 
 //ssize_t getdelim(char** lineptr, size_t* n, int delim, FILE* stream);
 //ssize_t getline(char** lineptr, size_t* n, FILE* stream);
