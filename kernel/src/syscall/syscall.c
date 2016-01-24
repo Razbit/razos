@@ -20,7 +20,8 @@
 #include "sys_setup.h"   /* setup kernel */
 #include "sys_pipe.h"    /* pipe() */
 #include "sys_uvm.h"     /* brk, sbrk */
-#include "sys_execve.h"    /* execve */
+#include "sys_execve.h"  /* execve */
+#include "sys_time.h"    /* time() */
 
 /* Add the syscall here AND into razos_kernel_headerds/api/razos.h */
 syscall_t syscall_table[] =
@@ -41,7 +42,8 @@ syscall_t syscall_table[] =
 	[SYS_SBRK] = &sys_sbrk,
 	[SYS_FCNTL] = &sys_fcntl,
 	[SYS_EXECVE] = &sys_execve,
-	[SYS_FSTAT] = &sys_fstat
+	[SYS_FSTAT] = &sys_fstat,
+	[SYS_TIME] = &sys_time
 };
 
 /* Make sure buffer is available to user */

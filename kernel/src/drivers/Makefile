@@ -1,4 +1,4 @@
-CSOURCES = idt.c pit.c kb.c
+CSOURCES = idt.c pit.c kb.c time.c
 ASMSOURCES = isr.s
 SUBOBJS = 
 
@@ -9,7 +9,7 @@ OBJS += $(patsubst %.s,%.s.o,$(ASMSOURCES))
 all: $(OBJS) link 
 
 link:
-	$(LD) $(LDFLAGS) -o interrupt.o $(SUBOBJS) $(OBJS)
+	$(LD) $(LDFLAGS) -o drivers.o $(SUBOBJS) $(OBJS)
 
 %.s.o: %.s
 	nasm $(ASFLAGS) $< -o $@

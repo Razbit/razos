@@ -48,6 +48,8 @@ typedef char __int8_t;
 #define _NEED_MODE_T
 #define _NEED_PID_T
 #define _NEED_DEV_T
+#define _NEED_CLOCK_T
+#define _NEED_TIME_T
 
 #endif /* defined(_RAZOS_KERNEL) || defined(_NEED_ALL_TYPES) */
 
@@ -221,3 +223,19 @@ typedef __builtin_va_list va_list;
 #endif /* VA_LIST */
 #undef _NEED_VA_LIST
 #endif /* _NEED_VA_LIST */
+
+#ifdef _NEED_CLOCK_T
+#ifndef CLOCK_T
+#define CLOCK_T
+typedef __uint32_t clock_t;
+#endif /* CLOCK_T */
+#undef _NEED_CLOCK_T
+#endif /* _NEED_CLOCK_T */
+
+#ifdef _NEED_TIME_T
+#ifndef TIME_T
+#define TIME_T
+typedef __int32_t time_t;
+#endif /* TIME_T */
+#undef _NEED_TIME_T
+#endif /* _NEED_TIME_T */

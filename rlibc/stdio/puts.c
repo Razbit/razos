@@ -3,6 +3,7 @@
  * Itara20 2016 */
 
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 int puts(const char *s)

@@ -8,17 +8,17 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <stdio.h>
-
-#define puts(msg) write(STDOUT_FILENO, msg, strlen(msg))
-#define putc(chr) write(STDOUT_FILENO, &chr, 1);
-#define putsfd(fd, msg) write(fd, msg, strlen(msg));
-#define putcfd(fd, chr) write(fd, &chr, 1);
+#include <time.h>
 
 extern char** environ;
 
 int main()
 {
     printf("Hello from printf! Here should be pi: %f\n", 3.1415927f);
+
+    time_t ut = time(NULL);
+
+    printf("UNIX time: %i\n", ut);
     
 	pid_t pid = fork();
 	

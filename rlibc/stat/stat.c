@@ -14,7 +14,7 @@ int stat(const char* path, struct stat* buf)
 {
 	if (path == NULL)
 	{
-		/* TODO: errno = ENOENT */
+		errno = ENOENT;
 		return -1;
 	}
 	
@@ -22,7 +22,7 @@ int stat(const char* path, struct stat* buf)
 	
 	if (fd < 0)
 	{
-		/* TODO: errno = EBADF */
+		errno = EBADF;
 		return -1;
 	}
 	

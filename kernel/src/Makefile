@@ -1,6 +1,6 @@
 CSOURCES = gdt.c console.c kmain.c vga.c panic.c
 ASMSOURCES = gdt.s
-SUBOBJS = interrupt.o mm.o syscall.o fs.o loader.o
+SUBOBJS = drivers.o mm.o syscall.o fs.o loader.o
 
 OBJS = $(patsubst %.c, %.c.o,$(CSOURCES))
 OBJS += $(patsubst %.s, %.s.o,$(ASMSOURCES))
@@ -8,8 +8,8 @@ OBJS += $(patsubst %.s, %.s.o,$(ASMSOURCES))
 export LDFLAGS += -r
 
 all: $(OBJS)
-	$(MAKE) -C interrupt
-	mv interrupt/interrupt.o ./interrupt.o
+	$(MAKE) -C drivers
+	mv drivers/drivers.o ./drivers.o
 
 	$(MAKE) -C mm
 	mv mm/mm.o ./mm.o
@@ -33,8 +33,9 @@ all: $(OBJS)
 
 clean:
 	rm *.o
-	$(MAKE) clean -C interrupt
+	$(MAKE) clean -C drivers
 	$(MAKE) clean -C mm
 	$(MAKE) clean -C syscall
 	$(MAKE) clean -C fs
 	$(MAKE) clean -C loader
+

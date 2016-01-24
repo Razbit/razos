@@ -2,14 +2,14 @@
  *
  * Define kernel's C-side entry point
  *
- * Razbit 2014, 2015
+ * Razbit 2014, 2015, 2016
  */
 
 #include <console.h>
 #include "gdt.h"
-#include "interrupt/idt.h"
-#include "interrupt/pit.h"
-#include "interrupt/kb.h"
+#include "drivers/idt.h"
+#include "drivers/pit.h"
+#include "drivers/kb.h"
 #include "mm/paging.h"
 #include "mm/task.h"
 #include "mm/sched.h"
@@ -27,6 +27,7 @@
 #include <asm/system.h>
 #include <asm/multiboot.h>
 #include <kmalloc.h>
+#include <time.h>
 
 int kmain(struct multiboot_info* mb, uint32_t esp)
 {
@@ -38,7 +39,7 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 
 	kprintf("Stack is at 0x%p\n", esp);
 
-	pit_set_freq(100);
+	pit_set_freq(CLOCKS_PER_SEC);
 
 	paging_init(mb);
 
@@ -56,7 +57,7 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 	init_initrd((void*)(*(uint32_t*)mb->mods_addr));
 	
 	/* open, close, creat, read, write, lseek can now access initrd */
-	
+
 	kputs("RazOS kernel initialized, starting init..\n");
 	
 	int ret = exec("test");
