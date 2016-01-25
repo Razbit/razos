@@ -1,4 +1,4 @@
-CSOURCES = vdprintf.c printf.c puts.c dprintf.c dgetc.c getchar.c vsprintf.c sprintf.c putc.c
+CSOURCES = vdprintf.c printf.c puts.c dprintf.c dgetc.c getchar.c vsprintf.c sprintf.c putc.c dgetdelim.c dgetline.c
 ASMSOURCES = 
 SUBOBJS = 
 

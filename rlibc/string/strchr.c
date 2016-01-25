@@ -11,8 +11,11 @@ char* strchr(const char* str, int value)
 	{
 		if (*str == value)
 			return (char*)str;
-		str++;
+		++str;
 	}
+	/* The terminating null byte is considered a part of the string. */
+	if (value == '\0')
+		return (char*)str;
 
 	return NULL;
 }
