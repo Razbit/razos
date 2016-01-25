@@ -120,8 +120,10 @@ int open_vfs(const char* name, int oflag, mode_t mode)
 		if (oflag & O_CREAT)
 		{
 			int ret = creat_vfs(name, mode);
-			/* If creat fails, it sets errno for us and returns -1,
-			 * so we return -1, too */
+			/* If creat fails, it sets errno for us */
+			if (ret < 0)
+				return -1;
+			cur_task->files[ret].oflag = oflag;
 			return ret;
 		}
 		else

@@ -9,6 +9,7 @@
 
 const char* str[] =
 {
+	[0] = "\0",
 	[EDOM] = "Argument out of function domain",
 	[ERANGE] = "Result out of range",
 	[EILSEQ] = "Illegal byte sequence",
@@ -59,7 +60,7 @@ const char* str[] =
 	[ENOLCK] = "No locks available",
 	[ENOLINK] = "Reserved",
 	[ENOMEM] = "Not enough space",
-	[ENOMSG] = "No message of the #define esired type",
+	[ENOMSG] = "No message of the desired type",
 	[ENOPROTOOPT] = "Protocol not available",
 	[ENOSPC] = "No space left on device",
 	[ENOSR] = "Out of streams resources",

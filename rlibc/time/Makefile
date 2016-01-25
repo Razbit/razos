@@ -1,4 +1,4 @@
-CSOURCES = mktime.c time.c
+CSOURCES = mktime.c time.c gmtime.c ctime.c
 ASMSOURCES = 
 SUBOBJS = 
 
