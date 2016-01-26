@@ -18,7 +18,7 @@ static char *heap_end   = NULL;
 
 static inline uint32_t round_up(uint32_t val, uint32_t divisor)
 {
-	return val + divisor - (val % divisor);
+	return (val-1 + divisor) & ~(val-1);
 }
 
 /* Size of heap_node_t must be 16 bytes for intended alignment. */
@@ -135,6 +135,9 @@ static void unify_fwd(struct heap_node_t* ptr)
 
 void free(void *ptr)
 {
+	if (ptr == NULL)
+		return;
+
 	/* The given ptr points to the beginning of usable space rather than
 	 * to the beginning of the heap_node_t struct */
 	
