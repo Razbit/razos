@@ -17,28 +17,23 @@
 [EXTERN init_rlibc]
 [EXTERN _init]
 [EXTERN _fini]
-[EXTERN environ] 				; char** environ in unistd/exec.c
 
 SECTION .start
 
     ;; Entry of the user program.
 _start:
-	;; The execve() -syscall stores contents of argv, envp on the stack:
-	;; <envp contents><envp><argv contents><argv><argc>
-	;; pointer to envp is in esi, pointer to argv in edi
+    ;; The execve() -syscall stores contents of argv, envp on the stack:
+    ;; <envp contents><envp><argv contents><argv><argc>
+    ;; pointer to envp is in esi, pointer to argv in edi
 
-	pop eax 					; argc in eax
-	lea esi, [esi]				; envp in esi
-	mov [environ], esi			; save envp to environ
+    pop eax                     ; argc in eax
 
-	lea edi, [edi]				; argv in edi
+    push esi                    ; push envp
+    push edi                    ; push argv
+    push eax                    ; push argc
 
-	push esi					; push envp
-	push edi 					; push argv
-	push eax					; push argc
-	
     ;; Prepare signals, memory allocation, stdio, errno etc.
-	;; In setup_rlibc.c
+    ;; In setup_rlibc.c
     call init_rlibc
 
     ;; Global constructors (crti.s)

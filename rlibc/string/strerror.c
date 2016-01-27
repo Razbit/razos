@@ -95,5 +95,5 @@ const char* str[] =
 
 char* strerror(int err)
 {
-	return str[err];
+	return (char*)str[err];
 }

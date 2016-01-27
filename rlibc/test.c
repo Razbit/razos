@@ -12,38 +12,31 @@
 
 extern char** environ;
 
-int main()
+int main(int argc, char* argv[])
 {
-    printf("Hello from printf! Here should be pi: %f\n", 3.1415927f);
-
-    time_t ut = time(NULL);
-
-    printf("UNIX time: %i\n", ut);
+	time_t ut = time(NULL);
+	struct tm time1 = *gmtime(&ut);    
+	printf("Time since Epoch %i seconds\n", ut);    
+	puts(asctime(&time1));
     
 	pid_t pid = fork();
 	
 	if (pid == 0)
 	{
-        printf("child: %i\n", pid);
+		printf("child: %i\n", pid);
 
-        char ** argv = sbrk(128);
-        argv[0] = sbrk(16);
-        argv[1] = NULL;
-        strcpy(argv[0], "world!");
-
-        environ = NULL;
-        
-        execve("hellow", argv, environ);
+		char* argv2[] = {"world", NULL};
+		setenv("SHELL", "bash", 1);
+		execve("hellow", argv2, environ);
 
 		return 2;
 	}
 	else
 	{
 		printf("parent: %i\n", pid);
-		
-		
-
-		wait(NULL);
+		int ret;
+		wait(&ret);
+		printf("child returned %i\n", ret);
 		return 1;
 	}
 }

@@ -23,16 +23,19 @@
 %define task_page_dir_phys(task) [(task) + 0x210]
 
 sched_begin:
+    mov esi, [esp + 12]         ; envp
+    mov edi, [esp + 8]          ; argv
+    mov ecx, [esp + 4]          ; user stack end
+
     mov eax, USER_DATA
     mov ds, eax
     mov es, eax
     mov fs, eax
     mov gs, eax
-    
-    mov ecx, 0xFFBFFFF0         ; user stack end: paging.h
+
     mov edx, 0x10000000         ; task entry point
     sti                         ; Now the PIT may call sched_switch
-    sysexit 	                ; Enter the user world
+    sysexit                     ; Enter the user world
 
 sched_switch:
     ;; save old task state
@@ -59,7 +62,7 @@ task_fork:
     xor eax, eax
 
     pusha
-    call task_fork_inner         ; create & set up the new task
+    call task_fork_inner        ; create & set up the new task
 
     ;; We save the return value so the parent that calls us gets
     ;; the right task_t* for the new child
@@ -70,4 +73,3 @@ task_fork:
 .return:
     popa
     ret
-    

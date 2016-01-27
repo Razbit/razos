@@ -1,4 +1,4 @@
-CSOURCES = abs.c bsearch.c div.c qsort.c rand.c atoi.c strtod.c atof.c malloc.c
+CSOURCES = abs.c bsearch.c div.c qsort.c rand.c atoi.c strtod.c atof.c malloc.c env.c
 ASMSOURCES = 
 SUBOBJS = 
 

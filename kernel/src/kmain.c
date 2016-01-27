@@ -60,12 +60,13 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 
 	kputs("RazOS kernel initialized, starting init..\n");
 	
-	int ret = exec("test");
-	kprintf("Execve returned %i\n", ret);
-	if (ret == 0)
+	char* argv[] = {"Hello", "world", NULL};
+	char* envp[] = {"SHELL=rash", NULL};
+	uint32_t* ret = execve("test", argv, envp);
+	if (ret != NULL)
 	{
 		kputs("Starting scheduler..\n");
-		sched_begin();
+		sched_begin(ret[2], ret[1], ret[0]);
 	}
 	
 	kputs("\n==HALTED==");

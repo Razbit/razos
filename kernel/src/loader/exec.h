@@ -7,6 +7,6 @@
 #ifndef EXEC_H
 #define EXEC_H
 
-int exec(char* path);
+uint32_t* execve(char* path, char** argv, char** envp);
 
 #endif /* EXEC_H */

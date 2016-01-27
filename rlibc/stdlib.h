@@ -2,7 +2,7 @@
  *
  * stdlib.h -- C99-ish stdlib
  *
- * Razbit 2015 */
+ * Razbit 2015, 2016, Itara20 2016 */
 
 #ifndef STDLIB_H
 #define STDLIB_H
@@ -63,6 +63,15 @@ double strtod(const char *str, char **endptr);
 
 double atof(const char *str);
 
-void exit(int status); /* int arch/../crt0.s */
+void exit(int status); /* in arch/../crt0.s */
+
+/* Get value of environment variable */
+char* getenv(const char* name);
+
+/* Add or change environment variable */
+int setenv(const char* envname, const char* envval, int overwrite);
+
+/* Remove an environment variable */
+int unsetenv(const char* name);
 
 #endif /* STDLIB_H */
