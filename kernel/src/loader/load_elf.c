@@ -57,16 +57,13 @@ void* load_elf(void* data)
 			/* TODO: check if page_map() fails */
 			if (phdr->p_flags & PF_W)
 			{
-				page_map(phdr->p_vaddr+size, page_alloc(), \
+				page_map(phdr->p_vaddr+size, frame_alloc(), \
 				         PE_PRESENT | PE_USER | PE_RW);
 			}
 			else
 			{
-				page_map(phdr->p_vaddr+size, page_alloc(), \
-				         PE_PRESENT | PE_USER | PE_RW);
-				/* Code segment writable so the page table is writable
-				 * TODO: figure out how to make the page table writable
-				 *       without the code segment being writable */
+				page_map(phdr->p_vaddr+size, frame_alloc(), \
+				         PE_PRESENT | PE_USER);
 			}
 		}
 

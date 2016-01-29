@@ -33,25 +33,25 @@
 /* Bit 31 in cr0 enables paging */
 #define FL_PAGING_ENABLED (1 << 31)
 
+uint32_t nframes; /* Pages of phys mem: mem_size/PAGE_SIZE */
 
 /* Set page_dir as current page directory */
 void set_page_directory(uint32_t page_dir);
 
 /* Allocate a frame */
-uint32_t page_alloc();
+uint32_t frame_alloc();
 
 /* Free a frame */
+void frame_free(uint32_t addr);
+
+/* Free a page */
 void page_free(uint32_t addr);
 
-/* Map a page to a frame */
-void page_map(uint32_t virt_page, uint32_t phys_page, uint32_t flag);
+/* Map a page to a frame, ret virtual address (or NULL) */
+void* page_map(uint32_t virt_page, uint32_t phys_page, uint32_t flag);
 
 /* Unmap a page */
 void page_unmap(uint32_t page);
-
-/* Behind-the-scenes of the above */
-void* page_temp_map(uint32_t phys_page);
-void page_temp_unmap();
 
 /* Return physical address of memory pointed to by virt */
 uint32_t virt_to_phys(uint32_t virt);
@@ -67,5 +67,8 @@ void paging_set_allocatable_start(uint32_t* addr);
 
 /* Initialize paging */
 void paging_init(struct multiboot_info* mb);
+
+/* How many frames are currently allocated */
+uint32_t allocated_frames();
 
 #endif /* PAGING_H */

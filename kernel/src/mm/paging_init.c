@@ -17,7 +17,8 @@ static uint32_t kernel_end;
 
 static uint32_t alloc_zeroed_page()
 {
-	uint32_t page = page_alloc();
+	uint32_t page = kernel_end;
+	kernel_end += PAGE_SIZE;
 	memset((void*)page, 0, PAGE_SIZE);
 	return page;
 }
@@ -30,13 +31,14 @@ static size_t register_avail_mem_region(struct memory_map* region)
 	     offset += PAGE_SIZE)
 	{
 		uint32_t addr = region->base_addr_low + offset;
+		pages_registered++;
 
-		/* Can't allocate before the end of the kernel.......... */
+		/* Can't allocate before the end of the kernel */
 		if (addr < kernel_end)
 			continue;
 
-		page_free(addr);
-		pages_registered++;
+		/* Make sure frame is free */
+		frame_free(addr);
 	}
 
 	return pages_registered;
@@ -105,16 +107,22 @@ void paging_init(struct multiboot_info* mb)
 	paging_set_allocatable_start((uint32_t*)initrd_end);
 
 	size_t pages_registered = register_avail_mem(mb);
-	kprintf("%u MiB available useful memory\n", \
-	        pages_registered * PAGE_SIZE / 0x100000);
+	/* Round down to a multiple of 32 pages, because of our
+	   bitmap-based frame allocation */
+	pages_registered &= ~(32 - 1);
+	kprintf("%u MiB available memory (0x%x pages)\n", \
+	        pages_registered * PAGE_SIZE / 0x100000, pages_registered);
+
+	nframes = pages_registered; /* in paging.c */
 
 	uint32_t* page_dir = (uint32_t*)alloc_zeroed_page();
-
+	kprintf("page_dir: 0x%p\n", page_dir);
 	create_page_tables_for_kernel_space(page_dir);
+	kprintf("mb->mods_addr: 0x%p\n", mb->mods_addr);
 	identity_map_kernel(page_dir);
 	recursively_map_page_directory(page_dir);
 
 	set_page_directory((uint32_t)page_dir);
 
-	kernel_page_init(kernel_end, KERNEL_STACK_BEGIN);
+	kernel_page_init(kernel_end);
 }

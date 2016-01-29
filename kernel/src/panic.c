@@ -8,6 +8,7 @@
 #include <stdarg.h>
 #include <vsprintf.h>
 #include <console.h>
+#include "mm/task.h"
 
 #include <panic.h>
 
@@ -18,9 +19,11 @@ void panic(const char* msg, ...)
 	char str[1024];
 	va_list va;
 	va_start(va, msg);
-
+	pid_t pid = 0;
+	if (cur_task)
+		pid = cur_task->pid;
 	vsprintf(str, msg, va);
-	kprintf("\nKernel panic: %s\n", str);
+	kprintf("\nKernel panic (pid %i): %s\n", pid, str);
 
 	va_end(va);
 

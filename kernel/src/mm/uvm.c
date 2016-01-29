@@ -12,7 +12,6 @@
 #include "paging.h"
 #include "task.h"
 
-/* TODO: fail if we run out of physical memory */
 /* Allocate the first available, sequential page for uvm use,
  * return its address */
 void* user_page_alloc()
@@ -20,9 +19,11 @@ void* user_page_alloc()
 	/* Make sure there is virtual address space left to allocate */
 	if (cur_task->uheap_end < (void*)USER_STACK_BEGIN)
 	{
-		page_map((uint32_t)(cur_task->uheap_end), page_alloc(), \
-		         PE_USER | PE_RW | PE_PRESENT);
-		void* ret = cur_task->uheap_end;
+		void* ret = page_map((uint32_t)(cur_task->uheap_end), \
+		                     frame_alloc(), PE_USER | PE_RW | PE_PRESENT);
+		if (ret == NULL)
+			return NULL; /* page_map sets errno */
+
 		cur_task->uheap_end += PAGE_SIZE;
 		return ret;
 	}
@@ -33,13 +34,15 @@ void* user_page_alloc()
 	}
 }
 
-/* Free the last page  allocated to uvm */
+/* Free the last page allocated to uvm */
 void user_page_free()
 {
-	void* addr = cur_task->uheap_end - PAGE_SIZE;
-	if (page_mapped_to_user((uint32_t)addr))
-		page_unmap((uint32_t)addr);
-	cur_task->uheap_end -= PAGE_SIZE;
+	uint32_t addr = (uint32_t)cur_task->uheap_end - PAGE_SIZE;
+	if (page_mapped_to_user(addr))
+	{
+		page_free(addr);
+		cur_task->uheap_end -= PAGE_SIZE;
+	}
 }
 
 /* POSIX brk(). Set end of heap to addr */
@@ -83,7 +86,7 @@ bad:
 void* uvm_sbrk(intptr_t incr)
 {
 	void* ret = cur_task->uheap_end;
-		
+
 	if (incr > 0)
 	{
 		/* Enlarge heap by incr bytes */
@@ -99,7 +102,7 @@ void* uvm_sbrk(intptr_t incr)
 		/* Shrink the heap */
 		if (cur_task->uheap_end + incr < cur_task->uheap_begin)
 			goto bad;
-		
+
 		incr += PAGE_SIZE-1;
 		while (incr < 0)
 		{

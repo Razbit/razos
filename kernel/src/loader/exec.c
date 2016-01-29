@@ -122,11 +122,12 @@ uint32_t* execve(char* path, char** argv, char** envp)
 	for (; page < USER_STACK_END; page += PAGE_SIZE)
 	{
 		if (page_mapped_to_user(page))
-			page_unmap(page);
+			page_free(page);
 	}
 
 	/* Create user stack */
-	page_map(USER_STACK_END, page_alloc(), PE_PRESENT | PE_USER | PE_RW);
+	page_map(USER_STACK_END, frame_alloc(), \
+	         PE_PRESENT | PE_USER | PE_RW);
 	cur_task->stack_begin = (USER_STACK_END) & (~(PAGE_SIZE-1));
 
 	read(fd, buf, size);

@@ -10,7 +10,7 @@
 #include <sys/types.h>
 
 /* Initialize kernel's paging */
-void kernel_page_init(uint32_t begin, uint32_t _end);
+void kernel_page_init(uint32_t begin);
 
 /* Allocate a page for kernel use */
 void* kernel_page_alloc();
@@ -18,12 +18,7 @@ void* kernel_page_alloc();
 /* Allocate a page for kernel use. Set contents to 0 */
 void* kernel_page_alloc_zeroed();
 
-/* These two don't check anything, so be careful.
- * Allocate a page at addr for kernel use */
-void* kernel_page_alloc_at(uint32_t addr);
-void* kernel_page_alloc_zeroed_at(uint32_t addr);
-
-/* Free a page */
-void kernel_page_free(void* addr);
+/* Free the last allocated page */
+void kernel_page_free();
 
 #endif /* KERNEL_PAGE_H */

@@ -2,81 +2,49 @@
  *
  * kernel_paging.c -- kernel-specific paging stuff
  *
- * Razbit 2015 (based on Charlie Somerville's Radium) */
+ * Razbit 2015, 2016 (based on Charlie Somerville's Radium) */
 
 #include <sys/types.h>
 #include <panic.h>
 #include <string.h>
 #include <util.h>
 #include <errno.h>
-
+#include <console.h>
 #include "paging.h"
 
 #include "kernel_page.h"
 
-typedef union kernel_page
-{
-	union kernel_page* next;
-	uint8_t mem[PAGE_SIZE];
-} kernel_page_t;
+static uint32_t kheap_begin = 0;
+static uint32_t kheap_end = 0;
 
-static kernel_page_t* allocated_to = NULL;
-static kernel_page_t* end = NULL;
-static kernel_page_t* next_free = NULL;
-
-void kernel_page_init(uint32_t begin, uint32_t _end)
+void kernel_page_init(uint32_t begin)
 {
-	allocated_to = (kernel_page_t*)begin;
-	end = (kernel_page_t*)_end;
+	kprintf("Kernel heap starts at 0x%p\n", begin);
+	kheap_begin = begin;
+	kheap_end = begin;
+
+	/* Mark pages taken by the kernel image as used */
+	while(frame_alloc() < kheap_begin);
 }
 
 /* Allocate a page for kernel use */
 void* kernel_page_alloc()
 {
-	if (next_free)
+	if (kheap_end < KERNEL_STACK_BEGIN)
 	{
-		kernel_page_t* page = next_free;
-		next_free = next_free->next;
-		return page;
+		void* ret = page_map(kheap_end, frame_alloc(), \
+		                     PE_RW | PE_PRESENT);
+		if (ret == NULL)
+			return NULL; /* page_map sets errno */
+
+		kheap_end += PAGE_SIZE;
+		return ret;
 	}
-
-	/* Out of memory */
-	if (allocated_to >= end)
-	{
-		errno = ENOMEM;
-		return NULL;
-	}
-
-	page_map((uint32_t)allocated_to, page_alloc(), PE_PRESENT | PE_RW);
-
-	void* ret = allocated_to++;
-
-	return ret;
-}
-
-/* Allocate a page at addr for kernel use */
-void* kernel_page_alloc_at(uint32_t addr)
-{
-	/* Out of memory */
-	if ((kernel_page_t*)addr >= end)
+	else
 	{
 		errno = ENOMEM;
 		return NULL;
 	}
-
-	uint32_t page_start = round_down(addr, PAGE_SIZE);
-	page_map(page_start, page_alloc(), PE_PRESENT | PE_RW);
-
-	return (void*)page_start;
-}
-
-/* Allocate a page at addr for kernel use, set contents to 0 */
-void* kernel_page_alloc_zeroed_at(uint32_t addr)
-{
-	void* page = kernel_page_alloc_at(addr);
-	if (page != NULL)
-		memset(page, 0, PAGE_SIZE);
-	return page;
 }
 
 /* Allocate a page for kernel use. Set contents to 0 */
@@ -88,10 +56,13 @@ void* kernel_page_alloc_zeroed()
 	return page;
 }
 
-/* Free a page */
-void kernel_page_free(void* addr)
+/* Free the last allocated page */
+void kernel_page_free()
 {
-	kernel_page_t* page = addr;
-	page->next = next_free;
-	next_free = page;
+	uint32_t addr = kheap_end - PAGE_SIZE;
+	if (page_flags(addr) & PE_PRESENT)
+	{
+		page_free(addr);
+		kheap_end -= PAGE_SIZE;
+	}
 }

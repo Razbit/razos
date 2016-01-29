@@ -2,25 +2,19 @@
  *
  * paging.c -- paging related stuff
  *
- * Razbit 2015 (based on Charlie Somerville's Radium) */
+ * Razbit 2015, 2016 (based on Charlie Somerville's Radium) */
 
 #include <sys/types.h>
 #include <string.h>
-
+#include <errno.h>
 #include "paging.h"
 
-static uint32_t next_free_page = 0;
-static uint32_t old_null_page = 0;
-static uint32_t* const temp_page_entry = (void*)CUR_PG_TABLE_BASE;
 
+/* Use a bitmap to keep track of used/free frames */
+static uint32_t frames[0x8000]; /* 0x8000 * 32 -> pages for 4 GiB */
 
-/* Return non-zero if paging is enabled */
-static int paging_enabled()
-{
-	uint32_t cr0;
-	__asm__ __volatile__("mov %%cr0, %0" : "=r"(cr0) :: "memory");
-	return (cr0 & FL_PAGING_ENABLED);
-}
+#define frame_index(a) ((a)/32)  /* Index in frames[] */
+#define frame_offset(a) ((a)%32) /* Bit number in the uint32_t */
 
 /* Flush the Translation Lookaside Buffer */
 static inline void tlb_flush(uint32_t addr)
@@ -34,94 +28,80 @@ void set_page_directory(uint32_t page_dir)
 	__asm__ __volatile__("mov %0, %%cr3" :: "r"(page_dir) : "memory");
 
 	/* Make sure paging is enabled */
+	/* This could be done just once, but I'll let this be here.. */
 	uint32_t cr0;
 	__asm__ __volatile__("mov %%cr0, %0" : "=r"(cr0) :: "memory");
 	cr0 |= FL_PAGING_ENABLED;
 	__asm__ __volatile__("mov %0, %%cr0" :: "r"(cr0) : "memory");
 }
 
-/* TODO: fix this pile of crap frame allocator! */
-/* Used in page_alloc() and page_free() */
-void* page_temp_map(uint32_t phys_page)
+/* Mark frame as used */
+static void set_frame(uint32_t frame)
 {
-	/* The temporary page is mapped to the first page in the first
-	 * page table, i.e. at virtual address 0 i.e. physical 0xFFC00000 */
-	old_null_page = *temp_page_entry;
-	*temp_page_entry = phys_page | PE_PRESENT | PE_RW;
-	tlb_flush(0);
-
-	return NULL;
+	frames[frame_index(frame)] |= (1 << frame_offset(frame));
 }
 
-/* Used in page_alloc() and page_free() */
-void page_temp_unmap()
+/* Mark frame as free */
+static void clear_frame(uint32_t frame)
 {
-	*temp_page_entry = old_null_page;
-	tlb_flush(0);
+	frames[frame_index(frame)] &= ~(1 << frame_offset(frame));
+}
+
+/* Find first free frame */
+static uint32_t find_free_frame()
+{
+	uint32_t i, j;
+	for (i = 0; i < frame_index(nframes); i++)
+		if (frames[i] != 0xFFFFFFFF)
+			for (j = 0; j < 32; j++)
+				if ((frames[i] & ((uint32_t)1 << j)) == 0)
+					return i * 32 + j;
+
+	/* If no free frame was found, return -1 */
+	return (uint32_t)-1;
+}
+
+uint32_t allocated_frames()
+{
+	uint32_t ret = 0;
+	for (uint32_t i = 0; i < frame_index(nframes); i++)
+		for(uint32_t j = 0; j < 32; j++)
+			if ((frames[i] & ((uint32_t)1 << j)) == 1)
+				ret++;
+	return ret;
 }
 
 /* Allocate a frame */
-uint32_t page_alloc()
+uint32_t frame_alloc()
 {
-	uint32_t page = next_free_page;
-
-	if (paging_enabled())
+	uint32_t index = find_free_frame();
+	if (index == (uint32_t)-1)
 	{
-		page_temp_map(page);
-		
-		/* Ok, this is here to please GCC: since dereferencing
-		 * NULL-pointers is bad, compilers want to f*ck your code up.
-		 * That's why we are bending the rules, i.e. writing the
-		 * NULL-dereferencing part in assembly..
-		 * Feel free to punch me in the face :D
-		 *
-		 * next_free_page = *0; */
-		__asm__ __volatile__("mov (0), %0"
-		                     : "=r"(next_free_page)
-		                     :
-			);
-		/* TODO: Do not bend the rules */
-		page_temp_unmap();
-	}
-	else
-	{
-		next_free_page = *(uint32_t*) page;
+		errno = ENOMEM;
+		return 0;
 	}
 
-	return page;
+	/* Mark frame as used */
+	set_frame(index);
+
+	return index*PAGE_SIZE;
 }
 
 /* Free a frame */
-void page_free(uint32_t addr)
+void frame_free(uint32_t addr)
 {
-	if (paging_enabled())
-	{
-		page_temp_map(addr);
-		
-		/* Ok, this is here to please GCC: since dereferencing
-		 * NULL-pointers is bad, compilers want to f*ck your code up.
-		 * That's why we are bending the rules, i.e. writing the
-		 * NULL-dereferencing part in assembly..
-		 * Feel free to punch me in the face :D
-		 *
-		 * *0 = next_free_page; */
-		__asm__ __volatile__("mov %0, (0)"
-		                     :
-		                     : "r"(next_free_page)
-			);
-		/* TODO: Do not bend the rules */
-		page_temp_unmap();
-	}
-	else
-	{
-		*(uint32_t*) addr = next_free_page;
-	}
-
-	next_free_page = addr;
+	clear_frame(addr/PAGE_SIZE);
 }
 
-void page_map(uint32_t virt_page, uint32_t phys_page, uint32_t flags)
+void* page_map(uint32_t virt_page, uint32_t phys_page, uint32_t flags)
 {
+	/* If we really try to map a page, but frame_alloc() gave us 0 */
+	if (phys_page == 0 && flags & PE_PRESENT)
+	{
+		errno = ENOMEM;
+		return NULL;
+	}
+
 	/* Page directories mapped recursively to themselves */
 	uint32_t* cur_page_dir = (uint32_t*)CUR_PG_DIR;
 
@@ -135,15 +115,25 @@ void page_map(uint32_t virt_page, uint32_t phys_page, uint32_t flags)
 	if (!(page_dir_entry & PE_PRESENT))
 	{
 		/* Create the page table if not present */
-		cur_page_dir[page_dir_index] =				\
-			page_alloc() | (flags & PE_FLAG_MASK);
+		uint32_t page = frame_alloc();
+		if (page == 0)
+		{
+			errno = ENOMEM;
+			return NULL;
+		}
+
+		/* Make page table writable, so we can write to pages
+		 * that are specified PE_RW */
+		cur_page_dir[page_dir_index] = page|(flags&PE_FLAG_MASK)|PE_RW;
 		tlb_flush((uint32_t)page_table);
 		memset(page_table, 0, PAGE_SIZE);
 	}
 
-	page_table[page_table_index] =								\
+	page_table[page_table_index] = \
 		(phys_page & PE_ADDR_MASK) | (flags & PE_FLAG_MASK);
 	tlb_flush((uint32_t)virt_page);
+
+	return (void*)virt_page;
 }
 
 /* Unmap a page */
@@ -152,29 +142,33 @@ void page_unmap(uint32_t page)
 	page_map(page, 0, 0);
 }
 
+void page_free(uint32_t page)
+{
+	frame_free(page);//virt_to_phys(page));
+	page_map(page, 0, 0);
+}
+
 /* Return physical address of memory pointed to by virt */
 uint32_t virt_to_phys(uint32_t virt)
 {
 	uint32_t* cur_page_dir = (uint32_t*)CUR_PG_DIR;
 
-	size_t page_dir_index = (virt / PAGE_SIZE) / 1024;
-	size_t page_table_index = (virt / PAGE_SIZE) % 1024;
-	size_t page_offset = virt % PAGE_SIZE;
+	size_t dir_i = virt / (PAGE_SIZE * 1024);
+	size_t tab_i = (virt / PAGE_SIZE) % 1024;
+	size_t offset = virt % PAGE_SIZE;
 
-	/* No such page directory allocated */
-	if (!(cur_page_dir[page_dir_index] & PE_PRESENT))
+	/* No such page table allocated */
+	if (!(cur_page_dir[dir_i] & PE_PRESENT))
 		return 0;
 
 	uint32_t* page_table = \
-		(uint32_t*)CUR_PG_TABLE_BASE + page_dir_index * PAGE_SIZE;
+		(uint32_t*)(CUR_PG_TABLE_BASE + dir_i * PAGE_SIZE);
 
-	uint32_t page_table_entry = page_table[page_table_index];
-
-	/* No such page table allocated */
-	if (!(page_table_entry & PE_PRESENT))
+	/* No such page allocated */
+	if (!(page_table[tab_i] & PE_PRESENT))
 		return 0;
 
-	return (page_table_entry & PE_ADDR_MASK) + page_offset;
+	return (page_table[tab_i] & PE_ADDR_MASK) + offset;
 }
 
 /* Return non-zero if page is present AND mapped to USER */

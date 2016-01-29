@@ -209,14 +209,18 @@ int kbrk(void* addr)
 	while (kheap_start + kheap_size < (uint32_t)addr)
 	{
 		/* We increase the size of the kernel heap */
-		kernel_page_alloc_zeroed();
+		if (kernel_page_alloc_zeroed() == NULL)
+		{
+			errno = ENOMEM;
+			return -1;
+		}
 		kheap_size += PAGE_SIZE;
 	}
 
 	while (kheap_start + kheap_size - PAGE_SIZE > (uint32_t)addr)
 	{
 		/* Free memory from the end of the kernel heap */
-		kernel_page_free((void*)round_down(kheap_start+kheap_size-1, PAGE_SIZE));
+		kernel_page_free((void*)(kheap_start+kheap_size-1));
 		kheap_size -= PAGE_SIZE;
 		kheap_last_node->size -= PAGE_SIZE;
 	}
@@ -236,6 +240,12 @@ void* ksbrk(size_t increment)
 	if (kheap_start == 0)
 	{
 		kheap_start = (uint32_t)kernel_page_alloc_zeroed();
+		if (kheap_start == 0)
+		{
+			errno = ENOMEM;
+			return NULL;
+		}
+
 		kheap_size += PAGE_SIZE;
 
 		if (increment >= PAGE_SIZE)
@@ -259,6 +269,7 @@ void* ksbrk(size_t increment)
 	return (void*)(kheap_start + kheap_size);
 }
 
+
 static void print_kheap_node_t(struct kheap_node_t* node)
 {
 	kprintf("%p\t%u\t%u\t\t%s\t%x\t%x\n", node,			\
@@ -266,6 +277,7 @@ static void print_kheap_node_t(struct kheap_node_t* node)
 	        node->status == KMALLOC_FREE ? "free" : "used",		\
 	        node->prev, node->next);
 }
+
 
 void dump_kheap()
 {
