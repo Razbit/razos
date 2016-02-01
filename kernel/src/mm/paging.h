@@ -1,74 +1,113 @@
 /* This file is a part of the RazOS project
  *
- * paging.h -- paging related stuff
+ * paging.h -- internals of the paging system
  *
- * Razbit 2015 (based on Charlie Somerville's Radium) */
+ * Razbit 2016 */
 
 #ifndef PAGING_H
 #define PAGING_H
 
 #include <sys/types.h>
-#include <asm/multiboot.h>
-
-#define PAGE_SIZE 4096
-
-#define PE_FLAG_MASK (PAGE_SIZE - 1)
-#define PE_ADDR_MASK (~PE_FLAG_MASK)
 
 /* Memory map (see memory_map.md) */
-#define KERNEL_STACK_BEGIN 0x0FC00000
-#define KERNEL_STACK_END   0x0FFFFFF0
-#define USER_MEMORY_BEGIN  0x10000000
-#define USER_CODE_BEGIN    0x10000000
-#define USER_STACK_BEGIN   0xFF800000
-#define USER_STACK_END     0xFFBFFFF0
-#define CUR_PG_DIR         0xFFFFF000
-#define CUR_PG_TABLE_BASE  0xFFC00000
+/* Kheap starts at the first page table after the kernel image */
+#define KHEAP_END    (KSTACK_BEGIN - 1)
+#define KSTACK_BEGIN 0x0FC00000
+#define KSTACK_END   0xFFFFFFF0
+#define UMEM_BEGIN   0x10000000
+#define UCODE_BEGIN  UMEM_BEG
+/* Uheap starts at the first page table after the kernel image */
+#define UHEAP_END    (USTACK_BEGIN - 1)
+#define USTACK_BEGIN 0xFFC00000
+#define USTACK_END   0xFFFFFFF0
 
-/* Page flags */
-#define PE_PRESENT 0x1
-#define PE_RW 0x2
-#define PE_USER 0x4
+/* x86-specific 32-bit paging structures and definitions */
+/* Page table entry, page dir entry flags */
+#define PF_PRES  (1 << 0)
+#define PF_RW    (1 << 1)
+#define PF_USER  (1 << 2)
+#define PF_WTC   (1 << 3)
+#define PF_NOC   (1 << 4)
+#define PF_ACC   (1 << 5)
+#define PF_DIRTY (1 << 6)
+#define PF_SIZE  (1 << 7)
+#define PF_GLO   (1 << 8)
 
-/* Bit 31 in cr0 enables paging */
-#define FL_PAGING_ENABLED (1 << 31)
+#define PAGE_SIZE 4096
+#define PAGE_FL_MASK (PAGE_SIZE - 1)
+#define PAGE_ADDR_MASK (~PAGE_FL_MASK)
 
-uint32_t nframes; /* Pages of phys mem: mem_size/PAGE_SIZE */
+/* Page table entry -- describes a single page */
+struct page_t
+{
+	uint32_t present : 1;		/* Page present in memory */
+	uint32_t rw : 1;   			/* Page writable */
+	uint32_t user : 1;			/* User-accessible */
+	uint32_t wt_caching : 1;	/* Write-through caching */
+	uint32_t nocache : 1;  	 	/* Caching disabled */
+	uint32_t accessed : 1;		/* Has been accessed */
+	uint32_t dirty : 1;			/* Has been written to */
+	uint32_t zero : 1;			/* Always zero */
+	uint32_t global : 1;		/* Global: do not flush in TLB flush */
+	uint32_t avail : 3;			/* Bits not used by CPU */
+	uint32_t frame : 20;		/* Physical address of frame */
+};
 
-/* Set page_dir as current page directory */
-void set_page_directory(uint32_t page_dir);
+/* Page table -- an array of 1024 pages. Align to 4K! */
+struct page_tab_t
+{
+	struct page_t entry[1024];
+};
 
-/* Allocate a frame */
+struct pg_dir_entry_t
+{
+	uint32_t present : 1;    /* Page present in memory */
+	uint32_t rw : 1;         /* Page writable */
+	uint32_t user : 1;       /* User-accessible */
+	uint32_t wt_caching : 1; /* Write-through caching */
+	uint32_t nocache : 1;    /* Caching disabled */
+	uint32_t accessed : 1;   /* Has been accessed */
+	uint32_t zero : 1;       /* Always zero */
+	uint32_t size : 1;       /* 0 = 4K, 1 = 4M pages */
+	uint32_t global : 1;     /* Global: do not flush in TLB flush */
+	uint32_t avail : 3;      /* Bits not used by CPU */
+	uint32_t table : 20;     /* Phys address of the page_tab_t */
+};
+
+/* A page directory -- an array of 1024 page tables. Align to 4K! */
+struct page_dir_t
+{
+	/* Used when modifying a page table entry */
+	struct page_tab_t* tables[1024];
+	/* Used when modifying a page dir entry.
+	 * The *physical* address of the first pg_dir_entry is put in cr3 */
+	struct pg_dir_entry tables_phys[1024];
+};
+
+
+/* Load the specified page directory to CR3 */
+void set_page_dir(page_dir_t* page_dir);
+
+/* Allocate a frame, return its physical address */
 uint32_t frame_alloc();
 
-/* Free a frame */
+/* Free a frame. Takes physical frame address */
 void frame_free(uint32_t addr);
 
-/* Free a page */
-void page_free(uint32_t addr);
+/* Map frame to address, set flags */
+void* page_map(uint32_t address, uint32_t frame, uint32_t flags, \
+               struct page_dir_t* page_dir);
 
-/* Map a page to a frame, ret virtual address (or NULL) */
-void* page_map(uint32_t virt_page, uint32_t phys_page, uint32_t flag);
+/* Convert virtual address to physical address */
+uint32_t virt_to_phys(uint32_t virt, struct page_dir_t* page_dir);
 
-/* Unmap a page */
-void page_unmap(uint32_t page);
-
-/* Return physical address of memory pointed to by virt */
-uint32_t virt_to_phys(uint32_t virt);
-
-/* Return non-zero if page is present AND mapped to USER */
-int page_mapped_to_user(uint32_t virt);
-
-/* Return page table and page flags */
-uint32_t page_flags(uint32_t virt);
-
-/* Figure out the beginning of allocatable memory */
-void paging_set_allocatable_start(uint32_t* addr);
+/* Get page and page table flags */
+uint32_t page_flags(uint32_t addr, struct page_dir_t* page_dir);
 
 /* Initialize paging */
 void paging_init(struct multiboot_info* mb);
 
-/* How many frames are currently allocated */
-uint32_t allocated_frames();
+/* Grow identity-mapped region to addr, round up to table boundary */
+void set_alloc_start(void* addr);
 
 #endif /* PAGING_H */

@@ -11,8 +11,8 @@
 
 #include "paging.h"
 
-void* user_page_alloc();
-void* user_page_free();
+void* uvm_page_alloc();
+void* uvm_page_free();
 
 /* POSIX brk, sbrk */
 int uvm_brk(void* addr);

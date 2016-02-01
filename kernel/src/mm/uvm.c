@@ -14,7 +14,7 @@
 
 /* Allocate the first available, sequential page for uvm use,
  * return its address */
-void* user_page_alloc()
+void* uvm_page_alloc()
 {
 	/* Make sure there is virtual address space left to allocate */
 	if (cur_task->uheap_end < (void*)USER_STACK_BEGIN)
@@ -35,7 +35,7 @@ void* user_page_alloc()
 }
 
 /* Free the last page allocated to uvm */
-void user_page_free()
+void uvm_page_free()
 {
 	uint32_t addr = (uint32_t)cur_task->uheap_end - PAGE_SIZE;
 	if (page_mapped_to_user(addr))
@@ -64,7 +64,7 @@ int uvm_brk(void* addr)
 		/* Enlarge the heap */
 		while(addr > cur_task->uheap_end)
 		{
-			if (user_page_alloc() == NULL)
+			if (uvm_page_alloc() == NULL)
 				goto bad;
 		}
 		return 0;
@@ -73,7 +73,7 @@ int uvm_brk(void* addr)
 	{
 		/* Shrink the heap */
 		while(addr < cur_task->uheap_end)
-			user_page_free();
+			uvm_page_free();
 		return 0;
 	}
 
@@ -92,7 +92,7 @@ void* uvm_sbrk(intptr_t incr)
 		/* Enlarge heap by incr bytes */
 		while (incr > 0)
 		{
-			if (user_page_alloc() == NULL)
+			if (uvm_page_alloc() == NULL)
 				goto bad;
 			incr -= PAGE_SIZE;
 		}
@@ -106,7 +106,7 @@ void* uvm_sbrk(intptr_t incr)
 		incr += PAGE_SIZE-1;
 		while (incr < 0)
 		{
-			user_page_free();
+			uvm_page_free();
 			incr += PAGE_SIZE;
 		}
 	}
