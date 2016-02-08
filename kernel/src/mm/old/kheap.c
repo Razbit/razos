@@ -11,12 +11,8 @@
 #include <errno.h>
 
 #include "paging.h"
-#include "kernel_page.h"
-
+#include "kvm.h"
 #include "kheap.h"
-
-static uint32_t kheap_start = 0;
-static uint32_t kheap_size = 0;
 
 #define KMALLOC_FREE 1
 #define KMALLOC_RES 0
@@ -185,90 +181,6 @@ void do_kfree(void* _ptr)
 		}
 	}
 }
-
-/* Kernel's brk()-ish functionality */
-int kbrk(void* addr)
-{
-	/* Take care of the paging behind kernel's heap, much like
-	 * the brk() syscall, i.e. maintain a contiguous heap of memory
-	 * available for kmalloc()'s use. */
-
-	if (addr >= (void*)KHEAP_MAX)
-	{
-		errno = ENOMEM;
-		return -1;
-	}
-
-	/* First allocation? */
-	if (kheap_start == 0)
-	{
-		kheap_start = (uint32_t)kernel_page_alloc_zeroed();
-		kheap_size += PAGE_SIZE;
-	}
-
-	while (kheap_start + kheap_size < (uint32_t)addr)
-	{
-		/* We increase the size of the kernel heap */
-		if (kernel_page_alloc_zeroed() == NULL)
-		{
-			errno = ENOMEM;
-			return -1;
-		}
-		kheap_size += PAGE_SIZE;
-	}
-
-	while (kheap_start + kheap_size - PAGE_SIZE > (uint32_t)addr)
-	{
-		/* Free memory from the end of the kernel heap */
-		kernel_page_free((void*)(kheap_start+kheap_size-1));
-		kheap_size -= PAGE_SIZE;
-		kheap_last_node->size -= PAGE_SIZE;
-	}
-
-	/* If we have freed the whole kheap, we have to create a new one.
-	 * We do that in the next call to kbrk() or ksbrk() */
-	if (kheap_size == 0)
-		kheap_start = 0;
-
-	return 0;
-}
-
-/* Kernel's sbrk()-ish functionality */
-void* ksbrk(size_t increment)
-{
-	/* First allocation? */
-	if (kheap_start == 0)
-	{
-		kheap_start = (uint32_t)kernel_page_alloc_zeroed();
-		if (kheap_start == 0)
-		{
-			errno = ENOMEM;
-			return NULL;
-		}
-
-		kheap_size += PAGE_SIZE;
-
-		if (increment >= PAGE_SIZE)
-			increment -= PAGE_SIZE;
-		else
-			increment = 0;
-	}
-
-	/* Truncate if we try to allocate over the heap boundary */
-	while (kheap_start + kheap_size + increment > KHEAP_MAX)
-		increment -= PAGE_SIZE;
-
-	/* Allocate memory to the heap, page by page */
-	for (size_t i = 0; i < increment; i += PAGE_SIZE)
-	{
-		if (kernel_page_alloc_zeroed() == NULL)
-			break;
-		kheap_size += PAGE_SIZE;
-	}
-
-	return (void*)(kheap_start + kheap_size);
-}
-
 
 static void print_kheap_node_t(struct kheap_node_t* node)
 {

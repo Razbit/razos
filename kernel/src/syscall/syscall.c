@@ -62,7 +62,8 @@ int valid_user_buffer(uint32_t ptr, size_t len)
 	uint32_t end = ptr + len;
 	while (ptr < end)
 	{
-		if (!page_mapped_to_user(ptr))
+		uint32_t flags = page_flags(ptr, cur_task->page_dir);
+		if ((flags & (PF_PRES || PF_USER)) != (PF_PRES || PF_USER))
 			return 0;
 		ptr += PAGE_SIZE;
 	}

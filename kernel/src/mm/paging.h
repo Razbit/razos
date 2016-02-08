@@ -8,18 +8,22 @@
 #define PAGING_H
 
 #include <sys/types.h>
+#include <asm/multiboot.h>
 
 /* Memory map (see memory_map.md) */
-/* Kheap starts at the first page table after the kernel image */
-#define KHEAP_END    (KSTACK_BEGIN - 1)
-#define KSTACK_BEGIN 0x0FC00000
-#define KSTACK_END   0xFFFFFFF0
-#define UMEM_BEGIN   0x10000000
-#define UCODE_BEGIN  UMEM_BEG
+/* Kheap starts at the first page table after the kernel image,
+ * giving a maximum size of 244 MiB (ends at 0x0f7fffff) */
+#define KHEAP_END      (KSTACK_BEGIN - 1)
+#define KSTACK_BEGIN   0x0F800000 /* Kernel/interrupt stack */
+#define KSTACK_END     0x0FBFFFF0 /* 4 MiB, 16 byte align */
+#define SC_STACK_BEGIN 0x0FC00000 /* Syscall stack */
+#define SC_STACK_END   0x0FFFFFF0 /* 4 MiB, 16 byte align */
+#define UMEM_BEGIN     0x10000000 /* Starts at 256 MiB */
+#define UCODE_BEGIN    UMEM_BEGIN
 /* Uheap starts at the first page table after the kernel image */
-#define UHEAP_END    (USTACK_BEGIN - 1)
-#define USTACK_BEGIN 0xFFC00000
-#define USTACK_END   0xFFFFFFF0
+#define UHEAP_END      (USTACK_BEGIN - 1)
+#define USTACK_BEGIN   0xFFC00000 /* User stack */
+#define USTACK_END     0xFFFFFFF0 /* 4 Mib, 16 byte align */
 
 /* x86-specific 32-bit paging structures and definitions */
 /* Page table entry, page dir entry flags */
@@ -40,17 +44,17 @@
 /* Page table entry -- describes a single page */
 struct page_t
 {
-	uint32_t present : 1;		/* Page present in memory */
-	uint32_t rw : 1;   			/* Page writable */
-	uint32_t user : 1;			/* User-accessible */
-	uint32_t wt_caching : 1;	/* Write-through caching */
-	uint32_t nocache : 1;  	 	/* Caching disabled */
-	uint32_t accessed : 1;		/* Has been accessed */
-	uint32_t dirty : 1;			/* Has been written to */
-	uint32_t zero : 1;			/* Always zero */
-	uint32_t global : 1;		/* Global: do not flush in TLB flush */
-	uint32_t avail : 3;			/* Bits not used by CPU */
-	uint32_t frame : 20;		/* Physical address of frame */
+	uint32_t present : 1;    /* Page present in memory */
+	uint32_t rw : 1;         /* Page writable */
+	uint32_t user : 1;       /* User-accessible */
+	uint32_t wt_caching : 1; /* Write-through caching */
+	uint32_t nocache : 1;    /* Caching disabled */
+	uint32_t accessed : 1;   /* Has been accessed */
+	uint32_t dirty : 1;      /* Has been written to */
+	uint32_t zero : 1;       /* Always zero */
+	uint32_t global : 1;     /* Global: do not flush in TLB flush */
+	uint32_t avail : 3;      /* Bits not used by CPU */
+	uint32_t frame : 20;     /* Physical address of frame */
 };
 
 /* Page table -- an array of 1024 pages. Align to 4K! */
@@ -71,7 +75,7 @@ struct pg_dir_entry_t
 	uint32_t size : 1;       /* 0 = 4K, 1 = 4M pages */
 	uint32_t global : 1;     /* Global: do not flush in TLB flush */
 	uint32_t avail : 3;      /* Bits not used by CPU */
-	uint32_t table : 20;     /* Phys address of the page_tab_t */
+	uint32_t table : 20;     /* Physical address of the page_tab_t */
 };
 
 /* A page directory -- an array of 1024 page tables. Align to 4K! */
@@ -81,12 +85,22 @@ struct page_dir_t
 	struct page_tab_t* tables[1024];
 	/* Used when modifying a page dir entry.
 	 * The *physical* address of the first pg_dir_entry is put in cr3 */
-	struct pg_dir_entry tables_phys[1024];
+	struct pg_dir_entry_t tables_phys[1024];
 };
 
+extern struct page_dir_t* cur_page_dir;
+
+/* Create a page directory */
+struct page_dir_t* create_page_dir();
+
+/* Clone a page directory */
+void clone_page_dir(struct page_dir_t* new, struct page_dir_t* old);
+
+/* Clear a page directory */
+void clear_page_dir(struct page_dir_t* page_dir);
 
 /* Load the specified page directory to CR3 */
-void set_page_dir(page_dir_t* page_dir);
+void set_page_dir(struct page_dir_t* page_dir);
 
 /* Allocate a frame, return its physical address */
 uint32_t frame_alloc();
@@ -95,11 +109,11 @@ uint32_t frame_alloc();
 void frame_free(uint32_t addr);
 
 /* Map frame to address, set flags */
-void* page_map(uint32_t address, uint32_t frame, uint32_t flags, \
+void* page_map(uint32_t addr, uint32_t frame, uint32_t flags, \
                struct page_dir_t* page_dir);
 
 /* Convert virtual address to physical address */
-uint32_t virt_to_phys(uint32_t virt, struct page_dir_t* page_dir);
+uint32_t get_phys(uint32_t addr, struct page_dir_t* page_dir);
 
 /* Get page and page table flags */
 uint32_t page_flags(uint32_t addr, struct page_dir_t* page_dir);
@@ -107,7 +121,7 @@ uint32_t page_flags(uint32_t addr, struct page_dir_t* page_dir);
 /* Initialize paging */
 void paging_init(struct multiboot_info* mb);
 
-/* Grow identity-mapped region to addr, round up to table boundary */
-void set_alloc_start(void* addr);
+/* Grow identity-mapped region. If addr == 0, return current end */
+void* set_alloc_start(void* addr);
 
 #endif /* PAGING_H */

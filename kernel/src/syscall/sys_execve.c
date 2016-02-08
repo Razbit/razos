@@ -27,7 +27,7 @@ uint32_t sys_execve(struct registers_t* regs)
 	REG_ARG3(regs) = args[0];
 	
 	regs->ecx = args[2];
-	regs->edx = USER_CODE_BEGIN;
+	regs->edx = UCODE_BEGIN;
 	
 	return 0;
 }

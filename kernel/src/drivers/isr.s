@@ -7,8 +7,8 @@
 [GLOBAL idt_init_asm]
 [GLOBAL idt_load]
 
-    ;; idt.c: void interrupt_register_isr(uint8_t int_no, void* handler)
-[EXTERN interrupt_register_isr]
+    ;; idt.c: void register_isr(uint8_t int_no, void* handler)
+[EXTERN register_isr]
 [EXTERN idt_ptr]                ; idt.c
 [EXTERN panic]                  ; panic.c
 
@@ -24,7 +24,7 @@
 %macro REGISTER_ISR 1
     push isr_%1                 ; Push interrupt handler address
     push %1                     ; Push interrupt number
-    call interrupt_register_isr ; in idt.c
+    call register_isr
     add esp, 8
 %endmacro
 

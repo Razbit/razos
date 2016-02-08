@@ -11,17 +11,16 @@
 [EXTERN cur_task]               ; task.c
 [EXTERN sched_next]             ; task.c
 [EXTERN task_fork_inner]        ; task.c
-[EXTERN set_page_dir]           ; paging.c
 
     ;; see gdt.h
 %define USER_CODE (0x18 | 3)
 %define USER_DATA (0x20 | 3)
 
-    ;; see task.h
-%define task_fpu_state(task) [(task) + 0]
-%define task_esp(task)       [(task) + 0x200]
-%define task_eip(task)       [(task) + 0x204]
-%define task_page_dir(task)  [(task) + 0x208]
+%define task_fpu_state(task)     [(task) + 0]
+%define task_esp(task)           [(task) + 0x200]
+%define task_eip(task)           [(task) + 0x204]
+%define task_kstack(task)        [(task) + 0x208]
+%define task_page_dir_phys(task) [(task) + 0x210]
 
 sched_begin:
     mov esi, [esp + 12]         ; envp
@@ -46,15 +45,12 @@ sched_switch:
     mov task_esp(eax), esp
     mov task_eip(eax), dword .return
 
-    ;; fetch the next task
-    call sched_next
+    call sched_next             ; fetch next task to be run
     mov [cur_task], eax
 
-    ;; restore page directory
-    push dword task_page_dir(eax)
-    call set_page_dir
+    mov ebx, task_page_dir_phys(eax) ; restore page directory
+    mov cr3, ebx
 
-    ;; restore task state
     fxrstor task_fpu_state(eax)
     mov esp, task_esp(eax)
     jmp task_eip(eax)

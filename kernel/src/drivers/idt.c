@@ -12,14 +12,14 @@
 #include "idt.h"
 
 extern void idt_init_asm(); /* isr.s */
-extern void idt_load(); /* isr.s */
+extern void idt_load();     /* isr.s */
 
 struct idt_entry_t
 {
 	uint16_t low_base;	/* Low 16 bits of the addr to jump to */
 	uint16_t selector;	/* Kernel segment selector */
 	uint8_t zero;		/* Always zero */
-	uint8_t flags;		/* 0..3: always 0xE; 4: 0; 5..6: Ring; 7: Present? */
+	uint8_t flags;		/* 0..3: 0xE; 4: 0; 5..6: PL; 7: Present? */
 	uint16_t high_base; /* Upper 16 bits of the address */
 } __attribute__((__packed__));
 
@@ -33,7 +33,7 @@ volatile struct
 
 
 /* Register an ISR handler. Called in isr.s */
-void interrupt_register_isr(uint8_t int_no, void* handler)
+void register_isr(uint8_t int_no, void* handler)
 {
 	struct idt_entry_t entry;
 

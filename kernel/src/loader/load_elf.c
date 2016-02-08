@@ -33,7 +33,7 @@ void* load_elf(void* data)
 		return (void*)-1;
 	}
 
-	void* ret = (void*)USER_CODE_BEGIN;
+	void* ret = (void*)UCODE_BEGIN;
 	
 	Elf32_Off offset;
 	Elf32_Phdr* phdr;
@@ -58,12 +58,12 @@ void* load_elf(void* data)
 			if (phdr->p_flags & PF_W)
 			{
 				page_map(phdr->p_vaddr+size, frame_alloc(), \
-				         PE_PRESENT | PE_USER | PE_RW);
+				         PF_PRES | PF_USER | PF_RW, cur_task->page_dir);
 			}
 			else
 			{
 				page_map(phdr->p_vaddr+size, frame_alloc(), \
-				         PE_PRESENT | PE_USER);
+				         PF_PRES | PF_USER, cur_task->page_dir);
 			}
 		}
 

@@ -117,26 +117,44 @@ uint32_t* execve(char* path, char** argv, char** envp)
 		return NULL;
 	}
 
+	/* TODO: We should check the executable before destroying
+	 * the user-space.. */
+
 	/* Clean up the user-space */
-	uint32_t page = USER_CODE_BEGIN;
-	for (; page < USER_STACK_END; page += PAGE_SIZE)
+	uint32_t page = UCODE_BEGIN;
+	for (; page < USTACK_END; page += PAGE_SIZE)
 	{
-		if (page_mapped_to_user(page))
-			page_free(page);
+		uint32_t flags = page_flags(page, cur_task->page_dir);
+		if ((flags & (PF_PRES || PF_USER)) == (PF_PRES || PF_USER))
+		{
+			frame_free(get_phys(page, cur_task->page_dir));
+			page_map(page, 0, 0, cur_task->page_dir);
+		}
 	}
 
 	/* Create user stack */
-	page_map(USER_STACK_END, frame_alloc(), \
-	         PE_PRESENT | PE_USER | PE_RW);
-	cur_task->stack_begin = (USER_STACK_END) & (~(PAGE_SIZE-1));
+	if (page_map(USTACK_END, frame_alloc(), PF_PRES | PF_USER | PF_RW, \
+	             cur_task->page_dir) == NULL)
+	{
+		/* page_map sets errno */
+		kfree(buf);
+		close(fd);
+		return NULL;
+	}
 
-	read(fd, buf, size);
+	if (read(fd, buf, size) != (ssize_t)size)
+	{
+		kfree(buf);
+		close(fd);
+		return NULL;
+	}
 
 	void* addr = load_elf(buf);
 	if ((int)addr < 0)
 	{
 		/* load_elf sets errno */
 		kfree(buf);
+		close(fd);
 		return NULL;
 	}
 
@@ -156,7 +174,7 @@ uint32_t* execve(char* path, char** argv, char** envp)
 	}
 
 	/* Set up the stack (store envp, argv contents) */
-	char* stack = (char*)USER_STACK_END;
+	char* stack = (char*)USTACK_END;
 
 	/* Copy the strings, store pointers to them */
 	if (envc > 0)

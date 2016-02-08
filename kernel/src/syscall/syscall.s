@@ -25,7 +25,7 @@ syscall_init:
     wrmsr
 
     mov ecx, IA32_SYSENTER_ESP
-    mov eax, 0x0FFFFFF0         ; sysenter stack in kernel stack
+    mov eax, 0x0FFFFFF0         ; sysenter stack is syscall stack
     wrmsr
 
     mov ecx, IA32_SYSENTER_EIP

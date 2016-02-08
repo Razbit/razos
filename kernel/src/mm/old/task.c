@@ -15,7 +15,7 @@
 #include <unistd.h>
 
 #include "../gdt.h"
-//#include "kernel_page.h"
+#include "kernel_page.h"
 #include "paging.h"
 #include "sched.h"
 #include "task.h"
@@ -46,12 +46,102 @@ static struct task_t* alloc_empty_task()
 
 		tasks[pid]->state = TASK_STATE_READY;
 		tasks[pid]->pid = pid;
+		tasks[pid]->stack_begin = USER_STACK_END;
 		tasks[pid]->wait_queue.live.head = NULL;
 		tasks[pid]->wait_queue.live.tail = NULL;
 		return tasks[pid];
 	}
 
 	return NULL;
+}
+
+static void copy_user_pages(struct task_t* new_task)
+{
+	new_task->uheap_begin = cur_task->uheap_begin;
+	new_task->uheap_end = cur_task->uheap_end;
+
+	uint32_t* cur_page_dir = (uint32_t*)CUR_PG_DIR;
+
+	/* Copy available page tables */
+	for (size_t dir_i = USER_MEMORY_BEGIN / (PAGE_SIZE * 1024); \
+	     dir_i < 1023; dir_i++)
+	{
+		if (!cur_page_dir[dir_i])
+			continue;
+
+		uint32_t* cur_page_table = \
+			(uint32_t*)(CUR_PG_TABLE_BASE + dir_i * PAGE_SIZE);
+		uint32_t* new_page_table = kmalloc_pa(PAGE_SIZE);
+
+		if (!new_page_table)
+			panic("tasking: could not allocate page table for user\n");
+
+		new_task->page_dir[dir_i] = \
+			virt_to_phys((uint32_t)new_page_table) \
+			| (cur_page_dir[dir_i] & PE_FLAG_MASK);
+
+		/* Copy available pages */
+		for(size_t tab_i = 0; tab_i < 1024; tab_i++)
+		{
+			uint32_t cur_entry = cur_page_table[tab_i];
+			void* cur_virt = \
+				(void*)((dir_i*PAGE_SIZE*1024)+(tab_i*PAGE_SIZE));
+			if (!(cur_entry & PE_PRESENT))
+				continue;
+
+			uint32_t new_page = frame_alloc();
+			if (new_page == 0)
+				panic("tasking: no memory\n");
+
+			/* Map the new page at NULL temporarily,
+			 * for copying its contents */
+			page_map(0, new_page, PE_PRESENT | PE_RW);
+			memcpy(NULL, cur_virt, PAGE_SIZE);
+			page_unmap(0);
+
+			new_page_table[tab_i] = new_page | (cur_entry & PE_FLAG_MASK);
+		}
+	}
+}
+
+static void create_skel_page_dir(struct task_t* task)
+{
+	uint32_t* cur_page_dir = (uint32_t*)CUR_PG_DIR;
+	uint32_t* task_page_dir = kmalloc_pa(PAGE_SIZE);
+
+	if (!task_page_dir)
+		panic("Tasking: could not allocate space for page directory\n");
+	memset(task_page_dir, 0, PAGE_SIZE);
+
+	task->kstack = kmalloc_pa(PAGE_SIZE);
+	if (!task->kstack)
+		panic("Tasking: could not allocate kstack\n");
+	memset(task->kstack, 0, PAGE_SIZE);
+
+	uint32_t* kstack_page_table = kmalloc_pa(PAGE_SIZE);
+	if (!kstack_page_table)
+		panic("Tasking: could not allocate kstack page table\n");
+	memset(kstack_page_table, 0, PAGE_SIZE);
+
+	task->page_dir = task_page_dir;
+	task->page_dir_phys = virt_to_phys((uint32_t)task_page_dir);
+	task->page_dir[1023] = task->page_dir_phys | PE_PRESENT | PE_RW;
+
+	if (task->pid != 1)
+		copy_user_pages(task);
+
+	/* Map kernel code, heap and stack to same locations */
+	for (size_t i = 0; i < KERNEL_STACK_BEGIN / (1024 * PAGE_SIZE); i++)
+		task_page_dir[i] = cur_page_dir[i];
+
+	task->page_dir[KERNEL_STACK_BEGIN / (1024 * PAGE_SIZE)] = \
+		virt_to_phys((uint32_t)kstack_page_table) | PE_PRESENT | PE_RW;
+
+	kstack_page_table[1023] = \
+		virt_to_phys((uint32_t)(task->kstack)) | PE_PRESENT | PE_RW;
+
+	for (int i = 0; i < 1023; i++)
+		kstack_page_table[i] = frame_alloc() | PE_PRESENT | PE_RW;
 }
 
 /* Initialize tasking */
@@ -61,7 +151,7 @@ void task_init()
 	gdt_reload();
 
 	tss.ss0 = GDT_KERNEL_DATA;
-	tss.esp0 = KSTACK_END; /* We use this when handling interrupts */
+	tss.esp0 = KERNEL_STACK_END;
 
 	/* Pointer to io perm bitmap is beyond the end of the segment */
 	tss.iopb = sizeof(tss);
@@ -73,8 +163,9 @@ void task_init()
 	                     :: "r"(GDT_TSS | 3) : "%eax");
 
 	cur_task = alloc_empty_task();
-	cur_task->page_dir = cur_page_dir;
+	create_skel_page_dir(cur_task);
 	cur_task->ppid = 0;
+	set_page_directory(cur_task->page_dir_phys);
 
 	kprintf("Tasking initialization succeeded.\n");
 }
@@ -83,18 +174,18 @@ void task_init()
 struct task_t* task_fork_inner()
 {
 	struct task_t* new_task = alloc_empty_task();	
-	new_task->page_dir = create_page_dir();
-	clone_page_dir(new_task->page_dir, cur_task->page_dir);
+	create_skel_page_dir(new_task);
 
 	memcpy(&new_task->fpu_state, &cur_task->fpu_state, \
 	       sizeof(new_task->fpu_state));
+
+	memcpy(new_task->kstack, cur_task->kstack, PAGE_SIZE);
 
 	memcpy(&new_task->files, &cur_task->files, \
 	       sizeof(new_task->files));
 
 	new_task->ppid = cur_task->pid;
 	new_task->syscall_regs = cur_task->syscall_regs;
-
 	/* vm cloned -> errno loc doesn't change */
 	new_task->errno_loc = cur_task->errno_loc; 
 
@@ -150,22 +241,30 @@ void task_kill(struct task_t* task, uint32_t status)
 
 void task_destroy(struct task_t* task)
 {
+	kfree(task->kstack);
+
 	/* Free user space */
-	for (size_t i = SC_STACK_BEGIN; i < USTACK_END; i += PAGE_SIZE)
+	for (size_t dir_i = USER_MEMORY_BEGIN / (PAGE_SIZE * 1024); \
+	     dir_i < 1023; dir_i++)
 	{
-		/* Check if page is present */
-		uint32_t flags = page_flags(i, task->page_dir);
-		if ((flags & PF_PRES) == 0)
+		if ((task->page_dir[dir_i] & PE_PRESENT) != PE_PRESENT)
 			continue;
 
-		frame_free(get_phys(i, task->page_dir));
-		page_map(i, 0, 0, task->page_dir);
+		uint32_t* pg_tab = (uint32_t*)(CUR_PG_TABLE_BASE + dir_i * PAGE_SIZE);
+
+		/* Free pages */
+		for(size_t tab_i = 0; tab_i < 1024; tab_i++)
+		{
+			if (pg_tab[tab_i] & PE_PRESENT)
+				frame_free(pg_tab[tab_i] & PE_ADDR_MASK);
+		}
+
+		/* Free page tables */
+		frame_free(task->page_dir[dir_i] & PE_ADDR_MASK);
 	}
 
-	clear_page_dir(task->page_dir);
-	kfree(task->page_dir);
-
 	tasks[task->pid] = NULL;
+	kfree(task->page_dir);
 	kfree(task);
 }
 
