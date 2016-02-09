@@ -152,12 +152,16 @@ void set_page_dir(struct page_dir_t* page_dir)
 void* page_map(uint32_t addr, uint32_t frame, uint32_t flags, \
                struct page_dir_t* page_dir)
 {
+	addr &= ~(PAGE_SIZE-1); /* Round down */
+
+	kprintf("mapping 0x%p to 0x%p in 0x%p", frame, addr, (size_t)page_dir+4096);
 	uint32_t tab_i = (addr >> 12) & 1023;
 	uint32_t dir_i = (addr >> 22) & 1023;
 
 	/* Create page table if it doesn't exist */
 	if (page_dir->tables[dir_i] == NULL)
 	{
+		kputs("\n Creating page table..\n");
 		page_dir->tables[dir_i] = \
 			(struct page_tab_t*)kmalloc_pa(sizeof(struct page_tab_t));
 		if (page_dir->tables[dir_i] == NULL)
@@ -181,6 +185,8 @@ void* page_map(uint32_t addr, uint32_t frame, uint32_t flags, \
 		page_dir->tables_phys[dir_i].global = (flags & PF_GLO)?1:0;
 		page_dir->tables_phys[dir_i].table = \
 			get_phys((uint32_t)page_dir->tables[dir_i], page_dir) >> 12;
+
+		flush_tlb((uint32_t)(page_dir->tables[dir_i]));
 	}
 
 	/* Page flags */
@@ -196,8 +202,12 @@ void* page_map(uint32_t addr, uint32_t frame, uint32_t flags, \
 	page->global = (flags & PF_GLO)?1:0;
 	page->frame = frame >> 12;
 
+	/* The table is writable if there is page that is writable */
+	page_dir->tables_phys[dir_i].rw |= (flags & PF_RW)?1:0;
+
 	flush_tlb(addr);
 
+	kprintf(" flags 0x%p (0x%p)\n", page_flags(addr, page_dir), flags);
 	return (void*)addr;
 }
 

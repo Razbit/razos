@@ -121,15 +121,20 @@ uint32_t* execve(char* path, char** argv, char** envp)
 	 * the user-space.. */
 
 	/* Clean up the user-space */
-	uint32_t page = UCODE_BEGIN;
-	for (; page < USTACK_END; page += PAGE_SIZE)
+	uint32_t page = UMEM_BEGIN;
+	/* Latter check because of integer overflow */
+	while (page < USTACK_END && page >= UMEM_BEGIN)
 	{
-		uint32_t flags = page_flags(page, cur_task->page_dir);
-		if ((flags & (PF_PRES || PF_USER)) == (PF_PRES || PF_USER))
+		uint32_t flags = page_flags(page, cur_task->page_dir);	
+		if (!((flags >> 16) & PF_PRES))
+			page += 1024 * PAGE_SIZE;
+
+		if ((flags & (PF_PRES | PF_USER)) == (PF_PRES | PF_USER))
 		{
 			frame_free(get_phys(page, cur_task->page_dir));
 			page_map(page, 0, 0, cur_task->page_dir);
 		}
+		page += PAGE_SIZE;
 	}
 
 	/* Create user stack */

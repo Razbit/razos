@@ -28,45 +28,47 @@ void* load_elf(void* data)
 	    || (elfhdr->e_ident[EI_MAG1] != ELFMAG1)
 	    || (elfhdr->e_ident[EI_MAG2] != ELFMAG2)
 	    || (elfhdr->e_ident[EI_MAG3] != ELFMAG3))
-	{
-		errno = ENOEXEC;
-		return (void*)-1;
-	}
+		goto bad;
 
 	void* ret = (void*)UCODE_BEGIN;
-	
-	Elf32_Off offset;
-	Elf32_Phdr* phdr;
-	for (int i = 0, offset = elfhdr->e_phoff; \
-	     i < elfhdr->e_phnum; \
-	     i++, offset += sizeof(Elf32_Phdr))
+
+	Elf32_Off offset = elfhdr->e_phoff;
+	int i = 0;
+	for (; i < elfhdr->e_phnum; i++, offset += sizeof(Elf32_Phdr))
 	{
-		phdr = (Elf32_Phdr*)(data + offset);
+		Elf32_Phdr* phdr = (Elf32_Phdr*)(data + offset);
 		if (phdr->p_type != PT_LOAD)
 			continue;
+
+		/* Sanity check, just in case */
 		if (phdr->p_memsz < phdr->p_filesz)
-		{
-			errno = ENOEXEC;
-			return (void*)-1;
-		}
+			goto bad;
 
 		/* Allocate space for the segment and copy the data */
 		Elf32_Word size = 0;
 		for (; size < phdr->p_memsz; size += PAGE_SIZE)
 		{
-			/* TODO: check if page_map() fails */
+			void* map = NULL;
+
 			if (phdr->p_flags & PF_W)
 			{
-				page_map(phdr->p_vaddr+size, frame_alloc(), \
+				map = page_map(phdr->p_vaddr+size, frame_alloc(), \
 				         PF_PRES | PF_USER | PF_RW, cur_task->page_dir);
 			}
 			else
 			{
-				page_map(phdr->p_vaddr+size, frame_alloc(), \
+				map = page_map(phdr->p_vaddr+size, frame_alloc(), \
 				         PF_PRES | PF_USER, cur_task->page_dir);
 			}
+
+			*(uint32_t*)map = 1;
+
+			if (map == NULL)
+				goto bad;
 		}
 
+		kprintf("memcpy: 0x%p bytes from 0x%p to 0x%p\n", \
+		        phdr->p_filesz, phdr->p_offset + data, phdr->p_vaddr);
 		memcpy((void*)(phdr->p_vaddr), (void*)(data + phdr->p_offset), \
 		       phdr->p_filesz);
 
@@ -74,4 +76,8 @@ void* load_elf(void* data)
 	}
 
 	return ret;
+
+bad:
+	errno = ENOEXEC;
+	return (void*)-1;
 }
