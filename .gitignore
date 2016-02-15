@@ -160,3 +160,13 @@ pythontex-files-*/
 
 # Latexian
 TSWLatexianTemp*
+
+doc/*.pdf
+doc/*.log
+doc/*.run.xml
+doc/*.aux
+doc/*.toc
+doc/*blx.bib
+doc/*.bbl
+doc/*.blg
+
