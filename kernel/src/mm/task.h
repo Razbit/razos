@@ -65,7 +65,7 @@ void task_init();
 /* Internals of fork() begin here. In task.s */
 struct task_t* task_fork();
 
-/* Kill task [task] */
+/* Kill task */
 void task_kill(struct task_t* task, uint32_t status);
 
 /* Free resourses taken by the task */

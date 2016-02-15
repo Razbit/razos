@@ -138,8 +138,16 @@ uint32_t* execve(char* path, char** argv, char** envp)
 	}
 
 	/* Create user stack */
-	if (page_map(USTACK_END, frame_alloc(), PF_PRES | PF_USER | PF_RW, \
-	             cur_task->page_dir) == NULL)
+	if (page_map(USTACK_END, frame_alloc(), \
+	             PF_PRES | PF_USER | PF_RW, cur_task->page_dir) == NULL)
+	{
+		/* page_map sets errno */
+		kfree(buf);
+		close(fd);
+		return NULL;
+	}
+	if (page_map(USTACK_END - PAGE_SIZE, frame_alloc(), \
+	             PF_PRES | PF_USER | PF_RW, cur_task->page_dir) == NULL)
 	{
 		/* page_map sets errno */
 		kfree(buf);

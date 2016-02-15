@@ -6,7 +6,6 @@
 
 #include <sys/types.h>
 #include <string.h>
-#include <console.h>
 #include <errno.h>
 
 #include "../mm/paging.h"
@@ -61,14 +60,10 @@ void* load_elf(void* data)
 				         PF_PRES | PF_USER, cur_task->page_dir);
 			}
 
-			*(uint32_t*)map = 1;
-
 			if (map == NULL)
 				goto bad;
 		}
 
-		kprintf("memcpy: 0x%p bytes from 0x%p to 0x%p\n", \
-		        phdr->p_filesz, phdr->p_offset + data, phdr->p_vaddr);
 		memcpy((void*)(phdr->p_vaddr), (void*)(data + phdr->p_offset), \
 		       phdr->p_filesz);
 

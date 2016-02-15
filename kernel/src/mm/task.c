@@ -15,15 +15,14 @@
 #include <unistd.h>
 
 #include "../gdt.h"
-//#include "kernel_page.h"
 #include "paging.h"
 #include "sched.h"
 #include "task.h"
 
-static struct tss_t tss;
-struct task_t* cur_task;
-static struct task_t* tasks[1024];
+struct task_t* cur_task = NULL;
 
+static struct tss_t tss = {0};
+static struct task_t* tasks[1024] = {NULL};
 
 struct task_t* get_task(pid_t pid)
 {
@@ -57,14 +56,14 @@ static struct task_t* alloc_empty_task()
 /* Initialize tasking */
 void task_init()
 {
-	gdt_set_tss(GDT_TSS, (uint32_t)&tss, sizeof(tss));
-	gdt_reload();
-
 	tss.ss0 = GDT_KERNEL_DATA;
 	tss.esp0 = KSTACK_END; /* We use this when handling interrupts */
-
-	/* Pointer to io perm bitmap is beyond the end of the segment */
+	
+	/* Pointer to io permission bitmap beyond the end of the segment */
 	tss.iopb = sizeof(tss);
+	
+	gdt_set_tss(GDT_TSS, (uint32_t)&tss, sizeof(tss));
+	gdt_reload();
 
 	kprintf("Load TSS at 0x%p\n", &tss);
 

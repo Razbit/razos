@@ -25,7 +25,7 @@ syscall_init:
     wrmsr
 
     mov ecx, IA32_SYSENTER_ESP
-    mov eax, 0x0FFFFFF0         ; sysenter stack is syscall stack
+    mov eax, 0x0FfFFFF0         ; sysenter stack is syscall stack
     wrmsr
 
     mov ecx, IA32_SYSENTER_EIP
@@ -35,6 +35,7 @@ syscall_init:
     ret
 
 syscall_entry:
+	jmp $
     pusha
 
     ;; create fake stack frame
@@ -52,4 +53,4 @@ syscall_entry:
     popa
 
     sti
-    sysexit
+    sysexit 					; go to PL=3, perform_syscall.ret in crt0.s

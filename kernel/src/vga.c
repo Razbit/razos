@@ -47,16 +47,16 @@ static void scroll()
 	}
 }
 
+/* Combine char c with color information */
+uint16_t vga_mkchar(char c, uint8_t bg, uint8_t fg)
+{
+	return (bg << 12) | ((fg & 0x0F) << 8) | (uint16_t)c;
+}
+
 
 /* write a character to the screen */
-int vga_putchar(char c, uint8_t bg_color, uint8_t fg_color)
+int vga_putchar(uint16_t c)
 {
-	/* attrib byte contains the bg and fg colors, 4 bits each */
-	uint8_t colorattrib = (bg_color << 4) | (fg_color & 0x0F);
-	/* attrib byte is the top half of the vga word */
-	uint16_t attrib = colorattrib << 8;
-	uint16_t *location;
-
 	/* backspc handler */
 	if (c == 0x08 && cursor_x > 0)
 		cursor_x--;
@@ -81,8 +81,7 @@ int vga_putchar(char c, uint8_t bg_color, uint8_t fg_color)
 	/* handle any printable chars */
 	else if (c >= ' ')
 	{
-		location = video_memory + (cursor_y*80 + cursor_x);
-		*location = (uint16_t)c | attrib;
+		*(video_memory + (cursor_y*80 + cursor_x)) = c;
 		cursor_x++;
 	}
 

@@ -97,7 +97,7 @@ struct page_dir_t* create_page_dir()
 		return NULL;
 
 	memset(ret, 0, sizeof(struct page_dir_t));
-	kprintf("Created page directory at 0x%p\n", ret);
+	
 	return ret;
 }
 
@@ -142,8 +142,7 @@ void set_page_dir(struct page_dir_t* page_dir)
 {
 	uint32_t phys_addr = \
 		get_phys((uint32_t)page_dir->tables_phys, page_dir);
-	kprintf("Setting page dir 0x%p (phys 0x%p)\n", page_dir, phys_addr);
-	
+//	kprintf("Changing page dir to 0x%p\n", phys_addr);
 	__asm__ __volatile__("mov %0, %%cr3" :: "r"(phys_addr) : "memory");
 }
 
@@ -154,14 +153,12 @@ void* page_map(uint32_t addr, uint32_t frame, uint32_t flags, \
 {
 	addr &= ~(PAGE_SIZE-1); /* Round down */
 
-	kprintf("mapping 0x%p to 0x%p in 0x%p", frame, addr, (size_t)page_dir+4096);
 	uint32_t tab_i = (addr >> 12) & 1023;
 	uint32_t dir_i = (addr >> 22) & 1023;
 
 	/* Create page table if it doesn't exist */
 	if (page_dir->tables[dir_i] == NULL)
 	{
-		kputs("\n Creating page table..\n");
 		page_dir->tables[dir_i] = \
 			(struct page_tab_t*)kmalloc_pa(sizeof(struct page_tab_t));
 		if (page_dir->tables[dir_i] == NULL)
@@ -190,24 +187,22 @@ void* page_map(uint32_t addr, uint32_t frame, uint32_t flags, \
 	}
 
 	/* Page flags */
-	struct page_t* page = &page_dir->tables[dir_i]->entry[tab_i];
-	page->present = (flags & PF_PRES)?1:0;
-	page->rw = (flags & PF_RW)?1:0;
-	page->user = (flags & PF_USER)?1:0;
-	page->wt_caching = (flags & PF_WTC)?1:0;
-	page->nocache = (flags & PF_NOC)?1:0;
-	page->accessed = (flags & PF_ACC)?1:0;
-	page->dirty = (flags & PF_DIRTY)?1:0;
-	page->zero = 0;
-	page->global = (flags & PF_GLO)?1:0;
-	page->frame = frame >> 12;
+	page_dir->tables[dir_i]->entry[tab_i].present = (flags & PF_PRES)?1:0;
+	page_dir->tables[dir_i]->entry[tab_i].rw = (flags & PF_RW)?1:0;
+	page_dir->tables[dir_i]->entry[tab_i].user = (flags & PF_USER)?1:0;
+	page_dir->tables[dir_i]->entry[tab_i].wt_caching = (flags & PF_WTC)?1:0;
+	page_dir->tables[dir_i]->entry[tab_i].nocache = (flags & PF_NOC)?1:0;
+	page_dir->tables[dir_i]->entry[tab_i].accessed = (flags & PF_ACC)?1:0;
+	page_dir->tables[dir_i]->entry[tab_i].dirty = (flags & PF_DIRTY)?1:0;
+	page_dir->tables[dir_i]->entry[tab_i].zero = 0;
+	page_dir->tables[dir_i]->entry[tab_i].global = (flags & PF_GLO)?1:0;
+	page_dir->tables[dir_i]->entry[tab_i].frame = frame >> 12;
 
 	/* The table is writable if there is page that is writable */
 	page_dir->tables_phys[dir_i].rw |= (flags & PF_RW)?1:0;
 
 	flush_tlb(addr);
 
-	kprintf(" flags 0x%p (0x%p)\n", page_flags(addr, page_dir), flags);
 	return (void*)addr;
 }
 
@@ -235,35 +230,37 @@ uint32_t page_flags(uint32_t addr, struct page_dir_t* page_dir)
 	uint32_t tab_i = (addr >> 12) & 1023;
 	uint32_t dir_i = (addr >> 22) & 1023;
 
-	uint32_t table_flags = 0;
+	uint32_t flags = 0;
 
-	table_flags |= (page_dir->tables_phys[dir_i].present << 0);
-	table_flags |= (page_dir->tables_phys[dir_i].rw << 1);
-	table_flags |= (page_dir->tables_phys[dir_i].user << 2);
-	table_flags |= (page_dir->tables_phys[dir_i].wt_caching << 3);
-	table_flags |= (page_dir->tables_phys[dir_i].nocache << 4);
-	table_flags |= (page_dir->tables_phys[dir_i].accessed << 5);
-	table_flags |= (page_dir->tables_phys[dir_i].zero << 6);
-	table_flags |= (page_dir->tables_phys[dir_i].size << 7);
-	table_flags |= (page_dir->tables_phys[dir_i].global << 8);
+	flags |= (page_dir->tables_phys[dir_i].present << 0);
+	flags |= (page_dir->tables_phys[dir_i].rw << 1);
+	flags |= (page_dir->tables_phys[dir_i].user << 2);
+	flags |= (page_dir->tables_phys[dir_i].wt_caching << 3);
+	flags |= (page_dir->tables_phys[dir_i].nocache << 4);
+	flags |= (page_dir->tables_phys[dir_i].accessed << 5);
+	flags |= (page_dir->tables_phys[dir_i].zero << 6);
+	flags |= (page_dir->tables_phys[dir_i].size << 7);
+	flags |= (page_dir->tables_phys[dir_i].global << 8);
 
-	uint32_t ret = table_flags << 16;
-
+	flags <<= 16;
+	
 	/* Check if the page exists */
-	if (page_dir->tables[dir_i] != NULL)
+	if ((page_dir->tables[dir_i] != NULL) \
+	    && ((flags & (PF_PRES << 16)) == (PF_PRES << 16)))
 	{
-		ret |= (page_dir->tables[dir_i]->entry[tab_i].present << 0);
-		ret |= (page_dir->tables[dir_i]->entry[tab_i].rw << 1);
-		ret |= (page_dir->tables[dir_i]->entry[tab_i].user << 2);
-		ret |= (page_dir->tables[dir_i]->entry[tab_i].wt_caching << 3);
-		ret |= (page_dir->tables[dir_i]->entry[tab_i].nocache << 4);
-		ret |= (page_dir->tables[dir_i]->entry[tab_i].accessed << 5);
-		ret |= (page_dir->tables[dir_i]->entry[tab_i].dirty << 6);
-		ret |= (page_dir->tables[dir_i]->entry[tab_i].zero << 7);
-		ret |= (page_dir->tables[dir_i]->entry[tab_i].global << 8);
+		kprintf("page_flags: page_dir->tables[dir_i]: 0x%p\n", page_dir->tables[dir_i]);
+		flags |= (page_dir->tables[dir_i]->entry[tab_i].present << 0);
+		flags |= (page_dir->tables[dir_i]->entry[tab_i].rw << 1);
+		flags |= (page_dir->tables[dir_i]->entry[tab_i].user << 2);
+		flags |= (page_dir->tables[dir_i]->entry[tab_i].wt_caching << 3);
+		flags |= (page_dir->tables[dir_i]->entry[tab_i].nocache << 4);
+		flags |= (page_dir->tables[dir_i]->entry[tab_i].accessed << 5);
+		flags |= (page_dir->tables[dir_i]->entry[tab_i].dirty << 6);
+		flags |= (page_dir->tables[dir_i]->entry[tab_i].zero << 7);
+		flags |= (page_dir->tables[dir_i]->entry[tab_i].global << 8);
 	}
 
-	return ret;
+	return flags;
 }
 
 /* These two figure out how much physical RAM we have. The information
@@ -328,6 +325,13 @@ static void create_kstack()
 		page_map(i, frame_alloc(), PF_PRES | PF_RW, cur_page_dir);
 }
 
+/* Create the syscall/kernel stack */
+static void create_scstack()
+{
+	for (size_t i = SC_STACK_BEGIN; i < SC_STACK_END; i += PAGE_SIZE)
+		page_map(i, frame_alloc(), PF_PRES | PF_RW, cur_page_dir);
+}
+
 
 /* Grow identity-mapped region. If addr == 0, return current end */
 void* set_alloc_start(void* addr)
@@ -384,7 +388,8 @@ void paging_init(struct multiboot_info* mb)
 
 	identity_map();
 	create_kstack();
-	
+	create_scstack();
+
 	kvm_init((void*)identity_end);
 
 	set_page_dir(cur_page_dir);

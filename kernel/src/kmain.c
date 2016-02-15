@@ -53,10 +53,12 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 	/* open, close, creat, read, write, lseek can now access initrd */
 
 	kputs("RazOS kernel initialized, starting init..\n");
-	
+
 	char* argv[] = {"Hello", "world", NULL};
 	char* envp[] = {"SHELL=rash", NULL};
 	uint32_t* ret = execve("test", argv, envp);
+
+	//kprintf("kmain: 0x0ffffff0 flags: 0x%p\n", page_flags(0x0ffffff0, cur_task->page_dir));
 	if (ret != NULL)
 	{
 		kputs("Switching to user mode..\n");
