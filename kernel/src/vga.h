@@ -9,6 +9,9 @@
 
 #include <sys/types.h>
 
+/* The VGA framebuffer */
+extern uint16_t *video_memory;
+
 void vga_clear_scr();
 uint16_t vga_mkchar(char c, uint8_t bg_color, uint8_t fg_color);
 int vga_putchar(uint16_t c);

@@ -2,10 +2,10 @@
  *
  * vga.h -- the VGA terminal driver system
  *
- * Razbit 2014 */
+ * Razbit 2014, 2016 */
 
 #include "vga.h"
-#include "colors.h"
+#include <colors.h>
 
 #include <portio.h>
 #include <sys/types.h>
@@ -55,8 +55,10 @@ uint16_t vga_mkchar(char c, uint8_t bg, uint8_t fg)
 
 
 /* write a character to the screen */
-int vga_putchar(uint16_t c)
+int vga_putchar(uint16_t chr)
 {
+	char c = chr & 0xFF;
+	
 	/* backspc handler */
 	if (c == 0x08 && cursor_x > 0)
 		cursor_x--;
@@ -81,7 +83,7 @@ int vga_putchar(uint16_t c)
 	/* handle any printable chars */
 	else if (c >= ' ')
 	{
-		*(video_memory + (cursor_y*80 + cursor_x)) = c;
+		*(video_memory + (cursor_y*80 + cursor_x)) = chr;
 		cursor_x++;
 	}
 
@@ -100,9 +102,7 @@ int vga_putchar(uint16_t c)
 
 void vga_clear_scr()
 {
-	/* attrib byte for default colors */
-	uint8_t colorattrib = (COLOR_BLACK << 4) | (COLOR_WHITE & 0x0F);
-	uint16_t blank = 0x20 | (colorattrib << 8);
+	uint16_t blank = vga_mkchar(' ', COLOR_BLACK, COLOR_WHITE);
 
 	int i;
 	for (i = 0; i < 80*25; i++)

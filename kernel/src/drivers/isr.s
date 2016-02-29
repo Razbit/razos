@@ -17,6 +17,7 @@
 [EXTERN sched_halted]           ; task.c
 [EXTERN kb_handler]             ; kb.c
 [EXTERN pagefault_handler]      ; pagefault.c
+[EXTERN gpf_handler]			; gpf.c
 
     ;; Some quite heavy macro-magic
     ;; Have a hard stare at this and you'll figure it out
@@ -76,7 +77,6 @@ idt_init_asm:
     GEN_EXCEPTION 10, "int 10: invalid TSS 0x%x at 0x%x"
     GEN_EXCEPTION 11, "int 11: segment not present 0x%x at 0x%x"
     GEN_EXCEPTION 12, "int 12: stack segment fault 0x%x at 0x%x"
-    GEN_EXCEPTION 13, "int 13: general protection fault 0x%x at 0x%x"
     GEN_EXCEPTION 16, "int 16: x87 floating-point exception at 0x%x"
     GEN_EXCEPTION 17, "int 17: Alignment check 0x%x at 0x%x"
     GEN_EXCEPTION 18, "int 18: Machine check at 0x%x"
@@ -84,7 +84,17 @@ idt_init_asm:
     GEN_EXCEPTION 20, "int 20: Virtualization at 0x%x"
     GEN_EXCEPTION 30, "int 30: Security exception 0x%x at 0x%x"
 
-    ;; page fault
+	;; General Protection Fault
+BEGIN_ISR 13
+	;; stack: [esp]: error code
+	xchg bx, bx
+	
+ 	call gpf_handler 			; gpf_handler(err, eip)
+	xchg bx, bx
+	iret
+END_ISR 13
+
+	;; Page fault
 BEGIN_ISR 14
     mov eax, cr2
     push eax
@@ -96,7 +106,7 @@ BEGIN_ISR 14
     iret
 END_ISR 14
 
-    ;; PIT
+	;; PIT
 BEGIN_ISR 32
     ACK_IRQ
 

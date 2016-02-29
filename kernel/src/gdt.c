@@ -5,6 +5,7 @@
  * Razbit 2015 (based on Charlie Somerville's Radium) */
 
 #include <sys/types.h>
+#include <asm/x86.h>
 #include <panic.h>
 #include <console.h>
 

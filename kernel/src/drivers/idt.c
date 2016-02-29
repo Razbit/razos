@@ -32,7 +32,7 @@ volatile struct
 } __attribute__((__packed__)) idt_ptr;
 
 
-/* Register an ISR handler. Called in isr.s */
+/* Register an ISR handler. */
 void register_isr(uint8_t int_no, void* handler)
 {
 	struct idt_entry_t entry;
@@ -63,6 +63,7 @@ static void irq_remap()
 void idt_init()
 {
 	irq_remap();
+
 	idt_init_asm(); /* isr.s */
 
 	idt_ptr.size = sizeof(idt) - 1;

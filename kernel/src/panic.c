@@ -9,12 +9,13 @@
 #include <vsprintf.h>
 #include <console.h>
 #include "mm/task.h"
+#include "mm/sched.h"
 
 #include <panic.h>
 
 void panic(const char* msg, ...)
 {
-	cli();
+	sched_halt();
 
 	char str[1024];
 	va_list va;
@@ -27,5 +28,6 @@ void panic(const char* msg, ...)
 
 	va_end(va);
 
+	sti();
 	for(;;);
 }

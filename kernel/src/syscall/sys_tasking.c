@@ -34,6 +34,7 @@ uint32_t sys_exit(struct registers_t* regs)
 uint32_t sys_fork(struct registers_t* regs)
 {
 	(void)regs;
+	kprintf("Hello from sys_fork\n");
 	struct task_t* new_task = task_fork();
 
 	if (new_task)

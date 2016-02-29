@@ -1,13 +1,15 @@
 /* This file is a part of the RazOS project
  *
- * Define kernel's C-side entry point
+ * Defines kernel's C-side entry point
  *
- * Razbit 2014, 2015, 2016
+ * Razbit 2014-2016
  */
 
 #include <sys/types.h>
 #include <asm/multiboot.h>
+#include <asm/system.h>
 #include <console.h>
+#include <colors.h>
 #include <kassert.h>
 #include <time.h>
 
@@ -25,19 +27,24 @@
 int kmain(struct multiboot_info* mb, uint32_t esp)
 {
 	/* Init routines here.. */
-	kclear_scr();
+	clear_scr();
 
+	sched_halt();
+	
 	gdt_init();
 	idt_init();
 
+	sti();
+	
 	kprintf("Multiboot info found at 0x%p\n", mb);
 	kprintf("Stack is at 0x%p\n", esp);
 
 	pit_set_freq(CLOCKS_PER_SEC);
 
 	paging_init(mb);
-
+	
 	/* kmalloc(), kfree() available from this point on */
+	
 	task_init();
 	syscall_init();
 
@@ -47,21 +54,22 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 
 	init_kb();
 	
-	/* Load initrd files to the ramfs */
+	/* Load initrd files to the ramfs
+	 * open, close, creat, read, write, lseek can now access initrd */
 	init_initrd((void*)(*(uint32_t*)mb->mods_addr));
 	
-	/* open, close, creat, read, write, lseek can now access initrd */
+	/* If we do this earlier, init_initrd causes TF */
+	console_init();
 
-	kputs("RazOS kernel initialized, starting init..\n");
+	kputs("RazOS kernel initialized, starting init..");
 
 	char* argv[] = {"Hello", "world", NULL};
 	char* envp[] = {"SHELL=rash", NULL};
 	uint32_t* ret = execve("test", argv, envp);
 
-	//kprintf("kmain: 0x0ffffff0 flags: 0x%p\n", page_flags(0x0ffffff0, cur_task->page_dir));
 	if (ret != NULL)
 	{
-		kputs("Switching to user mode..\n");
+		kputs("Switching to user mode..");
 		sched_begin(ret[2], ret[1], ret[0]);
 	}
 	

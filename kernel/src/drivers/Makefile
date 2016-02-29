@@ -1,4 +1,4 @@
-CSOURCES = idt.c pit.c kb.c time.c
+CSOURCES = idt.c pit.c kb.c time.c gpf.c
 ASMSOURCES = isr.s
 SUBOBJS = 
 

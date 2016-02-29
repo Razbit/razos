@@ -39,7 +39,6 @@ char* getenv(const char* name)
 }
 
 /* Add or change environment variable */
-/* TODO: the *change* part */
 int setenv(const char* envname, const char* envval, int overwrite)
 {
 	if (envname == NULL || envname[0] == '\0')
@@ -66,6 +65,7 @@ int setenv(const char* envname, const char* envval, int overwrite)
 	}
 	else
 	{
+		/* Modify */
 		int found = 0;
 		if (overwrite != 0)
 		{

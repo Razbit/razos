@@ -11,9 +11,8 @@
 [EXTERN cur_task]               ; task.c
 [EXTERN sched_next]             ; task.c
 [EXTERN task_fork_inner]        ; task.c
+[EXTERN sched_cont]             ; task.c
 [EXTERN set_page_dir]           ; paging.c
-[EXTERN kprintf]
-[EXTERN page_flags]
 
     ;; see gdt.h
 %define USER_CODE (0x18 | 3)
@@ -30,13 +29,7 @@ sched_begin:
     mov edi, [esp + 8]          ; argv
     mov ecx, [esp + 4]          ; user stack end
 
-;	push esi
-;	push edi
-;	push ecx
-;	push .msg
-;	call kprintf
-
-;	sub esp, 16
+    call sched_cont
 
     mov eax, USER_DATA
     mov ds, eax
@@ -47,8 +40,6 @@ sched_begin:
     mov edx, 0x10000000         ; task entry point
     sti                         ; Now the PIT may call sched_switch
     sysexit                     ; Enter the user world
-
-;	.msg db "stack: 0x%p argv: 0x%p envp: 0x%p", 0
 
 sched_switch:
     ;; save old task state
@@ -65,17 +56,10 @@ sched_switch:
     ;; restore page directory
     push dword task_page_dir(eax)
     call set_page_dir
-	add esp, 4
-;	push dword task_page_dir(eax)
-;	push 0x0FFFFFF0
-;	call page_flags
-;	push eax
-;	push .msg
-;	call kprintf
-;	add esp, 16
-;	jmp $
-	;; restore eax
-	mov eax, [cur_task]
+    add esp, 4
+    
+    ;; restore eax
+    mov eax, [cur_task]
 
     ;; restore task state
     fxrstor task_fpu_state(eax)
@@ -84,8 +68,6 @@ sched_switch:
 .return:
     popa
     ret
-
-.msg db "sched: 0x0ffffff0 flags: 0x%p", 0x0a,  0
 
 task_fork:
     xor eax, eax

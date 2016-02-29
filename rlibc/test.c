@@ -20,14 +20,14 @@ int main(int argc, char* argv[])
 	puts(asctime(&time1));
     
 	pid_t pid = fork();
-	
+
 	if (pid == 0)
 	{
 		printf("child: %i\n", pid);
 
-		char* argv2[] = {"world", NULL};
+/*		char* argv2[] = {"world", NULL};
 		setenv("SHELL", "bash", 1);
-		execve("hellow", argv2, environ);
+		execve("hellow", argv2, environ); */
 
 		return 2;
 	}

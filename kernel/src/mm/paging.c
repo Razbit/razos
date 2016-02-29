@@ -91,13 +91,16 @@ static inline void enable_paging()
 /* Create a page directory */
 struct page_dir_t* create_page_dir()
 {
+	kputs("Creating page directory");
+
 	struct page_dir_t* ret = \
 		(struct page_dir_t*)kmalloc_pa(sizeof(struct page_dir_t));
+
 	if (ret == NULL)
 		return NULL;
 
 	memset(ret, 0, sizeof(struct page_dir_t));
-	
+
 	return ret;
 }
 
@@ -142,7 +145,6 @@ void set_page_dir(struct page_dir_t* page_dir)
 {
 	uint32_t phys_addr = \
 		get_phys((uint32_t)page_dir->tables_phys, page_dir);
-//	kprintf("Changing page dir to 0x%p\n", phys_addr);
 	__asm__ __volatile__("mov %0, %%cr3" :: "r"(phys_addr) : "memory");
 }
 
@@ -248,7 +250,6 @@ uint32_t page_flags(uint32_t addr, struct page_dir_t* page_dir)
 	if ((page_dir->tables[dir_i] != NULL) \
 	    && ((flags & (PF_PRES << 16)) == (PF_PRES << 16)))
 	{
-		kprintf("page_flags: page_dir->tables[dir_i]: 0x%p\n", page_dir->tables[dir_i]);
 		flags |= (page_dir->tables[dir_i]->entry[tab_i].present << 0);
 		flags |= (page_dir->tables[dir_i]->entry[tab_i].rw << 1);
 		flags |= (page_dir->tables[dir_i]->entry[tab_i].user << 2);
@@ -363,7 +364,7 @@ void paging_init(struct multiboot_info* mb)
 		panic("Page directory could not be created");
 
 	/* Create kernel page tables */
-	for (size_t dir_i = 0; dir_i<SC_STACK_END/(PAGE_SIZE*1024); dir_i++)
+	for (size_t dir_i = 0; dir_i<SC_STACK_END/(PAGE_SIZE*1023); dir_i++)
 	{
 		cur_page_dir->tables[dir_i] = \
 			(struct page_tab_t*)kmalloc_pa(sizeof(struct page_tab_t));

@@ -5,6 +5,7 @@
  * Razbit 2015, 2016 (based on Charlie Somerville's Radium) */
 
 #include <sys/types.h>
+#include <asm/system.h>
 #include <console.h>
 #include <kassert.h>
 #include <panic.h>
@@ -39,7 +40,7 @@ static struct task_t* alloc_empty_task()
 		if (tasks[pid])
 			continue;
 
-		tasks[pid] = kmalloc(sizeof(struct task_t));
+		tasks[pid] = (struct task_t*)kmalloc(sizeof(struct task_t));
 		if (!tasks[pid])
 			panic("Tasking: could not allocate space for task_t\n");
 
@@ -81,7 +82,10 @@ void task_init()
 /* TODO: what if we run out of memory? Now we just panic or PF */
 struct task_t* task_fork_inner()
 {
-	struct task_t* new_task = alloc_empty_task();	
+
+	struct task_t* new_task = alloc_empty_task();
+	kprintf("Fork: allocated new task %u at 0x%p\n", new_task->pid, new_task);
+//	for(;;);
 	new_task->page_dir = create_page_dir();
 	clone_page_dir(new_task->page_dir, cur_task->page_dir);
 
