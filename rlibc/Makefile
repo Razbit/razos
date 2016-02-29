@@ -46,6 +46,10 @@ test: test.c.o
 
 hellow: hellow.c.o
 	$(LD) $(_LDLAGS) -Tuser.ld -o hellow rlibc.o hellow.c.o
+
+rash: rash.c.o
+	$(LD) $(_LDLAGS) -Tuser.ld -o rash rlibc.o rash.c.o
+
 clean:
 	rm *.o
 	$(MAKE) clean -C arch

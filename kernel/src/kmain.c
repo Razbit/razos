@@ -62,7 +62,7 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 	
 	char* argv[] = {"Hello", "world", NULL};
 	char* envp[] = {"SHELL=rash", NULL};
-	uint32_t* ret = execve("test", argv, envp);
+	uint32_t* ret = execve("rash", argv, envp);
 	if (ret != NULL)
 	{
 		kputs("Starting scheduler..\n");
