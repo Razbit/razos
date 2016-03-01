@@ -1,12 +1,10 @@
 memory: guest=512, host=512
-romimage: file=/usr/share/bochs/BIOS-bochs-latest, address=0x00000
-vgaromimage: file=/usr/share/bochs/VGABIOS-lgpl-latest
 floppya: 1_44=/dev/loop0, status=inserted
 boot: a
 log: bochsout.txt
 mouse: enabled=0
 clock: sync=realtime
-cpu: ips=200000 
-display_library: wx
-config_interface: wx
-#gdbstub: enabled=1, port=1234, text_base=0, data_base=0, bss_base=0
+cpu: ips=1000000, reset_on_triple_fault=0
+display_library: sdl, options="gui_debug"
+magic_break: enabled=1 # xchg bx, bx traps Bochs to debugger
+

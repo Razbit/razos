@@ -2,7 +2,7 @@
  *
  * portio.c -- port i/o functions
  *
- * Razbit 2014 */
+ * Razbit 2014, 2016 */
 
 #include <portio.h>
 #include <stdint.h>
@@ -11,6 +11,12 @@
 void outb(uint16_t port, uint8_t value)
 {
 	__asm__ __volatile__("outb %1, %0" :: "dN"(port), "a"(value));
+}
+
+/* write a word to the port */
+void outw(uint16_t port, uint16_t value)
+{
+	__asm__ __volatile__("outw %1, %0" :: "dN"(port), "a"(value));
 }
 
 /* read a byte from the port */

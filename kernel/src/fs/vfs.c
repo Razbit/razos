@@ -97,6 +97,12 @@ ssize_t write_vfs(int fd, const void* buf, size_t size)
 
 int open_vfs(const char* name, int oflag, mode_t mode)
 {
+	if (name == NULL)
+	{
+		errno = ENOENT;
+		return -1;
+	}
+
 	/* Find the corresponding VFS node for the file */
 	struct vfs_node_t* node = NULL;
 	struct vfs_node_t* ptr = vfs_root;
@@ -107,7 +113,7 @@ int open_vfs(const char* name, int oflag, mode_t mode)
 		{
 			if (ptr->status.st_dev == DEVID_PIPE)
 				ptr = ptr->next;
-			else if (strncmp(name, &(ptr->name[0]), strlen(name)) == 0)
+			else if (strcmp(name, ptr->name) == 0)
 				break;
 			else
 				ptr = ptr->next;

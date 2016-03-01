@@ -58,13 +58,8 @@ uint32_t* execve(char* path, char** argv, char** envp)
 	int argc = count(argv);
 	int envc = count(envp);
 
-	kprintf("kernel execve: %s %i %p %i %p\n", path, argc, argv, envc, envp);
-
 	static uint32_t ret[3];
 	char** args = NULL;
-
-	if (path == NULL)
-		return (uint32_t*) (-1);
 
 	if (argc > 0)
 	{

@@ -35,11 +35,10 @@ void* load_elf(void* data)
 
 	void* ret = (void*)USER_CODE_BEGIN;
 	
-	Elf32_Off offset;
+	Elf32_Off offset = elfhdr->e_phoff;
 	Elf32_Phdr* phdr;
-	for (int i = 0, offset = elfhdr->e_phoff; \
-	     i < elfhdr->e_phnum; \
-	     i++, offset += sizeof(Elf32_Phdr))
+	int i = 0;
+	for (; i < elfhdr->e_phnum; i++, offset += sizeof(Elf32_Phdr))
 	{
 		phdr = (Elf32_Phdr*)(data + offset);
 		if (phdr->p_type != PT_LOAD)

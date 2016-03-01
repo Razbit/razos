@@ -117,7 +117,7 @@ static int do_commands(char **args, int pipes, int *commandStarts, char *input_n
             }
 
             /* The commands are executed here. */
-            if (execve(args[commandStarts[i]], args+commandStarts[i], NULL) < 0)
+            if (execv(args[commandStarts[i]], args+commandStarts[i]) < 0)
 				return -1;
 
         }
@@ -358,6 +358,7 @@ static void rash_loop(void)
 
 int main(void)
 {
+	setenv("SHELL", "rash", 1);
     //signal(SIGINT, SIG_IGN);
     rash_loop();
 
