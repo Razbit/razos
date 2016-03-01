@@ -12,7 +12,7 @@
 [EXTERN sched_next]             ; task.c
 [EXTERN task_fork_inner]        ; task.c
 [EXTERN sched_cont]             ; task.c
-[EXTERN set_page_dir]           ; paging.c
+[EXTERN get_page_dir_phys]      ; paging.c
 
     ;; see gdt.h
 %define USER_CODE (0x18 | 3)
@@ -53,11 +53,14 @@ sched_switch:
     call sched_next
     mov [cur_task], eax
 
-    ;; restore page directory
+    ;; get physical page dir address
     push dword task_page_dir(eax)
-    call set_page_dir
+    call get_page_dir_phys
     add esp, 4
-    
+    ;; eax now contains physical address of the new task's page dir
+    ;; load to cr3
+    mov cr3, eax
+
     ;; restore eax
     mov eax, [cur_task]
 

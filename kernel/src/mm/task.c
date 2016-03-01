@@ -23,7 +23,7 @@
 struct task_t* cur_task = NULL;
 
 static struct tss_t tss = {0};
-static struct task_t* tasks[1024] = {NULL};
+static struct task_t* tasks[256] = {NULL};
 
 struct task_t* get_task(pid_t pid)
 {
@@ -84,8 +84,7 @@ struct task_t* task_fork_inner()
 {
 
 	struct task_t* new_task = alloc_empty_task();
-	kprintf("Fork: allocated new task %u at 0x%p\n", new_task->pid, new_task);
-//	for(;;);
+
 	new_task->page_dir = create_page_dir();
 	clone_page_dir(new_task->page_dir, cur_task->page_dir);
 

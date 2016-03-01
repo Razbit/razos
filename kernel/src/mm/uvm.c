@@ -110,6 +110,7 @@ void* uvm_sbrk(intptr_t incr)
 			incr += PAGE_SIZE;
 		}
 	}
+
 	return ret;
 
 bad:

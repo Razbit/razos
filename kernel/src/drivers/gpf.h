@@ -9,6 +9,6 @@
 
 #include <sys/types.h>
 
-void gpf_handler(uint32_t err);
+void gpf_handler(uint32_t err, uint32_t eip);
 
 #endif /* GPF_H */

@@ -59,7 +59,8 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 	init_initrd((void*)(*(uint32_t*)mb->mods_addr));
 	
 	/* If we do this earlier, init_initrd causes TF */
-	console_init();
+	/* Seems to fuck shit up.. :( */
+	//console_init();
 
 	kputs("RazOS kernel initialized, starting init..");
 

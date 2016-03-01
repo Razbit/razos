@@ -17,7 +17,7 @@
 [EXTERN sched_halted]           ; task.c
 [EXTERN kb_handler]             ; kb.c
 [EXTERN pagefault_handler]      ; pagefault.c
-[EXTERN gpf_handler]			; gpf.c
+[EXTERN gpf_handler]            ; gpf.c
 
     ;; Some quite heavy macro-magic
     ;; Have a hard stare at this and you'll figure it out
@@ -84,29 +84,38 @@ idt_init_asm:
     GEN_EXCEPTION 20, "int 20: Virtualization at 0x%x"
     GEN_EXCEPTION 30, "int 30: Security exception 0x%x at 0x%x"
 
-	;; General Protection Fault
+    ;; General Protection Fault
 BEGIN_ISR 13
-	;; stack: [esp]: error code
-	xchg bx, bx
-	
- 	call gpf_handler 			; gpf_handler(err, eip)
-	xchg bx, bx
-	iret
+    ;; stack: [esp+4]: faulting eip
+    ;;        [esp]: error code
+    pusha
+    mov eax, [esp+8*4+4]        ; eip
+    push eax
+    mov eax, [esp+8*4+4]        ; error
+    push eax
+
+    call gpf_handler            ; gpf_handler(err, eip)
+    add esp, 8
+    popa
+    add esp, 4
+    iret
 END_ISR 13
 
-	;; Page fault
+    ;; Page fault
 BEGIN_ISR 14
     mov eax, cr2
     push eax
+
     ;; stack: [esp+8]: faulting eip
     ;;        [esp+4]: error code
     ;;        [esp]:   addr
 
     call pagefault_handler      ; handler(addr, error, eip)
+    add esp, 8
     iret
 END_ISR 14
 
-	;; PIT
+    ;; PIT
 BEGIN_ISR 32
     ACK_IRQ
 

@@ -7,6 +7,10 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+/* Bochs magic breakpoint. This is a rather odd place to
+ * define this, but this header is included in nearly every file.. */
+#define BOCHS_BREAK __asm__ __volatile__("xchgw %%bx, %%bx":::"memory")
+
 /* These are used internally in this header */
 typedef unsigned int __uint32_t;
 typedef int __int32_t;

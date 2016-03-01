@@ -45,7 +45,7 @@ static size_t round_up(size_t num, size_t align)
 	return num;
 }
 
-static void* do_kmalloc2(size_t size, size_t align)
+static void* do_kmalloc(size_t size, size_t align)
 {
 	/* Start address is aligned to [align] that is a multiple of 16.
 	 * End of the block is aligned so that the entire chunk's end is
@@ -129,8 +129,11 @@ static void* do_kmalloc2(size_t size, size_t align)
 			padding->size = padding_amount \
 				- 2 * sizeof(struct kheap_node_t);
 			padding->status = KMALLOC_FREE;
+			curnode->next = padding->next;
 			padding->next = curnode;
 			curnode->prev = padding;
+			curnode->size = (size_t)curnode->next - (size_t)curnode \
+				- sizeof(struct kheap_node_t);
 		}
 
 		/* Pad if we need to */
@@ -164,147 +167,6 @@ static void* do_kmalloc2(size_t size, size_t align)
 	return ret;
 }
 
-static void* do_kmalloc(size_t size, size_t align)
-{
-	/* Start address aligned to [align] bytes.
-	 * End of the chunk is at a 16-byte boundary. */
-
-	if (size == 0)
-		return NULL;
-
-	size = round_up(size, NODE_T_SIZE);
-
-	/* Do we have a heap? */
-	if (kheap_start == NULL)
-	{
-		kheap_start = ksbrk(size + PAGE_SIZE);
-		if (kheap_start == (void*)-1)
-		{
-			errno = ENOMEM;
-			return NULL;
-		}
-
-		kheap_end = ksbrk(0);
-
-		struct kheap_node_t* start = (struct kheap_node_t*)kheap_start;
-		start->size = (size_t)(kheap_end - kheap_start);
-		start->status = KMALLOC_FREE;
-		start->next = NULL;
-		start->prev = NULL;
-	}
-
-	struct kheap_node_t* cur_node = (struct kheap_node_t*)kheap_start;
-	struct kheap_node_t* best_node = NULL;
-
-	/* Find a decent node (best-fit strategy) */
-	while (cur_node != NULL)
-	{
-		/* We are at the end of the list */
-		if (cur_node->next == NULL)
-		{
-			/* We have found large-enough free node */
-			if (best_node != NULL)
-				break;
-			
-			/* The last node is usable but too small */
-			if ((cur_node->size < size + PAGE_SIZE)
-			    && (cur_node->status == KMALLOC_FREE))
-			{
-				/* Enlarge the heap */
-				if (ksbrk(size+PAGE_SIZE-cur_node->size) == (void*)-1)
-				{
-					errno = ENOMEM;
-					return NULL;
-				}
-
-				cur_node->size += (size_t)ksbrk(0) - (size_t)kheap_end;
-				kheap_end = ksbrk(0);
-				best_node = cur_node;
-
-				break;
-			}
-		}
-
-		if (cur_node->status == KMALLOC_RES)
-		{
-			cur_node = cur_node->next;
-			continue;
-		}
-
-		/* How much padding do we need for aligning the beginning? */
-		size_t padding_size = 0;
-		if (((size_t)cur_node + NODE_T_SIZE) % align != 0)
-			padding_size = align - ((size_t)cur_node % align);
-
-		if (cur_node->size == (size + padding_size))
-		{
-			/* Found a perfect node */
-			best_node = cur_node;
-			break;
-		}
-		else if (cur_node->size > (size + padding_size))
-		{
-			if (best_node == NULL || best_node->size > cur_node->size)
-				best_node = cur_node;
-		}
-
-		cur_node = cur_node->next;
-	}
-
-	/* best_node is now either NULL (can't allocate) or points
-	 * to the best available node */
-	if (best_node == NULL)
-	{
-		errno = ENOMEM;
-		return NULL;
-	}
-
-	/* Allocate */
-	struct kheap_node_t* padding = best_node;
-	size_t padding_size = 0;
-
-	if (((size_t)best_node + NODE_T_SIZE) % align != 0)
-		padding_size = align - ((size_t)best_node % align);
-
-	if (padding_size != 0 && padding_size != NODE_T_SIZE)
-	{
-		/* Add padding before the node, if necessary */
-		best_node = (void*)((size_t)best_node+padding_size-NODE_T_SIZE);
-		padding->size = padding_size - 2 * NODE_T_SIZE;
-		padding->status = KMALLOC_FREE;
-		padding->next = best_node;
-		best_node->prev = padding;
-		best_node->size -= (size_t)best_node - (size_t)padding;
-	}
-
-	/* Create padding after the node, if necessary */
-	if (best_node->size != size)
-	{
-		padding = (void*)((size_t)best_node + NODE_T_SIZE + size);
-		padding->prev = best_node;
-		padding->next = best_node->next;
-		padding->status = KMALLOC_FREE;
-		best_node->next = padding;
-
-		if (padding->next != NULL)
-		{
-			padding->size = \
-				(size_t)padding->next - (size_t)padding - NODE_T_SIZE;
-			padding->next->prev = padding;
-		}
-		else
-		{
-			padding->size = \
-				(size_t)kheap_end - (size_t)padding - NODE_T_SIZE;
-		}
-	}
-
-	best_node->size = size;
-	best_node->status = KMALLOC_RES;
-
-	return (void*)((size_t)best_node + NODE_T_SIZE);
-}
-
 /* Unify two nodes (coalesce) */
 static void unify_fwd(struct kheap_node_t* ptr)
 {
@@ -333,7 +195,7 @@ void do_kfree(void* addr)
 	}
 
 	/* If this is the last node, free some of the heap */
-	if (ptr->next == NULL && ptr->size > 2 * PAGE_SIZE)
+	if (ptr->next == NULL && ptr->size > (2 * PAGE_SIZE))
 	{
 		ksbrk(-(ptr->size));
 		kheap_end = ksbrk(0);

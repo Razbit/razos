@@ -13,36 +13,38 @@
 #define GPF_EXT 0x00000001 /* External or internal? */
 #define GPF_GDT (0x0 << 1) /* table selector 00b -> GDT */
 #define GPF_IDT (0x1 << 1) /* table selector 01b OR 11b -> IDT */
-#define GPF_LDT (0x2 << 1) /* table selector 10b -> LDT */
+#define GPF_LDT (0x2 << 1) /* table selector 10b (11b) -> LDT */
 #define GPF_IDX 0x0000FFF8 /* Index in the descriptor */
 
-void gpf_handler(uint32_t err)
+void gpf_handler(uint32_t err, uint32_t eip)
 {
-//	for(;;);
+	/* check if GPF is segment related */
 	if (err != 0)
 	{
-		/* GPF is segment related */
-		if ((err & GPF_IDT) == GPF_IDT)
+		char errstr[35];
+		strcpy(errstr, "GPF: index %u (0x%x) in ");
+
+		if (err & GPF_LDT)
+		{
+			strcat(errstr, "LDT");
+		}
+		else if (err & GPF_IDT)
 		{
 			kprintf("Unhandled interrupt (%u)\n", (err & GPF_IDX) >> 3);
 			return;
 		}
-
-		char errstr[35];
-		strcpy(errstr, "GPF: index %u in ");
-		
-		if (err & GPF_GDT)
-			strcat(errstr, "GDT");
 		else
-			strcat(errstr, "LDT");
+		{
+			strcat(errstr, "GDT");
+		}
 		
 		if (err & GPF_EXT)
 			strcat(errstr, " (external)");
-
-		panic(errstr, (err & GPF_IDX) >> 3);
+		strcat(errstr, "\n");
+		panic(errstr, (err & GPF_IDX) >> 3, (err & GPF_IDX) >> 3);
 	}
 	else
 	{
-		panic("General protection fault");
+		panic("General protection fault at 0x%p", eip);
 	}
 }

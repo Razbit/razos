@@ -92,7 +92,6 @@ static inline void enable_paging()
 struct page_dir_t* create_page_dir()
 {
 	kputs("Creating page directory");
-
 	struct page_dir_t* ret = \
 		(struct page_dir_t*)kmalloc_pa(sizeof(struct page_dir_t));
 
@@ -117,6 +116,10 @@ void clone_page_dir(struct page_dir_t* new, struct page_dir_t* old)
 	/* Copy user memory and syscall stack*/
 	for (size_t i = SC_STACK_BEGIN; i < USTACK_END; i += PAGE_SIZE)
 	{
+		/* To prevent integer overflow */
+		if (i < PAGE_SIZE)
+			break;
+
 		/* Check if page is present */
 		uint32_t flags = page_flags(i, old);
 		if ((flags & PF_PRES) == 0)
@@ -127,7 +130,7 @@ void clone_page_dir(struct page_dir_t* new, struct page_dir_t* old)
 		page_map(0, frame, PF_PRES | PF_RW, cur_page_dir);
 		memcpy(NULL, (void*)i, PAGE_SIZE);
 		page_map(0, 0, 0, cur_page_dir);
-		page_map(i, frame, flags, old);
+		page_map(i, frame, flags, new);
 	}
 }
 
@@ -138,6 +141,11 @@ void clear_page_dir(struct page_dir_t* page_dir)
 	for (size_t i = 0; i < 1024; i++)
 		if (page_dir->tables[i])
 			kfree(page_dir->tables[i]);
+}
+
+uint32_t get_page_dir_phys(struct page_dir_t* page_dir)
+{
+	return get_phys((uint32_t)page_dir->tables_phys, page_dir);
 }
 
 /* Load the specified page directory to CR3 */

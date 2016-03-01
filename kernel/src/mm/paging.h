@@ -102,6 +102,9 @@ void clear_page_dir(struct page_dir_t* page_dir);
 /* Load the specified page directory to CR3 */
 void set_page_dir(struct page_dir_t* page_dir);
 
+/* Get physical address of page dir for loading to cr3 */
+uint32_t get_page_dir_phys(struct page_dir_t* page_dir);
+
 /* Allocate a frame, return its physical address */
 uint32_t frame_alloc();
 

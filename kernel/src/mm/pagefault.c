@@ -2,12 +2,11 @@
  *
  * pagefault.c -- pagefault handling
  *
- * Razbit 2015 (based on Charlie Somerville's Radium) */
+ * Razbit 2015 */
 
 #include <sys/types.h>
 #include <panic.h>
 #include <console.h>
-#include <kmalloc.h> /* dump_kheap */
 
 #include "task.h"
 #include "paging.h"
@@ -35,6 +34,6 @@ void pagefault_handler(uint32_t addr, uint32_t error, uint32_t eip)
 
 	kprintf("Page fault at 0x%p (0x%x: %s) eip: 0x%p\n", \
 	      addr, error, err, eip);
-	dump_kheap();
+
 	panic("Page fault\n");
 }
