@@ -145,4 +145,22 @@ BEGIN_ISR 33
     iret
 END_ISR 33
 
+    ;; Spurious interrupt (or lpt1)
+BEGIN_ISR 39
+    push ax                     ; save ax
+    mov al, 0x0b                ; cmd to read irq service reg (isr)
+    out 0x20, al                ; command port of PIC1
+    in al, 0x20                 ; al = register contents
+    test al, 0x80               ; test if bit 7 is set
+    pop ax                      ; restore ax
+    jz .spurious                ; jump if bit 7 is not set
+
+    ;; the irq is not spurious, so ACK it and handle
+    ACK_IRQ
+
+.spurious:
+    ;; should not be acknowledged, so just iret
+    iret
+END_ISR 39
+
 ret
