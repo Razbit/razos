@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <util.h>
+#include <string.h>
 
 #include "paging.h"
 #include "task.h"
@@ -24,6 +25,7 @@ void* uvm_page_alloc()
 			return NULL; /* page_map sets errno */
 
 		cur_task->uheap_end += PAGE_SIZE;
+		memset(ret, 0, PAGE_SIZE);
 		return ret;
 	}
 	else
@@ -89,7 +91,7 @@ void* uvm_sbrk(intptr_t incr)
 		/* Enlarge heap by incr bytes */
 		if (cur_task->uheap_end + incr > (void*)USTACK_BEGIN)
 			goto bad;
-		
+
 		while (incr > 0)
 		{
 			if (uvm_page_alloc() == NULL)

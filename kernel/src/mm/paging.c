@@ -91,7 +91,6 @@ static inline void enable_paging()
 /* Create a page directory */
 struct page_dir_t* create_page_dir()
 {
-	kputs("Creating page directory");
 	struct page_dir_t* ret = \
 		(struct page_dir_t*)kmalloc_pa(sizeof(struct page_dir_t));
 
@@ -107,13 +106,14 @@ struct page_dir_t* create_page_dir()
 void clone_page_dir(struct page_dir_t* new, struct page_dir_t* old)
 {
 	/* Link kernel page tables */
-	for (size_t i = 0; i < SC_STACK_BEGIN / (1024*PAGE_SIZE); i++)
+	for (size_t i = 0; i < SC_STACK_BEGIN / (1023 * PAGE_SIZE); i++)
 	{
 		new->tables[i] = old->tables[i];
 		new->tables_phys[i] = old->tables_phys[i];
 	}
 
-	/* Copy user memory and syscall stack*/
+	/* Copy user memory and syscall stack. */
+	/* TODO: this takes a HUGE amount of time. Optimize frame_alloc? */
 	for (size_t i = SC_STACK_BEGIN; i < USTACK_END; i += PAGE_SIZE)
 	{
 		/* To prevent integer overflow */
@@ -137,8 +137,8 @@ void clone_page_dir(struct page_dir_t* new, struct page_dir_t* old)
 /* Clear a page directory */
 void clear_page_dir(struct page_dir_t* page_dir)
 {
-	/* For each page table */
-	for (size_t i = 0; i < 1024; i++)
+	/* Free each page table after the kernel memory */
+	for (size_t i = SC_STACK_BEGIN / (1023 * PAGE_SIZE); i < 1024; i++)
 		if (page_dir->tables[i])
 			kfree(page_dir->tables[i]);
 }

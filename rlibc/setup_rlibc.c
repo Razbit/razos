@@ -11,6 +11,8 @@
 #include <errno.h>
 #include <stdio.h>
 
+extern char** environ;
+
 /* Set kernel parameter */
 int __attribute__((noinline)) set_kernel_param(unsigned int cmd, int param)
 {
@@ -21,6 +23,7 @@ int __attribute__((noinline)) set_kernel_param(unsigned int cmd, int param)
 /* Initialize the lib. Called from crt0.s _start */
 void init_rlibc(int argc, char* argv[], char* envp[])
 {
+	environ = NULL;
 	/* Set environ using setenv() */
 	if (envp != NULL)
 	{

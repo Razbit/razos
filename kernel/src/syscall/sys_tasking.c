@@ -27,14 +27,13 @@ uint32_t sys_exit(struct registers_t* regs)
 	task_kill(cur_task, status);
 
 	sched_switch(); /* We should never return to this process */
-	return 0; /* If we happen to get here somehow */
+	return 0; /* If we happen to get here somehow (makes gcc happy) */
 }
 
 
 uint32_t sys_fork(struct registers_t* regs)
 {
 	(void)regs;
-	kprintf("Hello from sys_fork\n");
 	struct task_t* new_task = task_fork();
 
 	if (new_task)
@@ -52,15 +51,9 @@ uint32_t sys_fork(struct registers_t* regs)
 
 uint32_t sys_wait(struct registers_t* regs)
 {
-	if (REG_ARG1(regs) != 0 \
-	    && !valid_user_buffer(REG_ARG1(regs), sizeof(uint32_t)))
-	{
-		errno = EFAULT;
-		return (uint32_t)-1;
-	}
-
 	uint32_t* stat_loc = (uint32_t*)REG_ARG1(regs);
 
+	/* Wait for the children to die and destroy them */
 again:
 	if (cur_task->wait_queue.live.head)
 	{
@@ -81,8 +74,10 @@ again:
 		return child_pid;
 	}
 
+	/* Put this task to sleep until woken up by the death of a child */
 	cur_task->state = TASK_STATE_BLOCK_WAIT;
 	sched_switch();
+
 	goto again;
 }
 

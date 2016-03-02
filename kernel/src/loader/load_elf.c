@@ -64,6 +64,7 @@ void* load_elf(void* data)
 				goto bad;
 		}
 
+		memset((void*)(phdr->p_vaddr), 0, phdr->p_memsz);
 		memcpy((void*)(phdr->p_vaddr), (void*)(data + phdr->p_offset), \
 		       phdr->p_filesz);
 

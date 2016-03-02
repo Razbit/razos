@@ -82,7 +82,6 @@ void task_init()
 /* TODO: what if we run out of memory? Now we just panic or PF */
 struct task_t* task_fork_inner()
 {
-
 	struct task_t* new_task = alloc_empty_task();
 
 	new_task->page_dir = create_page_dir();
@@ -120,7 +119,7 @@ void task_kill(struct task_t* task, uint32_t status)
 		waitable_child = next_waitable_child;
 	}
 
-	/* Reparent children */
+	/* Reparent orphan children */
 	for (pid_t i = 2; i < countof(tasks); i++)
 	{
 		struct task_t* child = get_task(i);
@@ -155,6 +154,10 @@ void task_destroy(struct task_t* task)
 	/* Free user space */
 	for (size_t i = SC_STACK_BEGIN; i < USTACK_END; i += PAGE_SIZE)
 	{
+		/* Break if/when i overflows */
+		if (i < SC_STACK_BEGIN)
+			break;
+
 		/* Check if page is present */
 		uint32_t flags = page_flags(i, task->page_dir);
 		if ((flags & PF_PRES) == 0)
@@ -164,6 +167,7 @@ void task_destroy(struct task_t* task)
 		page_map(i, 0, 0, task->page_dir);
 	}
 
+	/* Free the paging structures */
 	clear_page_dir(task->page_dir);
 	kfree(task->page_dir);
 
