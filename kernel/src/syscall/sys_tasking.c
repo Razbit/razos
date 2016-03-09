@@ -53,15 +53,21 @@ uint32_t sys_wait(struct registers_t* regs)
 {
 	uint32_t* stat_loc = (uint32_t*)REG_ARG1(regs);
 
-	/* Wait for the children to die and destroy them */
-again:
-	if (cur_task->wait_queue.live.head)
+	/* Fail if there are no children */
+	if (cur_task->children == 0)
 	{
-		struct task_t* child = cur_task->wait_queue.live.head;
-		cur_task->wait_queue.live.head = child->wait_queue.dead.next;
-		
-		if (!cur_task->wait_queue.live.head)
-			cur_task->wait_queue.live.tail = NULL;
+		errno = ECHILD;
+		return (uint32_t)-1;
+	}
+
+	/* Wait for a child to die and destroy it and return */
+again:
+	if (cur_task->wait_queue)
+	{
+		struct task_t* child = cur_task->wait_queue;
+		/* If there are multiple dead children, the next one can now
+		 * be found from the parent's wait queue */
+		cur_task->wait_queue = child->wait_queue;
 
 		pid_t child_pid = child->pid;
 		uint32_t child_status = child->exit_status;

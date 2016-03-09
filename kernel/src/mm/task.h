@@ -37,24 +37,15 @@ struct task_t
 	uint32_t state;
 	uint32_t exit_status;
 
-	union
-	{
-		struct
-		{
-			struct task_t* head;
-			struct task_t* tail;
-		} live;
-		struct
-		{
-			struct task_t* next;
-		} dead;
-	} wait_queue;
+	uint32_t children;           /* Number of children */
 
-	void* uheap_begin;         /* Beginning of user heap */
-	void* uheap_end;           /* End of user heap */
-	
+	struct task_t* wait_queue;   /* List of killed children */
+
+	void* uheap_begin;           /* Beginning of user heap */
+	void* uheap_end;             /* End of user heap */
+
 	struct fildes_t files[OPEN_MAX]; /* Files used by the process */
-	int* errno_loc;            /* errno is here */
+	int* errno_loc;              /* errno is here */
 };
 
 extern struct task_t* cur_task;

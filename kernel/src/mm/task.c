@@ -22,8 +22,8 @@
 
 struct task_t* cur_task = NULL;
 
-static struct tss_t tss = {0};
-static struct task_t* tasks[256] = {NULL};
+static struct tss_t tss;
+static struct task_t* tasks[256];
 
 struct task_t* get_task(pid_t pid)
 {
@@ -44,10 +44,11 @@ static struct task_t* alloc_empty_task()
 		if (!tasks[pid])
 			panic("Tasking: could not allocate space for task_t\n");
 
+		memset(tasks[pid], 0, sizeof(struct task_t));
+
 		tasks[pid]->state = TASK_STATE_READY;
 		tasks[pid]->pid = pid;
-		tasks[pid]->wait_queue.live.head = NULL;
-		tasks[pid]->wait_queue.live.tail = NULL;
+
 		return tasks[pid];
 	}
 
@@ -57,6 +58,8 @@ static struct task_t* alloc_empty_task()
 /* Initialize tasking */
 void task_init()
 {
+	memset(&tss, 0, sizeof(tss));
+	memset(tasks, 0, sizeof(tasks));
 	tss.ss0 = GDT_KERNEL_DATA;
 	tss.esp0 = KSTACK_END; /* We use this when handling interrupts */
 	
@@ -97,26 +100,28 @@ struct task_t* task_fork_inner()
 	new_task->syscall_regs = cur_task->syscall_regs;
 
 	/* vm cloned -> errno loc doesn't change */
-	new_task->errno_loc = cur_task->errno_loc; 
+	new_task->errno_loc = cur_task->errno_loc;
+
+	cur_task->children++;
 
 	return new_task;
 }
 
 void task_kill(struct task_t* task, uint32_t status)
 {
+	if (task == NULL)
+		return;
+
 	task->exit_status = status;
 
-	struct task_t* parent = get_task(task->ppid);
-
-	/* If there are children in this task's wait queue we clean them up.
-	 * Nothing really gives a single sh1t about them anymore.. */
-	struct task_t* waitable_child = task->wait_queue.live.head;
-	while(waitable_child)
+	/* If there are killed children in this task's wait queue we
+	 * clean them up. */
+	struct task_t* child = task->wait_queue;
+	while(child)
 	{
-		struct task_t* next_waitable_child = \
-			waitable_child->wait_queue.dead.next;
-		task_destroy(waitable_child);
-		waitable_child = next_waitable_child;
+		struct task_t* next_child = child->wait_queue;
+		task_destroy(child);
+		child = next_child;
 	}
 
 	/* Reparent orphan children */
@@ -127,19 +132,15 @@ void task_kill(struct task_t* task, uint32_t status)
 			child->ppid = 1;
 	}
 
-	/* Insert this task into the parent's wait queue */
-	if (parent->wait_queue.live.tail)
-	{
-		parent->wait_queue.live.tail->wait_queue.dead.next = task;
-		parent->wait_queue.live.tail = task;
-	}
-	else
-	{
-		parent->wait_queue.live.head = task;
-		parent->wait_queue.live.tail = task;
-	}
+	struct task_t* parent = get_task(task->ppid);
 
-	task->wait_queue.dead.next = NULL;
+	/* Insert this task to the end of parent's wait queue */
+	struct task_t* queue = parent;
+	while (queue->wait_queue)
+		queue = queue->wait_queue;
+
+	queue->wait_queue = task;
+	task->wait_queue = NULL;
 
 	/* Wake parent if it is blocked in wait() */
 	if (parent->state == TASK_STATE_BLOCK_WAIT)
@@ -171,6 +172,8 @@ void task_destroy(struct task_t* task)
 	clear_page_dir(task->page_dir);
 	kfree(task->page_dir);
 
+	tasks[task->ppid]->children--;
+
 	tasks[task->pid] = NULL;
 	kfree(task);
 }
@@ -183,9 +186,7 @@ struct task_t* sched_next()
 	{		
 		struct task_t* task = get_task(i);
 
-		if (!task)
-			continue;
-		if (task->state == TASK_STATE_READY)
+		if (task && task->state == TASK_STATE_READY)
 			return task;
 	}
 
@@ -193,12 +194,10 @@ struct task_t* sched_next()
 	{		
 		struct task_t* task = get_task(i);
 
-		if (!task)
-			continue;
-		if (task->state == TASK_STATE_READY)
+		if (task && task->state == TASK_STATE_READY)
 			return task;
 	}
-	
+
 	panic("No tasks ready to schedule!");
 }
 

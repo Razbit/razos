@@ -68,6 +68,7 @@ sched_switch:
     fxrstor task_fpu_state(eax)
     mov esp, task_esp(eax)
     jmp task_eip(eax)
+
 .return:
     popa
     ret
@@ -84,6 +85,7 @@ task_fork:
 
     mov task_esp(eax), esp
     mov task_eip(eax), dword .return
+
 .return:
     popa
     ret

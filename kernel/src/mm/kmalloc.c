@@ -265,7 +265,7 @@ void dump_kheap()
 	struct kheap_node_t* ptr = (struct kheap_node_t*)kheap_start;
 	kprintf("KHEAP: SIZE: 0x%p START: 0x%p END: 0x%p\n", kheap_end - kheap_start, kheap_start, kheap_end);
 	int i = 0;
-	while (ptr->next != NULL && ptr < kheap_end)
+	while (ptr->next != NULL && (void*)ptr < kheap_end)
 	{
 		ptr = ptr->next;
 

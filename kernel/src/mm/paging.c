@@ -151,8 +151,7 @@ uint32_t get_page_dir_phys(struct page_dir_t* page_dir)
 /* Load the specified page directory to CR3 */
 void set_page_dir(struct page_dir_t* page_dir)
 {
-	uint32_t phys_addr = \
-		get_phys((uint32_t)page_dir->tables_phys, page_dir);
+	uint32_t phys_addr = get_page_dir_phys(page_dir);
 	__asm__ __volatile__("mov %0, %%cr3" :: "r"(phys_addr) : "memory");
 }
 
@@ -242,15 +241,15 @@ uint32_t page_flags(uint32_t addr, struct page_dir_t* page_dir)
 
 	uint32_t flags = 0;
 
-	flags |= (page_dir->tables_phys[dir_i].present << 0);
-	flags |= (page_dir->tables_phys[dir_i].rw << 1);
-	flags |= (page_dir->tables_phys[dir_i].user << 2);
-	flags |= (page_dir->tables_phys[dir_i].wt_caching << 3);
-	flags |= (page_dir->tables_phys[dir_i].nocache << 4);
-	flags |= (page_dir->tables_phys[dir_i].accessed << 5);
-	flags |= (page_dir->tables_phys[dir_i].zero << 6);
-	flags |= (page_dir->tables_phys[dir_i].size << 7);
-	flags |= (page_dir->tables_phys[dir_i].global << 8);
+	flags |= page_dir->tables_phys[dir_i].present << 0;
+	flags |= page_dir->tables_phys[dir_i].rw << 1;
+	flags |= page_dir->tables_phys[dir_i].user << 2;
+	flags |= page_dir->tables_phys[dir_i].wt_caching << 3;
+	flags |= page_dir->tables_phys[dir_i].nocache << 4;
+	flags |= page_dir->tables_phys[dir_i].accessed << 5;
+	flags |= page_dir->tables_phys[dir_i].zero << 6;
+	flags |= page_dir->tables_phys[dir_i].size << 7;
+	flags |= page_dir->tables_phys[dir_i].global << 8;
 
 	flags <<= 16;
 	
@@ -258,15 +257,15 @@ uint32_t page_flags(uint32_t addr, struct page_dir_t* page_dir)
 	if ((page_dir->tables[dir_i] != NULL) \
 	    && ((flags & (PF_PRES << 16)) == (PF_PRES << 16)))
 	{
-		flags |= (page_dir->tables[dir_i]->entry[tab_i].present << 0);
-		flags |= (page_dir->tables[dir_i]->entry[tab_i].rw << 1);
-		flags |= (page_dir->tables[dir_i]->entry[tab_i].user << 2);
-		flags |= (page_dir->tables[dir_i]->entry[tab_i].wt_caching << 3);
-		flags |= (page_dir->tables[dir_i]->entry[tab_i].nocache << 4);
-		flags |= (page_dir->tables[dir_i]->entry[tab_i].accessed << 5);
-		flags |= (page_dir->tables[dir_i]->entry[tab_i].dirty << 6);
-		flags |= (page_dir->tables[dir_i]->entry[tab_i].zero << 7);
-		flags |= (page_dir->tables[dir_i]->entry[tab_i].global << 8);
+		flags |= page_dir->tables[dir_i]->entry[tab_i].present << 0;
+		flags |= page_dir->tables[dir_i]->entry[tab_i].rw << 1;
+		flags |= page_dir->tables[dir_i]->entry[tab_i].user << 2;
+		flags |= page_dir->tables[dir_i]->entry[tab_i].wt_caching << 3;
+		flags |= page_dir->tables[dir_i]->entry[tab_i].nocache << 4;
+		flags |= page_dir->tables[dir_i]->entry[tab_i].accessed << 5;
+		flags |= page_dir->tables[dir_i]->entry[tab_i].dirty << 6;
+		flags |= page_dir->tables[dir_i]->entry[tab_i].zero << 7;
+		flags |= page_dir->tables[dir_i]->entry[tab_i].global << 8;
 	}
 
 	return flags;
@@ -354,6 +353,9 @@ void* set_alloc_start(void* addr)
 /* Initialize paging */
 void paging_init(struct multiboot_info* mb)
 {
+	identity_end = 0;
+	memset(&frames[0], 0, sizeof(frames));
+
 	extern uint32_t end_of_image; /* In linker.ld, boot.s */
 	uint32_t initrd_end = *(uint32_t*)(mb->mods_addr+4);
 
