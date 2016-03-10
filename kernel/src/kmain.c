@@ -58,10 +58,6 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 	 * open, close, creat, read, write, lseek can now access initrd */
 	init_initrd((void*)(*(uint32_t*)mb->mods_addr));
 	
-	/* If we do this earlier, init_initrd causes TF */
-	/* Seems to fuck shit up.. :( */
-	//console_init();
-
 	kputs("RazOS kernel initialized, starting init..");
 
 	char* argv[] = {"Hello", "world", NULL};

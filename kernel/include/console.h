@@ -7,17 +7,9 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
-/* Initialize the console */
-void console_init();
 
 /* Clear the screen */
 void clear_scr();
-
-/* Refresh the console */
-void console_refresh();
-
-/* Scroll the console */
-void scroll(int lines);
 
 /* Set color info */
 int set_color(int bg, int fg);

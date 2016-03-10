@@ -461,23 +461,11 @@ void kb_handler()
 		}
 	}
 
+	if (ascii > 0)
+		write(stdin_fd, &ascii, 1);
+
 	tempfl = 0;
 	flags &= ~NUMPAD;
 	flags &= ~RELEASE;
-
-	/* The rest of this function should be replaced with some sort of
-	 * tty/termios handler */
-	if (ascii > 0)
-		write(stdin_fd, &ascii, 1);
-	/* Handle special keys (scrolling etc..) */
-	switch ((packet >> 8) & 0xFF)
-	{
-	case KEY_PGUP:
-		scroll(20);
-		break;
-	case KEY_PGDOWN:
-		scroll(-20);
-		break;
-	}
 }
 

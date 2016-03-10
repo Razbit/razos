@@ -146,7 +146,6 @@ static ssize_t write_stdin(int fd, const void* buf, size_t size)
 
 		/* Echo to the screen */
 		kputchar(((char*)buf)[i]);
-		console_refresh();
 	}
     
 	return size;
