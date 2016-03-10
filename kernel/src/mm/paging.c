@@ -106,15 +106,15 @@ struct page_dir_t* create_page_dir()
 void clone_page_dir(struct page_dir_t* new, struct page_dir_t* old)
 {
 	/* Link kernel page tables */
-	for (size_t i = 0; i < SC_STACK_BEGIN / (1023 * PAGE_SIZE); i++)
+	for (size_t i = 0; i < KSTACK_BEGIN / (1023 * PAGE_SIZE); i++)
 	{
 		new->tables[i] = old->tables[i];
 		new->tables_phys[i] = old->tables_phys[i];
 	}
 
-	/* Copy user memory and syscall stack. */
+	/* Copy user memory and kernel stack. */
 	/* TODO: this takes a HUGE amount of time. Optimize frame_alloc? */
-	for (size_t i = SC_STACK_BEGIN; i < USTACK_END; i += PAGE_SIZE)
+	for (size_t i = KSTACK_BEGIN; i < USTACK_END; i += PAGE_SIZE)
 	{
 		/* To prevent integer overflow */
 		if (i < PAGE_SIZE)
@@ -138,7 +138,7 @@ void clone_page_dir(struct page_dir_t* new, struct page_dir_t* old)
 void clear_page_dir(struct page_dir_t* page_dir)
 {
 	/* Free each page table after the kernel memory */
-	for (size_t i = SC_STACK_BEGIN / (1023 * PAGE_SIZE); i < 1024; i++)
+	for (size_t i = KSTACK_BEGIN / (1023 * PAGE_SIZE); i < 1024; i++)
 		if (page_dir->tables[i])
 			kfree(page_dir->tables[i]);
 }
@@ -326,17 +326,10 @@ static void identity_map()
 	}
 }
 
-/* Create the interrupt/kernel stack */
+/* Create the syscall/kernel stack */
 static void create_kstack()
 {
 	for (size_t i = KSTACK_BEGIN; i < KSTACK_END; i += PAGE_SIZE)
-		page_map(i, frame_alloc(), PF_PRES | PF_RW, cur_page_dir);
-}
-
-/* Create the syscall/kernel stack */
-static void create_scstack()
-{
-	for (size_t i = SC_STACK_BEGIN; i < SC_STACK_END; i += PAGE_SIZE)
 		page_map(i, frame_alloc(), PF_PRES | PF_RW, cur_page_dir);
 }
 
@@ -374,7 +367,7 @@ void paging_init(struct multiboot_info* mb)
 		panic("Page directory could not be created");
 
 	/* Create kernel page tables */
-	for (size_t dir_i = 0; dir_i<SC_STACK_END/(PAGE_SIZE*1023); dir_i++)
+	for (size_t dir_i = 0; dir_i < KSTACK_END/(PAGE_SIZE*1023); dir_i++)
 	{
 		cur_page_dir->tables[dir_i] = \
 			(struct page_tab_t*)kmalloc_pa(sizeof(struct page_tab_t));
@@ -399,7 +392,6 @@ void paging_init(struct multiboot_info* mb)
 
 	identity_map();
 	create_kstack();
-	create_scstack();
 
 	kvm_init((void*)identity_end);
 

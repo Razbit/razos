@@ -14,7 +14,7 @@
 extern char** environ;
 
 /* Set kernel parameter */
-int __attribute__((noinline)) set_kernel_param(unsigned int cmd, int param)
+int set_kernel_param(unsigned int cmd, int param)
 {
 	return (int)__syscall2(SYS_SETUP, (uint32_t)cmd, (uint32_t)param);
 }

@@ -63,7 +63,7 @@ int kbrk(void* addr)
 {
 	if (addr < kheap_start)
 		goto bad;
-	if (addr > (void*)SC_STACK_BEGIN)
+	if (addr > (void*)KSTACK_BEGIN)
 		goto bad;
 
 	if (addr == (void*)((size_t)kheap_start + kheap_size))
@@ -101,7 +101,7 @@ void* ksbrk(intptr_t incr)
 	if (incr > 0)
 	{
 		/* Enlarge */
-		if (((size_t)kheap_start + kheap_size) + incr > SC_STACK_BEGIN)
+		if (((size_t)kheap_start + kheap_size) + incr > KSTACK_BEGIN)
 			goto bad;
 
 		while (incr > 0)

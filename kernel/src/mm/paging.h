@@ -12,12 +12,10 @@
 
 /* Memory map (see memory_map.md) */
 /* Kheap starts at the first page table after the kernel image,
- * giving a maximum size of 244 MiB (ends at 0x0f7fffff) */
+ * giving a maximum size of 244 MiB (ends at 0x0fbfffff) */
 #define KHEAP_END      (KSTACK_BEGIN - 1)
-#define KSTACK_BEGIN   0x0F800000 /* Kernel/interrupt stack */
-#define KSTACK_END     0x0FBFFFF0 /* 4 MiB, 16 byte align */
-#define SC_STACK_BEGIN 0x0FC00000 /* Syscall stack */
-#define SC_STACK_END   0x0FFFFFF0 /* 4 MiB, 16 byte align */
+#define KSTACK_BEGIN   0x0FC00000 /* Kernel stack */
+#define KSTACK_END     0x0FFFFFF0 /* 4 MiB, 16 byte align */
 #define UMEM_BEGIN     0x10000000 /* Starts at 256 MiB */
 #define UCODE_BEGIN    UMEM_BEGIN
 /* Uheap starts at the first page table after the kernel image */

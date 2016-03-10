@@ -61,7 +61,7 @@ void task_init()
 	memset(&tss, 0, sizeof(tss));
 	memset(tasks, 0, sizeof(tasks));
 	tss.ss0 = GDT_KERNEL_DATA;
-	tss.esp0 = KSTACK_END; /* We use this when handling interrupts */
+	tss.esp0 = KSTACK_END; /* Use kernel stack with interrupts */
 	
 	/* Pointer to io permission bitmap beyond the end of the segment */
 	tss.iopb = sizeof(tss);
@@ -153,10 +153,10 @@ void task_kill(struct task_t* task, uint32_t status)
 void task_destroy(struct task_t* task)
 {
 	/* Free user space */
-	for (size_t i = SC_STACK_BEGIN; i < USTACK_END; i += PAGE_SIZE)
+	for (size_t i = KSTACK_BEGIN; i < USTACK_END; i += PAGE_SIZE)
 	{
 		/* Break if/when i overflows */
-		if (i < SC_STACK_BEGIN)
+		if (i < KSTACK_BEGIN)
 			break;
 
 		/* Check if page is present */

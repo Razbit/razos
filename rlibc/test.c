@@ -25,9 +25,9 @@ int main(int argc, char* argv[])
 	{
 		printf("child: %i\n", pid);
 
-/*		char* argv2[] = {"world", NULL};
+		char* argv2[] = {"world", NULL};
 		setenv("SHELL", "bash", 1);
-		execve("hellow", argv2, environ); */
+		execve("hellow", argv2, environ);
 
 		return 2;
 	}
