@@ -10,15 +10,15 @@
 SECTION .text
 
 gdt_reload:
-	cli
+    cli
     lgdt [gdt_ptr]              ; Load GDT table specified by gdtr
 
-	;; Enable protected mode
-	mov eax, cr0
-	or al, 1
-	mov cr0, eax
+    ;; Enable protected mode
+    mov eax, cr0
+    or al, 1
+    mov cr0, eax
 
-	;; Load CS using a far jump
+    ;; Load CS using a far jump
     jmp 0x08:.flush_cs
 .flush_cs:
     mov eax, 0x10
