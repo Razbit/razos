@@ -17,12 +17,6 @@
 
 uint32_t sys_read(struct registers_t* regs)
 {
-	if (!valid_user_buffer((uint32_t)REG_ARG2(regs), \
-	                       (size_t)REG_ARG3(regs)))
-	{
-		return (uint32_t)-1;
-	}
-	
 	int fd = (int)REG_ARG1(regs);
 	void* buf = (void*)REG_ARG2(regs);
 	size_t size = (size_t)REG_ARG3(regs);
