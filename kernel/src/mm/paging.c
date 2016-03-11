@@ -106,7 +106,7 @@ struct page_dir_t* create_page_dir()
 void clone_page_dir(struct page_dir_t* new, struct page_dir_t* old)
 {
 	/* Link kernel page tables */
-	for (size_t i = 0; i < KSTACK_BEGIN / (1023 * PAGE_SIZE); i++)
+	for (size_t i = 0; i < KSTACK_BEGIN / (1024 * PAGE_SIZE - 1); i++)
 	{
 		new->tables[i] = old->tables[i];
 		new->tables_phys[i] = old->tables_phys[i];

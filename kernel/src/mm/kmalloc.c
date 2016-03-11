@@ -54,7 +54,7 @@ static void* do_kmalloc(size_t size, size_t align)
 	if (size == 0)
 		return NULL;
 
-	size = round_up(size, sizeof(struct kheap_node_t));
+	size = round_up(size, NODE_T_SIZE);
 
 	/* Make sure we have a heap */
 	if (kheap_start == NULL)
@@ -66,9 +66,10 @@ static void* do_kmalloc(size_t size, size_t align)
 			return NULL;
 		}
 
-		kheap_size = ksbrk(0) - kheap_start;
+		kheap_end = ksbrk(0);
+		kheap_size = kheap_end - kheap_start;
 		struct kheap_node_t* start = (struct kheap_node_t*)kheap_start;
-		start->size = kheap_size - sizeof(struct kheap_node_t);
+		start->size = kheap_size - NODE_T_SIZE;
 		start->status = KMALLOC_FREE;
 		start->next = NULL;
 		start->prev = NULL;
@@ -88,14 +89,14 @@ static void* do_kmalloc(size_t size, size_t align)
 			if (curnode->size < size + PAGE_SIZE)
 			{
 				void* prev_end = ksbrk(size + PAGE_SIZE - curnode->size);
-				void* new_end = ksbrk(0);
+				kheap_end = ksbrk(0);
 				if (prev_end == (void*)-1)
 				{
 					errno = ENOMEM;
 					return NULL;
 				}
-				curnode->size += (size_t)(new_end - prev_end);
-				kheap_size += (size_t)(new_end - prev_end);
+				curnode->size += (size_t)(kheap_end - prev_end);
+				kheap_size += (size_t)(kheap_end - prev_end);
 			}
 		}
 
@@ -106,7 +107,7 @@ static void* do_kmalloc(size_t size, size_t align)
 		}
 
 		size_t padding_amount = 0;
-		if (((size_t)(curnode+sizeof(struct kheap_node_t)) % align) != 0)
+		if (((size_t)(curnode + NODE_T_SIZE) % align) != 0)
 		{
 			padding_amount = align - ((size_t)curnode % align);
 		}
@@ -121,37 +122,35 @@ static void* do_kmalloc(size_t size, size_t align)
 
 		struct kheap_node_t* padding = curnode;
 		if (padding_amount != 0 \
-		    && padding_amount != sizeof(struct kheap_node_t))
+		    && padding_amount != NODE_T_SIZE)
 		{
 			/* Set the padding node */
-			curnode = (void*)curnode + padding_amount \
-				- sizeof(struct kheap_node_t);
-			padding->size = padding_amount \
-				- 2 * sizeof(struct kheap_node_t);
+			curnode = (void*)curnode + padding_amount - NODE_T_SIZE;
+			padding->size = padding_amount - 2 * NODE_T_SIZE;
 			padding->status = KMALLOC_FREE;
 			curnode->next = padding->next;
 			padding->next = curnode;
 			curnode->prev = padding;
-			curnode->size = (size_t)curnode->next - (size_t)curnode \
-				- sizeof(struct kheap_node_t);
+			curnode->size = (size_t)curnode->next \
+				- (size_t)curnode - NODE_T_SIZE;
 		}
 
 		/* Pad if we need to */
 		if (curnode->size != size)
 		{
-			padding = (void*)curnode + sizeof(struct kheap_node_t) + size;
+			padding = (void*)curnode + NODE_T_SIZE + size;
 			padding->prev = curnode;
 			padding->next = curnode->next;
 			if (padding->next != NULL)
 			{
-				padding->size = (size_t)padding->next - (size_t)padding \
-					- sizeof(struct kheap_node_t);
+				padding->size = (size_t)padding->next \
+					- (size_t)padding - NODE_T_SIZE;
 				padding->next->prev = padding;
 			}
 			else
 			{
-				padding->size = ((size_t)kheap_start + kheap_size) \
-					- (size_t)padding - sizeof(struct kheap_node_t);
+				padding->size = (size_t)kheap_end
+					- (size_t)padding - NODE_T_SIZE;
 			}
 			padding->status = KMALLOC_FREE;
 			curnode->next = padding;
@@ -160,7 +159,7 @@ static void* do_kmalloc(size_t size, size_t align)
 		curnode->size = size;
 		curnode->status = KMALLOC_RES;
 
-		ret = (void*)((void*)curnode + sizeof(struct kheap_node_t));
+		ret = (void*)((void*)curnode + NODE_T_SIZE);
 		break;
 	}
 
@@ -197,8 +196,9 @@ void do_kfree(void* addr)
 	/* If this is the last node, free some of the heap */
 	if (ptr->next == NULL && ptr->size > (2 * PAGE_SIZE))
 	{
-		ksbrk(-(ptr->size));
+		void* prev_end = ksbrk(-(ptr->size));
 		kheap_end = ksbrk(0);
+		ptr->size -= ((size_t)prev_end - (size_t)kheap_end);
 	}
 }
 
@@ -250,7 +250,7 @@ static int print_kheap_node_t(struct kheap_node_t* node)
 	if (node->status == KMALLOC_FREE)
 	{
 		kprintf("%p\t%u\t%u\t\t%s\t%x\t%x\n", node, \
-	        node->size, node->size + sizeof(struct kheap_node_t),	\
+	        node->size, node->size + NODE_T_SIZE,	\
 	        node->status == KMALLOC_FREE ? "free" : "used",		\
 	        node->prev, node->next);
 		return 1;
@@ -263,7 +263,9 @@ void dump_kheap()
 {
 	kprintf("**KERNEL HEAP DUMP**\n");
 	struct kheap_node_t* ptr = (struct kheap_node_t*)kheap_start;
-	kprintf("KHEAP: SIZE: 0x%p START: 0x%p END: 0x%p\n", kheap_end - kheap_start, kheap_start, kheap_end);
+	kprintf("KHEAP: SIZE: 0x%p START: 0x%p END: 0x%p\n", kheap_size, \
+	        kheap_start, kheap_end);
+
 	int i = 0;
 	while (ptr->next != NULL && (void*)ptr < kheap_end)
 	{
