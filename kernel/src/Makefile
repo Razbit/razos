@@ -1,4 +1,4 @@
-CSOURCES = gdt.c console.c kmain.c vga.c panic.c x86.c
+CSOURCES = gdt.c console.c kmain.c vga.c panic.c x86.c power.c
 ASMSOURCES = gdt.s
 SUBOBJS = drivers.o mm.o syscall.o fs.o loader.o
 

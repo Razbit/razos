@@ -1,6 +1,6 @@
 /* This file is a part of the RazOS project
  *
- * Razbit 2014 */
+ * Razbit 2014, 2016 */
 
 #include <string.h>
 #include <sys/types.h>
@@ -146,7 +146,11 @@ int memcmp(const void* ptr1, const void* ptr2, size_t num)
 
 int strcmp(const char* str1, const char* str2)
 {
-	while (true)
+	ssize_t diff = strlen(str1) - strlen(str2);
+	if (diff != 0)
+		return diff;
+
+	while (1)
 	{
 		if (*str1 < *str2)
 			return -1;
@@ -162,8 +166,17 @@ int strcmp(const char* str1, const char* str2)
 
 int strncmp(const char* str1, const char* str2, size_t num)
 {
+	size_t len1 = strlen(str1);
+	size_t len2 = strlen(str2);
+
 	for (; num > 0; num--)
 	{
+		/* str1 is too short */
+		if ((len1 < num) && (len1 < len2))
+			return -1;
+		/* str2 is too short */
+		if ((len2 < num) && (len2 < len1))
+			return 1;
 		if (*str1 < *str2)
 			return -1;
 		if (*str1 > *str2)
@@ -173,6 +186,8 @@ int strncmp(const char* str1, const char* str2, size_t num)
 
 		str1++;
 		str2++;
+		len1--;
+		len2--;
 	}
 
 	return 0;
@@ -332,7 +347,7 @@ char* strtok(char* str, const char* delimiters)
 	/* start of the substr */
 	char* p_start = last;
 
-	while (true)
+	while (1)
 	{
 		for (i = 0; i < len; i++)
 		{

@@ -23,9 +23,7 @@ int main(int argc, char* argv[])
 
 	if (pid == 0)
 	{
-		printf("child: %i\n", pid);
-
-		char* argv2[] = {"world", NULL};
+		char* argv2[] = {"hellow", "world", NULL};
 		setenv("SHELL", "bash", 1);
 		execve("hellow", argv2, environ);
 
@@ -33,7 +31,7 @@ int main(int argc, char* argv[])
 	}
 	else
 	{
-		printf("parent: %i\n", pid);
+		printf("child's (hellow) pid: %i\n", pid);
 		int ret;
 		wait(&ret);
 		printf("child returned %i\n", ret);

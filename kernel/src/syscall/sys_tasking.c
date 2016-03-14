@@ -16,13 +16,14 @@
 
 #include "sys_tasking.h"
 
+#include <asm/power.h>
 
 uint32_t sys_exit(struct registers_t* regs)
 {
 	uint32_t status = REG_ARG1(regs);
 
 	if (cur_task->pid == 1)
-		panic("Init exited with status %d\n", status);
+		shutdown();
 
 	task_kill(cur_task, status);
 

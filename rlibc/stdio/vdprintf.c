@@ -539,6 +539,9 @@ int vdprintf(int fd_, const char* fmt, va_list arg)
 
 			case 's':
 				s = va_arg(arg, char*);
+				if (s == NULL)
+					break;
+
 				slen = strlen(s);
 
 				if (prec < 0)

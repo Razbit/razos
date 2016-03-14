@@ -26,9 +26,11 @@ init:
 	$(MAKE) -C rlibc
 	$(MAKE) test -C rlibc
 	$(MAKE) hellow -C rlibc
+	$(MAKE) rash -C rlibc
 	mv rlibc/test ./test
 	mv rlibc/hellow ./hellow
-	tools/mk-initrd test hellow
+	mv rlibc/rash ./rash
+	tools/mk-initrd test hellow rash
 
 bochs:
 	sudo ./update_image.sh

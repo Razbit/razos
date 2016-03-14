@@ -60,9 +60,11 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 	
 	kputs("RazOS kernel initialized, starting init..");
 
-	char* argv[] = {"Hello", "world", NULL};
-	char* envp[] = {"SHELL=rash", NULL};
-	uint32_t* ret = execve("test", argv, envp);
+	/* Uncomment and set arguments/env variables when/if needed. */
+	//char* argv[] = {"arg0", NULL};
+	//char* envp[] = {"VAR=VAL", NULL};
+	
+	uint32_t* ret = execve("rash", NULL, NULL);
 
 	if (ret != NULL)
 	{
