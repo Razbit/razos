@@ -117,6 +117,7 @@ END_ISR 14
 
     ;; PIT
 BEGIN_ISR 32
+	pusha
     ACK_IRQ
 
     cmp [sched_halted], dword 1
@@ -132,21 +133,24 @@ BEGIN_ISR 32
     add esp, 8
     pop ebp
 
-.skip:  
+.skip:
+	popa
     iret
 END_ISR 32
 
     ;; Keyboard
 BEGIN_ISR 33
+	pusha
     ACK_IRQ
 
     call kb_handler
-
+	popa
     iret
 END_ISR 33
 
     ;; Spurious interrupt (or lpt1)
 BEGIN_ISR 39
+	pusha
     push ax                     ; save ax
     mov al, 0x0b                ; cmd to read irq service reg (isr)
     out 0x20, al                ; command port of PIC1
@@ -160,6 +164,7 @@ BEGIN_ISR 39
 
 .spurious:
     ;; should not be acknowledged, so just iret
+	popa
     iret
 END_ISR 39
 
