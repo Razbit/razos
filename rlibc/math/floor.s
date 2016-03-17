@@ -6,22 +6,20 @@
 
 SECTION .data
 
-old:	dw 0
-new:	dw 0x0400
-
+old: dw 0
+new: dw 0x0400
 
 SECTION .text
 
 floor:
-	fstcw	[old]
-	mov	eax, old
-	and	ah, 0b11110011
-	or	eax, new
+    fstcw [old]
+    mov eax, old
+    and ah, 0b11110011
+    or eax, new
 
-	fldcw	[new]
-	fld	QWORD [esp+4]
-	frndint
+    fldcw [new]
+    fld QWORD [esp+4]
+    frndint
 
-	fldcw	[old]
-	ret
-
+    fldcw [old]
+    ret

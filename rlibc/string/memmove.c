@@ -33,4 +33,3 @@ void* memmove(void* dest, const void* source, size_t num)
 		return dest;
 	}
 }
-

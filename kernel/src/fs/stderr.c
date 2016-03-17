@@ -27,7 +27,7 @@ int init_stderr()
 	/* stderr already open? */
 	if (cur_task->files[STDERR_FILENO].vfs_node != NULL)
 		return STDERR_FILENO;
-	
+
     struct vfs_node_t* node = vfs_root;
 
 	/* If this is the first file */
@@ -82,9 +82,7 @@ static ssize_t write_stderr(int fd, const void* buf, size_t size)
 	(void)fd;
 
 	for (size_t i = 0; i < size; i++)
-	{
 		kputchar(((char*)buf)[i]);
-	}
 
 	return (ssize_t)size;
 }
@@ -97,13 +95,13 @@ static int open_stderr(struct vfs_node_t* node, int oflag, mode_t mode)
 	(void)node;
 
 	int ret = STDERR_FILENO;
-	
+
 	/* If STDERR_FILENO is not free, get the first free fd */
 	if (cur_task->files[STDERR_FILENO].vfs_node != NULL)
 		ret = get_free_fd(3);
 
 	if (ret < 0)
 		errno = EMFILE;
-	
+
 	return ret;
 }

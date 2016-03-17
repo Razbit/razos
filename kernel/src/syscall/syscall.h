@@ -36,7 +36,4 @@ extern syscall_t syscall_table[];
 /* Initalize syscall interface (syscall.s) */
 void syscall_init();
 
-/* Make sure buffer is available to user */
-int valid_user_buffer(uint32_t ptr, size_t len);
-
 #endif /* SYSCALL_H */

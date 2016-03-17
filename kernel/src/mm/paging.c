@@ -55,7 +55,6 @@ static inline uint32_t find_free_frame()
 	return (uint32_t)-1;
 }
 
-
 /* Allocate a frame, return its physical address */
 uint32_t frame_alloc()
 {
@@ -155,7 +154,6 @@ void set_page_dir(struct page_dir_t* page_dir)
 	__asm__ __volatile__("mov %0, %%cr3" :: "r"(phys_addr) : "memory");
 }
 
-
 /* Map frame to address, set flags */
 void* page_map(uint32_t addr, uint32_t frame, uint32_t flags, \
                struct page_dir_t* page_dir)
@@ -221,7 +219,7 @@ uint32_t get_phys(uint32_t addr, struct page_dir_t* page_dir)
 	uint32_t offset = addr & (PAGE_SIZE - 1);
 	uint32_t tab_i = (addr >> 12) & 1023;
 	uint32_t dir_i = (addr >> 22) & 1023;
-	
+
 	/* Check if the page table exists */
 	if (page_dir->tables[dir_i] == NULL)
 		return 0;
@@ -252,7 +250,7 @@ uint32_t page_flags(uint32_t addr, struct page_dir_t* page_dir)
 	flags |= page_dir->tables_phys[dir_i].global << 8;
 
 	flags <<= 16;
-	
+
 	/* Check if the page exists */
 	if ((page_dir->tables[dir_i] != NULL) \
 	    && ((flags & (PF_PRES << 16)) == (PF_PRES << 16)))
@@ -333,7 +331,6 @@ static void create_kstack()
 		page_map(i, frame_alloc(), PF_PRES | PF_RW, cur_page_dir);
 }
 
-
 /* Grow identity-mapped region. If addr == 0, return current end */
 void* set_alloc_start(void* addr)
 {
@@ -341,7 +338,6 @@ void* set_alloc_start(void* addr)
 		identity_end = (uint32_t)addr;
 	return (void*)identity_end;
 }
-
 
 /* Initialize paging */
 void paging_init(struct multiboot_info* mb)
@@ -358,7 +354,7 @@ void paging_init(struct multiboot_info* mb)
 	/* Get size of available memory. Round down to a multiple of
 	 * 32 frames because of the bitmap */
 	memsize = register_mem(mb) & ~31;
-	
+
 	kprintf("%u MiB available memory (0x%x pages)\n", \
 	        memsize * PAGE_SIZE / 0x100000, memsize);
 

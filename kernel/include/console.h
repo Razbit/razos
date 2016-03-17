@@ -2,11 +2,10 @@
  *
  * console.h -- kernel i/o system
  *
- * Razbit 2014 */
+ * Razbit 2014, 2016 */
 
 #ifndef CONSOLE_H
 #define CONSOLE_H
-
 
 /* Clear the screen */
 void clear_scr();
@@ -19,7 +18,7 @@ int kputchar_color(char c, int bg, int fg);
 
 /* Print using color information set by set_color */
 int kputchar(char c);
-int kputs(char *c);
+int kputs(char *str);
 
 int kprintf(const char* fmt, ...);
 

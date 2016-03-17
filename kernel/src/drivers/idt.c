@@ -46,6 +46,7 @@ void register_isr(uint8_t int_no, void* handler)
 	idt[int_no] = entry;
 }
 
+/* Remap irq's as interrupt vectors starting from 32 */
 static void irq_remap()
 {
 	outb(0x20, 0x11);

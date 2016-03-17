@@ -80,10 +80,10 @@ int init_stdout()
 static ssize_t write_stdout(int fd, const void* buf, size_t size)
 {
 	(void)fd;
-	
+
 	for (size_t i = 0; i < size; i++)
 		kputchar(((char*)buf)[i]);
-	
+
 	return (ssize_t)size;
 }
 
@@ -95,13 +95,13 @@ static int open_stdout(struct vfs_node_t* node, int oflag, mode_t mode)
 	(void)node;
 
 	int ret = STDOUT_FILENO;
-	
+
 	/* If STDOUT_FILENO is not free, get the first free fd */
 	if (cur_task->files[STDOUT_FILENO].vfs_node != NULL)
 		ret = get_free_fd(3);
 
 	if (ret < 0)
 		errno = EMFILE;
-	
+
 	return ret;
 }

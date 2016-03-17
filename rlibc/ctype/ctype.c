@@ -4,25 +4,25 @@
 
 #include <ctype.h>
 
+/* Take a look at an ASCII chart */
+
 int isalnum(int c)
 {
-	if ((c >= 0x41 && c <=0x5A)					\
-	    || (c >= 0x61 && c <= 0x7A)				\
-	    || (c >= 0x30 && c <= 0x39))
+	if (isalpha(c) || isdigit(c))
 		return 1;
 	return 0;
 }
 
 int isalpha(int c)
 {
-	if ((c >= 0x41 && c <=0x5A) || (c >= 0x61 && c <= 0x7A))
+	if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
 		return 1;
 	return 0;
 }
 
 int isdigit(int c)
 {
-	if (c >= 0x30 && c <= 0x39)
+	if (c >= '0' && c <= '9')
 		return 1;
 	return 0;
 }
@@ -43,7 +43,7 @@ int isgrapf(int c)
 
 int islower(int c)
 {
-	if (c >= 0x61 && c <= 0x7A)
+	if (c >= 'a' && c <= 'z')
 		return 1;
 	return 0;
 }
@@ -74,16 +74,14 @@ int isspace(int c)
 
 int isupper(int c)
 {
-	if (c >= 0x41 && c <= 0x5A)
+	if (c >= 'A' && c <= 'Z')
 		return 1;
 	return 0;
 }
 
 int isxdigit(int c)
 {
-	if ((c >= 0x30 && c <= 0x39)				\
-	    || (c >= 0x41 && c <= 0x46)				\
-	    || (c >= 0x61 && c <= 0x66))
+	if (isdigit(c) || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'))
 		return 1;
 	return 0;
 }

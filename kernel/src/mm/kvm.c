@@ -32,7 +32,7 @@ void* kvm_page_alloc()
 	}
 
 	kheap_size += PAGE_SIZE;
-	
+
 	return ret;
 }
 
@@ -40,7 +40,7 @@ void* kvm_page_alloc()
 void* kvm_page_alloc_zeroed()
 {
 	void* ret = kvm_page_alloc();
-	
+
 	if (ret == NULL)
 		return NULL;
 

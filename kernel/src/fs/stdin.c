@@ -81,7 +81,7 @@ int init_stdin()
 	cur_task->files[STDIN_FILENO].vfs_node = node;
 	cur_task->files[STDIN_FILENO].at = 0;
 	cur_task->files[STDIN_FILENO].oflag = O_RDWR;
-	
+
 	return STDIN_FILENO;
 }
 
@@ -108,7 +108,7 @@ static char pop_stdin()
 		read_at = 0;
 	if (read_at == write_at) /* buf empty -> fail */
 		return '\0';
-	
+
 	read_at++;
 	return stdin_buf[read_at-1];
 }
@@ -120,7 +120,7 @@ static ssize_t read_stdin(int fd, void* buf, size_t size)
 
 	sched_halt(); /* Make sure not to switch tasks now */
 	sti(); /* Now we can catch kb inputs */
-	
+
 	while (stdin_buf_size < size);
 
 	for (; read < size; read++)
@@ -159,7 +159,7 @@ static int open_stdin(struct vfs_node_t* node, int oflag, mode_t mode)
 	(void)node;
 
 	int ret = STDIN_FILENO;
-	
+
 	/* If STDIN_FILENO is not free, get the first free fd */
 	if (cur_task->files[STDIN_FILENO].vfs_node != NULL)
 		ret = get_free_fd(3);

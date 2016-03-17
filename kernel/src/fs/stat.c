@@ -21,17 +21,17 @@ int stat(const char* path, struct stat* buf)
 		errno = ENOENT;
 		return -1;
 	}
-	
+
 	int fd = open(path, O_RDONLY);
-	
+
 	if (fd < 0)
 	{
 		errno = EBADF;
 		return -1;
 	}
-	
+
 	int ret = fstat(fd, buf);
-	
+
 	close(fd);
 
 	return ret;
@@ -46,6 +46,6 @@ int fstat(int fd, struct stat* buf)
 	}
 
 	*buf = cur_task->files[fd].vfs_node->status;
-	
+
 	return 0;
 }

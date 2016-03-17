@@ -1,6 +1,6 @@
     ;; This file is a part of the RazOS project
     ;;
-    ;; crti.s -- provides the kernel with crti.o
+    ;; crti.s -- provides the user-space with crti.o
     ;;
     ;; Razbit 2015
 

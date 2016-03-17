@@ -12,6 +12,7 @@
 void shutdown()
 {
 	kprintf("Shutting down...\n");
+	
 	/* extremely proper ACPI usage.. :D */
 	outw(0xb004, 0x0 | 0x2000);
 	panic("power: lol no, just panicing xD\n");

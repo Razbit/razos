@@ -37,4 +37,3 @@ char* strrchr(const char* str, int value)
 	return NULL;
 
 }
-

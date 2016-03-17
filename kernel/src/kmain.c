@@ -36,8 +36,8 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 
 	sti();
 	
-	kprintf("Multiboot info found at 0x%p\n", mb);
-	kprintf("Stack is at 0x%p\n", esp);
+	kprintf("Multiboot info found at %p\n", mb);
+	kprintf("Stack is at %p\n", esp);
 
 	pit_set_freq(CLOCKS_PER_SEC);
 

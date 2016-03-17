@@ -111,7 +111,7 @@ static double check_nan_inf(const char *str, char **endptr)
 		{
 			++(*endptr);
 			while (isalnum(**endptr) || **endptr == '_') ++(*endptr);
-			
+
 			if (**endptr == ')') ++(*endptr);
 			else				 *endptr = (char*)str+3;
 		}
@@ -133,21 +133,21 @@ double strtod(const char *str, char **endptr)
 	char **curend = (char**)(&str); /* In case endptr == NULL. */
 	const char *orig = str;
 	double sign = 1;
-	
+
 	while (isspace(*str)) ++str; /* Skip whitespace. */
-	
+
 	if		(*str == '+') ++str;
 	else if (*str == '-') ++str, sign = -1;
-	
+
 	double result = check_nan_inf(str, curend);
 
 	if (result != 0) return result * sign;
-	
+
 	if (strcicmp("0X", str) == 0 && isxdigit(*(str+2)))
 		result = parse_hex_decimal(str+2, curend);
 	else
 		result = parse_decimal(str, curend);
-	
+
 	/* If no valid conversion, do not skip whitespace. */
 	if (*curend == orig) *curend = (char*)orig;
 

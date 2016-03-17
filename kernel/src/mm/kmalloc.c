@@ -2,7 +2,7 @@
  *
  * kmalloc.c -- kernel-world malloc() family
  *
- * Razbit 2015 */
+ * Razbit 2015, 2016 */
 
 #include <kmalloc.h>
 
@@ -171,7 +171,7 @@ static void unify_fwd(struct kheap_node_t* ptr)
 {
 	ptr->size += ptr->next->size + NODE_T_SIZE;
 	ptr->next = ptr->next->next;
-	
+
 	if (ptr->next != NULL)
 		ptr->next->prev = ptr;
 }
@@ -206,13 +206,13 @@ void do_kfree(void* addr)
 static void* pre_paging_kmalloc(size_t size, size_t align)
 {
 	void* cur_alloc_start = set_alloc_start(NULL);
-	
+
 	cur_alloc_start = (void*)round_up((size_t)cur_alloc_start, align);
-	
+
 	void* ret = cur_alloc_start;
 	set_alloc_start(cur_alloc_start + size);
-	
-	return ret;	
+
+	return ret;
 }
 
 /* Aligned */
@@ -245,19 +245,13 @@ void kfree(void* ptr)
 		do_kfree(ptr);
 }
 
-static int print_kheap_node_t(struct kheap_node_t* node)
+static void print_kheap_node_t(struct kheap_node_t* node)
 {
-	if (node->status == KMALLOC_FREE)
-	{
-		kprintf("%p\t%u\t%u\t\t%s\t%x\t%x\n", node, \
-	        node->size, node->size + NODE_T_SIZE,	\
-	        node->status == KMALLOC_FREE ? "free" : "used",		\
+	kprintf("%p\t%u\t%u\t\t%s\t%x\t%x\n", node, \
+	        node->size, node->size + NODE_T_SIZE, \
+	        node->status == KMALLOC_FREE ? "free" : "used", \
 	        node->prev, node->next);
-		return 1;
-	}
-	return 0;
 }
-
 
 void dump_kheap()
 {
@@ -277,7 +271,8 @@ void dump_kheap()
 	{
 		if (i % 20 == 0)
 			kprintf("NODE\t\tSIZE\tWITH NODE\tSTATUS\tPREV\tNEXT\n");
-		i += print_kheap_node_t(ptr);
+		print_kheap_node_t(ptr);
+		i++;
 		ptr = ptr->prev;
 	}
 	kprintf("\n");

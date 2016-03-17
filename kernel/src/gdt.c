@@ -1,6 +1,6 @@
 /* This file is a part of the RazOS project
  *
- * gdt.c -- Global Descriptor Table
+ * gdt.c -- Global Descriptor Tables
  *
  * Razbit 2015 (based on Charlie Somerville's Radium) */
 

@@ -1,6 +1,6 @@
 CSOURCES = vdprintf.c printf.c puts.c dprintf.c dgetc.c getchar.c vsprintf.c sprintf.c putc.c dgetdelim.c dgetline.c
-ASMSOURCES = 
-SUBOBJS = 
+ASMSOURCES =
+SUBOBJS =
 
 OBJS = $(patsubst %.c, %.c.o,$(CSOURCES))
 OBJS += $(patsubst %.s, %.s.o,$(ASMSOURCES))

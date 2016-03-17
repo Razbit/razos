@@ -43,7 +43,7 @@ static ssize_t read_fifofs(int fd, void* buf, size_t size)
 		 * until size > 0 or there are no writers */
 		sched_switch();
 	}
-	
+
 	/* Data is splitted in 256 byte blocks */
 	/* Offset in the first node */
 	off_t offset = hdr->read_at % 0x100;
@@ -61,7 +61,7 @@ static ssize_t read_fifofs(int fd, void* buf, size_t size)
 			/* Stop at EOF */
 			if (read >= size)
 				goto exit;
-			
+
 			*(uint8_t*)(buf+read) = curnode->data[offset];
 			read++;
 			hdr->read_at++;
@@ -93,11 +93,11 @@ static ssize_t write_fifofs(int fd, const void* buf, size_t size)
 		errno = EPIPE;
 		return -1;
 	}
-	
+
 	/* Find the location where we can start writing */
 	size_t start_node = hdr->write_at / 0xFF;
 	size_t offset = hdr->write_at % 0x100;
-	
+
 	for (size_t i = 0; i < start_node; i++)
 		curnode = curnode->next;
 
@@ -174,7 +174,7 @@ static int open_fifofs(struct vfs_node_t* node, int oflag, mode_t mode)
 				errno = ENXIO;
 				return -1;
 			}
-			
+
 			sched_switch();
 		}
 
@@ -189,7 +189,7 @@ static int close_fifofs(int fd)
 {
 	struct fifofs_hdr_t* hdr = \
 		fifofs_nodes[cur_task->files[fd].vfs_node->status.st_ino];
-	
+
 	if (cur_task->files[fd].oflag & O_RDONLY) /* O_RDWR also handled */
 	{
 		hdr->readers--;
@@ -202,14 +202,14 @@ static int close_fifofs(int fd)
 		if (hdr->writers < 0)
 			hdr->writers = 0;
 	}
-	
+
 	return 0;
 }
 
 int creat_fifofs(struct vfs_node_t* node, mode_t mode)
 {
 	(void)mode;
-	
+
 	/* Creat is set in creat_vfs() */
 	node->read = &read_fifofs;
 	node->write = &write_fifofs;

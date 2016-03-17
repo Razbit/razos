@@ -21,12 +21,12 @@
 #undef _NEED_WHENCE_VALUES
 
 /* Mask for access modes */
-#define O_ACCMODE 0x03
+#define O_ACCMODE  0x03
 
 /* Access modes used by open/fcntl */
-#define O_RDONLY 0x01
-#define O_WRONLY 0x02
-#define O_RDWR   (O_RDONLY | O_WRONLY)
+#define O_RDONLY   0x01
+#define O_WRONLY   0x02
+#define O_RDWR     (O_RDONLY | O_WRONLY)
 
 /* File status flags for open/fcntl */
 /* Creation flags */
@@ -44,7 +44,6 @@
 /* Mask for all the above O_* flags */
 #define O_MASK     (O_ACCMODE | O_CF_MASK | O_SF_MASK)
 
-
 /* File descriptor flags */
 #define FD_MASK    0xF000 /* Mask for the below flags */
 #define FD_CLOEXEC 0x1000 /* Close FD on call to exec() */
@@ -56,7 +55,6 @@
 #define F_SETFD    0x0004 /* Set file descriptor flags */
 #define F_GETFL    0x0008 /* Get file status flags */
 #define F_SETFL    0x0010 /* Set file status flags */
-
 
 /* Function prototypes */
 int open(const char* name, int oflag, ...);

@@ -62,14 +62,14 @@ void task_init()
 	memset(tasks, 0, sizeof(tasks));
 	tss.ss0 = GDT_KERNEL_DATA;
 	tss.esp0 = KSTACK_END; /* Use kernel stack with interrupts */
-	
+
 	/* Pointer to io permission bitmap beyond the end of the segment */
 	tss.iopb = sizeof(tss);
-	
+
 	gdt_set_tss(GDT_TSS, (uint32_t)&tss, sizeof(tss));
 	gdt_reload();
 
-	kprintf("Load TSS at 0x%p\n", &tss);
+	kprintf("Load TSS at %p\n", &tss);
 
 	/* load tss selector */
 	__asm__ __volatile__("mov %0, %%eax; ltr %%ax" \
@@ -183,7 +183,7 @@ struct task_t* sched_next()
 	pid_t cur_pid = cur_task->pid;
 
 	for (size_t i = cur_pid + 1; i < countof(tasks); i++)
-	{		
+	{
 		struct task_t* task = get_task(i);
 
 		if (task && task->state == TASK_STATE_READY)
@@ -191,7 +191,7 @@ struct task_t* sched_next()
 	}
 
 	for (size_t i = 1; i <= cur_pid; i++)
-	{		
+	{
 		struct task_t* task = get_task(i);
 
 		if (task && task->state == TASK_STATE_READY)

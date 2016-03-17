@@ -32,6 +32,7 @@ int do_fcntl(int fd, int cmd, uint32_t arg)
 			errno = EINVAL;
 			return -1;
 		}
+
 		int fd2 = get_free_fd((int)arg);
 		if (fd2 < 0)
 		{
@@ -43,23 +44,23 @@ int do_fcntl(int fd, int cmd, uint32_t arg)
 		cur_task->files[fd2].oflag &= ~FD_CLOEXEC;
 
 		return fd2;
-		
+
 	case F_GETFD: /* Get fd flags */
 		return cur_task->files[fd].oflag & FD_MASK;
-		
+
 	case F_SETFD: /* Set fd flags */
 		cur_task->files[fd].oflag &= ~FD_MASK; /* Clear all fd flags */
 		cur_task->files[fd].oflag |= ((int)arg & FD_MASK);
 		return 0;
-		
+
 	case F_GETFL: /* Get status flags */
 		return cur_task->files[fd].oflag & O_MASK;
-		
+
 	case F_SETFL: /* Set status flags (ignore access and creation) */
 		cur_task->files[fd].oflag &= ~O_SF_MASK; /* Clear status flags */
 		cur_task->files[fd].oflag |= ((int)arg & O_SF_MASK);
 		return 0;
-		
+
 	default:
 		errno = EINVAL;
 		return -1;

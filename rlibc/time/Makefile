@@ -1,6 +1,6 @@
 CSOURCES = mktime.c time.c gmtime.c ctime.c
-ASMSOURCES = 
-SUBOBJS = 
+ASMSOURCES =
+SUBOBJS =
 
 OBJS = $(patsubst %.c, %.c.o,$(CSOURCES))
 OBJS += $(patsubst %.s, %.s.o,$(ASMSOURCES))

@@ -14,13 +14,13 @@ double exp(double x)
 	double y = LOG2E * x;
 	int intpart = (int)trunc(y);
 	double fractional = y - intpart;
-	
+
 	double exp2;
 	__asm__("fldl   %1\n\t"
 			"f2xm1"
 			: "=t"(exp2)
 			: "m"(fractional)
 			: "st(1)");
-	
+
 	return ldexp(1, intpart) * (exp2+1);
 }

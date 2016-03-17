@@ -17,7 +17,7 @@ ssize_t dgetdelim(char **lineptr, size_t *n, int delim, int fd)
 	for (char c = dgetc(fd); c != EOF && c != delim; c = dgetc(fd))
 	{
 		(*lineptr)[pos++] = c;
-		
+
 		/* If the buffer is about to be exceeded, reallocate. */
 		if (pos >= *n)
 		{

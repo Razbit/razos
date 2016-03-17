@@ -1,8 +1,14 @@
+/* This file is a part of the RazOS project
+ *
+ * errno_defs.h -- define errno numbers
+ *
+ * Razbit 2016 */
+
 #ifndef H_ERRNO_DEFS
 #define H_ERRNO_DEFS
 
 /* ISO C99 */
-#define EDOM             1  /* Mathematics argument out of domain of function. */
+#define EDOM             1  /* Mathematics argument out of domain */
 #define ERANGE           2  /* Result out of range. */
 #define EILSEQ           3  /* Illegal byte sequence. */
 
@@ -61,7 +67,7 @@
 #define ENOSTR          55  /* Device not a stream. */
 #define ENOSYS          56  /* Function not supported. */
 #define ENOTCONN        57  /* The socket is not connected. */
-#define ENOTDIR         58  /* Not a directory or a symlink to a directory. */
+#define ENOTDIR         58  /* Not a directory or a symlink to one. */
 #define ENOTEMPTY       59  /* Directory not empty. */
 #define ENOTRECOVERABLE 60  /* State not recoverable. */
 #define ENOTSOCK        61  /* Not a socket. */
@@ -69,7 +75,7 @@
 #define ENOTTY          63  /* Inappropriate I/O control operation. */
 #define ENXIO           64  /* No such device or address. */
 #define EOPNOTSUPP      65  /* Operation not supported on socket. */
-#define EOVERFLOW       66  /* Value too large to be stored in data type. */
+#define EOVERFLOW       66  /* Value too large to be stored in type. */
 #define EOWNERDEAD      67  /* Previous owner died. */
 #define EPERM           68  /* Operation not permitted. */
 #define EPIPE           69  /* Broken pipe. */

@@ -14,7 +14,6 @@
 #define SYS_SCHED_YIELD 1
 #define SYS_FORK 2
 #define SYS_WAIT 3
-
 #define SYS_READ 4
 #define SYS_WRITE 5
 #define SYS_OPEN 6
@@ -23,17 +22,12 @@
 #define SYS_LSEEK 9
 #define SYS_FCNTL 10
 #define SYS_FSTAT 11
-
 #define SYS_SETUP 12
-
 #define SYS_PIPE 13
 #define SYS_BRK 14
 #define SYS_SBRK 15
-
 #define SYS_EXECVE 16
-
 #define SYS_TIME 17
-
 
 /* In arch/../crt0.s */
 uint32_t __syscall0(uint32_t num);

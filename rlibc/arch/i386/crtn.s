@@ -1,6 +1,6 @@
     ;; This file is a part of the RazOS project
     ;;
-    ;; crtn.s -- provides the kernel with crtn.o
+    ;; crtn.s -- provides the user-space with crtn.o
     ;;
     ;; Razbit 2015
 

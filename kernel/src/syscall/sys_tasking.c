@@ -31,7 +31,6 @@ uint32_t sys_exit(struct registers_t* regs)
 	return 0; /* If we happen to get here somehow (makes gcc happy) */
 }
 
-
 uint32_t sys_fork(struct registers_t* regs)
 {
 	(void)regs;
@@ -48,7 +47,6 @@ uint32_t sys_fork(struct registers_t* regs)
 		return 0;
 	}
 }
-
 
 uint32_t sys_wait(struct registers_t* regs)
 {
@@ -87,7 +85,6 @@ again:
 
 	goto again;
 }
-
 
 uint32_t sys_sched_yield(struct registers_t* regs)
 {

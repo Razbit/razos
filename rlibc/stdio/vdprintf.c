@@ -19,7 +19,7 @@
  * This function is used for all other functions of the printf-family,
  * for now. It will be replaced by vfprintf because of heavy write()
  * usage. (syscall at every write -> slow as fuck)
- * 
+ *
  * Following is what this implementation can do. Aiming for C99..
  *
  * Format specifier prototype:
@@ -228,7 +228,7 @@ static void floatstr(double number, int width, int prec, int flags)
 	const char* digs = "0123456789";
 	int i, p;
 	double num, frac;
-	
+
 	if (prec > buf_size)
 		prec = buf_size;
 
@@ -239,7 +239,7 @@ static void floatstr(double number, int width, int prec, int flags)
 		c = '0';
 	else
 		c = ' ';
-	
+
 	if (number < 0)
 	{
 		sign = '-';
@@ -261,14 +261,14 @@ static void floatstr(double number, int width, int prec, int flags)
 
 	if (sign != 0)
 		width--;
-	
+
 	if (isnan(number))
 	{
 		if (flags & FL_SMALL)
 			tmp[2] = 'n', tmp[1] = 'a', tmp[0] = 'n';
 		else
 			tmp[2] = 'N', tmp[1] = 'A', tmp[0] = 'N';
-		
+
 		width -= 3;
 		i = 3;
 		prec = 0;
@@ -279,7 +279,7 @@ static void floatstr(double number, int width, int prec, int flags)
 			tmp[2] = 'i', tmp[1] = 'n', tmp[0] = 'f';
 		else
 			tmp[2] = 'I', tmp[1] = 'N', tmp[0] = 'F';
-		
+
 		width -= 3;
 		i = 3;
 		prec = 0;
@@ -328,10 +328,10 @@ static void floatstr(double number, int width, int prec, int flags)
 				num /= 10.0;
 			}
 		}
-		
+
 		if (i > prec)
 			prec = i;
-		
+
 		width -= prec;
 	}
 
@@ -582,7 +582,7 @@ int vdprintf(int fd_, const char* fmt, va_list arg)
 				else
 					*printed = (long)nprinted;
 				break;
-			
+
 			case 'f':
 				flags |= FL_SMALL;
 			case 'F':

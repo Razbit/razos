@@ -14,7 +14,7 @@ int fcntl(int fd, int cmd, ...)
 	uint32_t arg;
 	va_list args;
 	va_start(args, cmd);
-	
+
 	switch(cmd)
 	{
 	case F_DUPFD:

@@ -46,31 +46,6 @@ syscall_t syscall_table[] =
 	[SYS_TIME] = &sys_time
 };
 
-/* Make sure buffer is available to user */
-int valid_user_buffer(uint32_t ptr, size_t len)
-{
-	if ((void*)ptr == NULL)
-		return 0;
-	
-	if ((0xFFFFFFFF - len) < ptr)
-		return 0;
-
-	size_t page_offset = ptr % PAGE_SIZE;
-	ptr -= page_offset;
-	len += page_offset;
-
-	uint32_t end = ptr + len;
-	while (ptr < end)
-	{
-		uint32_t flags = page_flags(ptr, cur_task->page_dir);
-		if ((flags & (PF_PRES || PF_USER)) != (PF_PRES || PF_USER))
-			return 0;
-		ptr += PAGE_SIZE;
-	}
-
-	return 1;
-}
-
 /* Dispatch a syscall. Called in syscall.s */
 void syscall_dispatch(struct registers_t* regs)
 {

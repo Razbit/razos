@@ -9,7 +9,6 @@ Here's a quick how-to:
 ###In the kernel
 - Include ```<api/razos.h>``` and ```"syscall.h"``` to your files
 - Use the ARG -macros from ```syscall.h``` to fetch arguments on the kernel side
-- Check all the buffers used for communication between kernel and user using the ```valid_user_buffer()``` from ```syscall.h```, at least the ones where you write from the kernel, user might not be able to read that memory..
 
 ###In user-space
 - Include ```<api/razos.h>``` to your wrapper

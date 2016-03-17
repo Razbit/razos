@@ -15,7 +15,6 @@
 #define DEVID_PIPE  2
 #define DEVID_STDIO 3
 
-
 struct vfs_node_t;
 
 typedef ssize_t (*read_t)(int, void*, size_t);
@@ -29,7 +28,7 @@ struct vfs_node_t
 {
 	char name[64];
 	struct stat status;
-	
+
 	read_t read;
 	write_t write;
 	open_t open;

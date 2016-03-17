@@ -9,7 +9,7 @@ int dprintf(int fildes, const char *restrict format, ...)
 {
 	va_list args;
 	va_start(args, format);
-    
+
 	int ret = vdprintf(fildes, format, args);
 
 	va_end(args);

@@ -46,8 +46,6 @@ void *realloc(void *ptr, size_t size);
 
 void *calloc(size_t nelems, size_t elsize);
 
-//void dump_heap();
-
 int rand(void);
 
 void srand(unsigned int seed);

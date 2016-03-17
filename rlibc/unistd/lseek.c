@@ -14,4 +14,3 @@ off_t lseek(int fd, off_t offset, int whence)
 	return (off_t)__syscall3(SYS_LSEEK, (uint32_t)fd, \
 	                         (uint32_t)offset, (uint32_t)whence);
 }
-

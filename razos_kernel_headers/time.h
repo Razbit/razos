@@ -45,7 +45,6 @@ time_t mktime(struct tm* tm_ptr);
 /* Get difference in seconds between beg and end */
 double difftime(time_t end, time_t beg);
 
-
 /* Convert seconds since epoch to broken-down UTC time */
 struct tm* gmtime(const time_t* time);
 

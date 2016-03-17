@@ -10,7 +10,6 @@
 
 #include <api/razos.h>
 
-
 int open(const char* name, int oflag, ...)
 {
 	mode_t mode = 0;
@@ -22,4 +21,3 @@ int open(const char* name, int oflag, ...)
 
 	return (int)__syscall3(SYS_OPEN, (uint32_t)name, (uint32_t)oflag, (uint32_t)mode);
 }
-

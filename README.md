@@ -1,9 +1,9 @@
 razos
 =====
 
-Razbit's (and Itara20's) operating system, RazOS.
+Razbit and Itara20's operating system, RazOS.
 
-This is our diploma work, an operating system trying to be as unix-like as is possible in our timeframe. Maybe one day this project (razos kernel and rlibc C library) is POSIX/C99 compliant, maybe.
+This is our diploma work, an operating system trying to be as UNIX-like as is possible in our timeframe. Maybe one day this project (Razos kernel and rlibc C library) is POSIX/C99 compliant, maybe.
 
 #Setting up the developing environment
 ##Making cross-compiler
@@ -20,7 +20,7 @@ $ sudo apt-get install nasm
 
 ##Setting up Bochs
 First, download Bochs sources (we use version 2.6.8).
-Make sure you have gtk2.0-dev, libncurses5-dev and libsdl-dev *SDL1* libraries.
+Make sure you have libgtk2.0-dev, libncurses5-dev and libsdl-dev (SDL 1) libraries.
 
 Extract the tarball and cd to the bochs-2.6.8 directory. Then build Bochs:
 ```shell
@@ -48,6 +48,8 @@ $ sudo make install
 ```
 
 #Building and running
+Building the whole thing is simple, just run ```make```
+
 ###Build the kernel
 ```shell
 $ make kernel

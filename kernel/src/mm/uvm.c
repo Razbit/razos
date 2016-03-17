@@ -52,7 +52,7 @@ int uvm_brk(void* addr)
 		goto bad;
 	if (addr >= (void*)USTACK_BEGIN)
 		goto bad;
-	
+
 	/* cur_task->uheap_next_free tells us the size of the heap */
 	if (addr == cur_task->uheap_end)
 	{

@@ -36,9 +36,9 @@
  *        *     Precision is specified as an int in the arg list.   [ok]
  *
  *              d i       u o x X   c    s     p     n
- * len:   (n/a) int16_t   uint16_t  char char* void* int16_t*       [ok]
- *        h     int16_t   uint16_t                   int16_t*       [??]
- *        l     int32_t   uint32_t                   int32_t*       [??]
+ * len:   (n/a) int       int       char char* void* int*           [ok]
+ *        h     short     short                      short*         [ok]
+ *        l     long      long                       long*          [ok]
  *
  * spec:  d, i       signed decimal                                 [ok]
  *        u          unsigned decimal                               [ok]

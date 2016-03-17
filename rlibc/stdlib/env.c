@@ -82,7 +82,7 @@ int setenv(const char* envname, const char* envval, int overwrite)
 				index++;
 			}
 		}
-		
+
 		if (found == 0)
 		{
 			index = 0;

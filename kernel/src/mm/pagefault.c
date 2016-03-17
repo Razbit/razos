@@ -12,7 +12,8 @@
 #include "paging.h"
 
 /* Handle pagefaults. Called in ISR 14 in isr.s */
-/* TODO: highly WIP */
+/* TODO: We should check for 'valid' (i.e. out-of-memory)
+ * faults and fix them */
 void pagefault_handler(uint32_t addr, uint32_t error, uint32_t eip)
 {
 	char err[6] = {0};
@@ -32,7 +33,7 @@ void pagefault_handler(uint32_t addr, uint32_t error, uint32_t eip)
 		err[4] = 'N';
 	err[5] = '\0';
 
-	kprintf("Page fault at 0x%p (0x%x: %s) eip: 0x%p\n", \
+	kprintf("Page fault at %p (0x%x: %s) eip: %p\n", \
 	      addr, error, err, eip);
 
 	panic("Page fault\n");

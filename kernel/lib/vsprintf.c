@@ -338,8 +338,7 @@ int vsprintf(char* buf, const char* fmt, va_list arg)
 						*str++ = ' ';
 
 				/* Add string to the output str */
-				int i;
-				for (i = 0; i < slen; i++)
+				for (int i = 0; i < slen; i++)
 					*str++ = *s++;
 				while (slen < width--)
 					*str++ = ' ';

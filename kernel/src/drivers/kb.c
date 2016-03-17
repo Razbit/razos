@@ -4,7 +4,7 @@
  *
  * Razbit 2014 */
 
-/* see refs/kb_ref.txt */
+/* see refs/kb_ref.txt for scan codes */
 
 #include <sys/types.h>
 #include <portio.h>

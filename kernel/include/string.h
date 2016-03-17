@@ -2,8 +2,8 @@
  *
  * Razbit 2014 */
 
-#ifndef H_STRING
-#define H_STRING
+#ifndef STRING_H
+#define STRING_H
 
 #include <sys/types.h>
 
@@ -54,4 +54,4 @@ char* strtok(char* str, const char* delimiters);
 /* Return length of [str] */
 size_t strlen(const char* str);
 
-#endif /* H_STRING */
+#endif /* STRING_H */

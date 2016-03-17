@@ -1,6 +1,6 @@
 /* This file is a part of the RazOS project
  *
- * elf.h -- The Execubale ELF format (32-bit 386 only)
+ * elf.h -- The Execubale ELF format (32-bit i386 only)
  *
  * Razbit 2015 */
 
@@ -79,21 +79,17 @@ typedef struct
 
 #define EI_PAD 0x9        /* Start of padding */
 
-
 /* Legal values for e_type (object file type) */
 #define ET_NONE 0x0       /* No file type */
 #define ET_EXEC 0x2       /* Executable file */
-
 
 /* Legal values for e_machine (architecture) */
 #define EM_NONE 0x0       /* No machine */
 #define EM_386 0x3        /* Intel 80386 */
 
-
 /* Legal values for e_version */
 #define EV_NONE 0x0       /* Invalid ELF version */
 #define EV_CURRENT 0x1    /* Current ELF version */
-
 
 /* Program header */
 typedef struct
@@ -108,11 +104,9 @@ typedef struct
 	Elf32_Word p_align;  /* Alignment */
 } Elf32_Phdr;
 
-
 /* Legal values for p_type */
 #define PT_NULL 0x0 /* Entry is unused */
 #define PT_LOAD 0x1 /* Loadable program segment */
-
 
 /* Legal values for p_flags */
 #define PF_X 0x1 /* Executable */

@@ -26,7 +26,7 @@ double ldexp(double x, int exp)
 	if (isnan(x)) return x;
 
 	exp += dc.parts.exponent - 1023;
-	
+
 	if (exp > 1023)
 	{
 		errno = ERANGE;

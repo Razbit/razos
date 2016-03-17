@@ -9,7 +9,7 @@ int strcmp(const char* str1, const char* str2)
 	int diff = (int)strlen(str1) - (int)strlen(str2);
 	if (diff != 0)
 		return diff;
-	
+
 	while (1)
 	{
 		if (*str1 < *str2)
@@ -52,4 +52,3 @@ int strncmp(const char* str1, const char* str2, size_t num)
 
 	return 0;
 }
-

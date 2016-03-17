@@ -14,4 +14,3 @@ void* memset(void* ptr, int value, int num)
 
 	return ptr;
 }
-

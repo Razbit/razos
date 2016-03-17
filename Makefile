@@ -2,8 +2,7 @@
 export CC = i686-elf-gcc 
 export LD = i686-elf-ld
 
-all:
-	echo "Usage: make kernel|rlibc|init|clean|bochs|qemu|tools"
+all: tools kernel rlibc init
 
 .PHONY: kernel
 kernel:
@@ -17,13 +16,16 @@ rlibc:
 tools:
 	$(MAKE) -C tools
 
+.PHONY: rlibc
+rlibc:
+	$(MAKE) -C rlibc
+
 .PHONY: clean
 clean:
 	$(MAKE) clean -C kernel
 	$(MAKE) clean -C rlibc
-.PHONY: init
-init:
-	$(MAKE) -C rlibc
+
+init: rlibc
 	$(MAKE) test -C rlibc
 	$(MAKE) hellow -C rlibc
 	$(MAKE) rash -C rlibc

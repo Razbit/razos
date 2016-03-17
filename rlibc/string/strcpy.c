@@ -29,4 +29,3 @@ char* strncpy(char* dest, const char* source, size_t num)
 
 	return dest;
 }
-

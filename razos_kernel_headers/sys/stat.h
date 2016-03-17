@@ -1,6 +1,6 @@
 /* This file is a part of the RazOS project
  *
- * sys/stat.h -- file status information. 
+ * sys/stat.h -- file status information.
  *
  * Razbit 2016 */
 
@@ -16,6 +16,7 @@
 #define _NEED_UID_T
 #define _NEED_GID_T
 #define _NEED_OFF_T
+#define _NEED_TIME_T
 
 #include <sys/types.h>
 
@@ -26,16 +27,13 @@ struct stat
 	dev_t st_dev;     /* Device ID of device containing the file */
 	ino_t st_ino;     /* File serial number */
 	mode_t st_mode;   /* File mode: access, type */
-	//nlink_t st_nlink; /* Number of hard links to file */
 	uid_t st_uid;     /* User ID of file */
 	gid_t st_gid;     /* Group ID of file */
 	dev_t st_rdev;    /* Device ID if file is char/block special */
 	off_t st_size;    /* Size of file */
-	//time_t st_atime;  /* Last accessed */
-	//time_t st_mtime;  /* Last modified */
-	//time_t st_ctime;  /* Status last changed */
-	//blksize_t st_blksize; /* FS-specific IO block size */
-	//blkcnt_t st_blocks;   /* Blocks allocated */
+	time_t st_atime;  /* Last accessed */
+	time_t st_mtime;  /* Last modified */
+	time_t st_ctime;  /* Status last changed */
 };
 
 /* Function prototypes */
@@ -59,7 +57,6 @@ int mkfifo(const char* path, mode_t mode);
 #define S_IFDIR  0x00100000 /* Directory */
 #define S_IFLNK  0x00200000 /* Symbolic link */
 #define S_IFSOCK 0x00400000 /* Socket */
-
 
 /* File mode */
 #define S_IPERM  07777 /* Permission mask */
@@ -93,4 +90,3 @@ int mkfifo(const char* path, mode_t mode);
 #define S_ISREG(m)  (((m) & S_IFREG) ? 1 : 0)
 #define S_ISLNK(m)  (((m) & S_IFLNK) ? 1 : 0)
 #define S_ISSOCK(m) (((m) & S_IFSOCK) ? 1 : 0)
-

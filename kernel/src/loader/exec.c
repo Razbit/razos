@@ -19,7 +19,6 @@
 
 #include "elf.h"
 
-
 /* Count the argument strings */
 static int count(char** v)
 {
@@ -103,6 +102,16 @@ uint32_t* execve(char* path, char** argv, char** envp)
 	int fd = open(path, O_RDONLY);
 	if (fd < 0)
 	{
+		argc--;
+		while (argc >= 0)
+			kfree(args[argc--]);
+		kfree(args);
+
+		envc--;
+		while(envc >= 0)
+			kfree(env[envc--]);
+		kfree(env);
+
 		errno = ENOENT;
 		return NULL;
 	}
@@ -113,6 +122,16 @@ uint32_t* execve(char* path, char** argv, char** envp)
 	uint8_t* buf = kmalloc(size);
 	if (buf == NULL)
 	{
+		argc--;
+		while (argc >= 0)
+			kfree(args[argc--]);
+		kfree(args);
+
+		envc--;
+		while(envc >= 0)
+			kfree(env[envc--]);
+		kfree(env);
+
 		errno = ENOMEM;
 		return NULL;
 	}
@@ -137,39 +156,20 @@ uint32_t* execve(char* path, char** argv, char** envp)
 		page += PAGE_SIZE;
 	}
 
-	/* Create user stack */
+	/* Allocate 4096 bytes to user stack */
 	if (page_map(USTACK_END, frame_alloc(), \
 	             PF_PRES | PF_USER | PF_RW, cur_task->page_dir) == NULL)
 	{
 		/* page_map sets errno */
-		kfree(buf);
-		close(fd);
-		return NULL;
-	}
-	if (page_map(USTACK_END - PAGE_SIZE, frame_alloc(), \
-	             PF_PRES | PF_USER | PF_RW, cur_task->page_dir) == NULL)
-	{
-		/* page_map sets errno */
-		kfree(buf);
-		close(fd);
-		return NULL;
+		goto bad;
 	}
 
 	if (read(fd, buf, size) != (ssize_t)size)
-	{
-		kfree(buf);
-		close(fd);
-		return NULL;
-	}
+		goto bad;
 
 	void* addr = load_elf(buf);
 	if ((int)addr < 0)
-	{
-		/* load_elf sets errno */
-		kfree(buf);
-		close(fd);
-		return NULL;
-	}
+		goto bad;
 
 	/* User heap area begins at the next page table boundary */
 	cur_task->uheap_begin = \
@@ -245,4 +245,20 @@ uint32_t* execve(char* path, char** argv, char** envp)
 	ret[2] = (uint32_t)push(stack, (uint32_t)argc, sizeof(uint32_t));
 
 	return ret;
+
+bad:
+	argc--;
+	while (argc >= 0)
+		kfree(args[argc--]);
+	kfree(args);
+
+	envc--;
+	while(envc >= 0)
+		kfree(env[envc--]);
+	kfree(env);
+
+	kfree(buf);
+	close(fd);
+
+	return NULL;
 }

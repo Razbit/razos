@@ -6,7 +6,6 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <string.h>
-//#include <stdio.h>
 
 #define MALLOC_FREE 1
 #define MALLOC_RES 0
@@ -49,7 +48,7 @@ static void create_heap(size_t size)
 	}
 }
 /* size_t size is the new, smaller size of curnode:
-*  size <= curnode->size - sizeof(struct heap_node_t), so at least 
+*  size <= curnode->size - sizeof(struct heap_node_t), so at least
 *  a heap_node_t struct with size 0 fits in the padding. */
 static void create_padding_node(struct heap_node_t* curnode, size_t size)
 {
@@ -75,13 +74,13 @@ void* malloc(size_t size)
 {
 	if (size == 0)
 		return NULL;
-	
+
 	size = round_up(size, sizeof(struct heap_node_t));
 
 	/* Make sure we have a heap */
 	if (heap_start == NULL)
 		create_heap(PAGE_SIZE + size);
-	
+
 	struct heap_node_t* curnode = (struct heap_node_t*)heap_start;
 
 	void* ret = NULL;
@@ -100,7 +99,7 @@ void* malloc(size_t size)
 				curnode->size = (size_t)heap_end - (size_t)(curnode+1);
 			}
 		}
-		
+
 		if (curnode->status == MALLOC_RES || curnode->size < size)
 		{
 			curnode = curnode->next;
@@ -108,11 +107,11 @@ void* malloc(size_t size)
 		}
 
 		/* If we reach this, we have found a decent node. */
-		
+
 		/* Pad if we need to. */
 		if (curnode->size > size)
 			create_padding_node(curnode, size);
-		
+
 		curnode->status = MALLOC_RES;
 
 		ret = (void*)((char*)curnode + sizeof(struct heap_node_t));
@@ -140,7 +139,7 @@ void free(void *ptr)
 
 	/* The given ptr points to the beginning of usable space rather than
 	 * to the beginning of the heap_node_t struct */
-	
+
 	ptr -= sizeof(struct heap_node_t);
 	struct heap_node_t* nodeptr = ptr;
 
@@ -170,7 +169,7 @@ void *realloc(void *ptr, size_t size)
 
 	if (size == 0)
 		return NULL;
-	
+
 	struct heap_node_t* nodeptr = ((struct heap_node_t*)ptr) - 1;
 	void *ret = ptr;
 
@@ -199,27 +198,3 @@ void *calloc(size_t nelem, size_t elsize)
 	memset(ret, 0, nelem*elsize);
 	return ret;
 }
-/*
-static void print_heap_node_t(struct heap_node_t* node)
-{
-	printf("%p\t%u\t%lu\t\t%s\t%p\t%p\n", node,			\
-	        node->size, node->size + sizeof(struct heap_node_t),	\
-	        node->status == MALLOC_FREE ? "free" : "used",		\
-	        node->prev, node->next);
-}
-
-void dump_heap()
-{
-	struct heap_node_t* ptr = (struct heap_node_t*)heap_start;
-	printf("**HEAP DUMP**\nKHEAP: SIZE: %p START: %p\n", (char*)(heap_end-heap_start), heap_start);
-	int i = 0;
-	while (ptr != NULL)
-	{
-		if (i % 20 == 0)
-			printf("NODE\t\tSIZE\tWITH NODE\tSTATUS\tPREV\tNEXT, %d\n", 1);
-		print_heap_node_t(ptr);
-		ptr = ptr->next;
-		i++;
-	}
-}
-*/

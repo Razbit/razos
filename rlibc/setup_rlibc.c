@@ -19,7 +19,6 @@ int set_kernel_param(unsigned int cmd, int param)
 	return (int)__syscall2(SYS_SETUP, (uint32_t)cmd, (uint32_t)param);
 }
 
-
 /* Initialize the lib. Called from crt0.s _start */
 void init_rlibc(int argc, char* argv[], char* envp[])
 {

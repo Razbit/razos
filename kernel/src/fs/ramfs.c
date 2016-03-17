@@ -23,7 +23,7 @@ uint32_t ramfs_inodes = 0;
 ssize_t read_ramfs(int fd, void* buf, size_t size)
 {
 	struct vfs_node_t* node = cur_task->files[fd].vfs_node;
-	
+
    	size_t start_node = cur_task->files[fd].at / 0xFF;
 	size_t offset = cur_task->files[fd].at % 0x100;
 	size_t readable = (size_t)node->status.st_size - cur_task->files[fd].at;
@@ -36,7 +36,7 @@ ssize_t read_ramfs(int fd, void* buf, size_t size)
 	/* Now that we know where are we gonna read at, we read */
 	if (size > readable)
 		size = readable;
-    
+
 	size_t read = 0;
 	while (read < size)
 	{
@@ -53,7 +53,7 @@ ssize_t read_ramfs(int fd, void* buf, size_t size)
 		curnode = curnode->next;
 		offset = 0;
 	}
-    
+
 exit:
 	return read;
 }
@@ -96,7 +96,7 @@ ssize_t write_ramfs(int fd, const void* buf, size_t size)
 			else
 				break;
 		}
-	    
+
 		memset(&(curnode->data[0]), 0, 256);
 		curnode->next = NULL;
 		offset = 0;
@@ -108,7 +108,7 @@ ssize_t write_ramfs(int fd, const void* buf, size_t size)
 int creat_ramfs(struct vfs_node_t* node, uint32_t mode)
 {
 	(void)mode;
-	
+
 	/* Set up function pointers. Creat is set in creat_vfs */
 	node->read = &read_ramfs;
 	node->write = &write_ramfs;
@@ -124,7 +124,7 @@ int creat_ramfs(struct vfs_node_t* node, uint32_t mode)
 		errno = ENOSPC;
 		return -1;
 	}
-	
+
 	memset(&(ramfs_nodes[node->status.st_ino]->data[0]), 0, 256);
 
 	return 1;

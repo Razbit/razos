@@ -5,7 +5,6 @@
     ;; Razbit 2015
 
 [GLOBAL _start]
-
 [GLOBAL __syscall0]
 [GLOBAL __syscall1]
 [GLOBAL __syscall2]
@@ -38,12 +37,12 @@ _start:
 
     ;; Global constructors (crti.s)
     call _init
-    
+
     call main
     push eax
 
     call exit
-    
+
 SECTION .text
 exit:
     mov ebx, [esp + 4]
@@ -53,9 +52,9 @@ exit:
 
     call do_exit
 
-    
+
     ;; Syscall interface
-    
+
 %macro perform_syscall 0
     push ecx
     push edx
@@ -66,7 +65,7 @@ exit:
     pop edx
     pop ecx
 %endmacro
-    
+
     ;; No parameters, syscall num on stack
     ;; In razos.h as uint32_t __syscall0(num)
 __syscall0:
@@ -82,7 +81,7 @@ __syscall1:
     push ebx
     mov ebx, [esp+4+8]
     mov eax, [esp+4+4]
-    
+
     perform_syscall
 
     pop ebx

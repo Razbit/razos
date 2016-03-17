@@ -45,7 +45,7 @@ ssize_t read_vfs(int fd, void* buf, size_t size)
 	if (cur_task->files[fd].oflag & O_RDONLY)
 	{
 		struct vfs_node_t* node = cur_task->files[fd].vfs_node;
-	
+
 		if (node->read != NULL)
 			return node->read(fd, buf, size);
 		else
@@ -106,7 +106,7 @@ int open_vfs(const char* name, int oflag, mode_t mode)
 	/* Find the corresponding VFS node for the file */
 	struct vfs_node_t* node = NULL;
 	struct vfs_node_t* ptr = vfs_root;
-	
+
 	if (vfs_root != NULL)
 	{
 		while (ptr != NULL)
@@ -119,7 +119,7 @@ int open_vfs(const char* name, int oflag, mode_t mode)
 				ptr = ptr->next;
 		}
 	}
-    
+
 	/* File doesn't exist yet -> create it. */
 	if (ptr == NULL)
 	{
@@ -190,7 +190,7 @@ int close_vfs(int fd)
 		errno = EBADF;
 		return -1;
 	}
-	
+
 	struct vfs_node_t* node = cur_task->files[fd].vfs_node;
 
 	if (node == NULL)
@@ -217,7 +217,7 @@ int close_vfs(int fd)
 int creat_vfs(const char* name, mode_t mode)
 {
 	struct vfs_node_t* node = vfs_root;
-	
+
 	/* First file */
 	if (node == NULL)
 	{
@@ -314,7 +314,7 @@ off_t lseek_vfs(int fd, off_t offset, int whence)
 		errno = EBADF;
 		return -1;
 	}
-	
+
 	struct vfs_node_t* node = cur_task->files[fd].vfs_node;
 
 	if (node == NULL)
@@ -322,7 +322,7 @@ off_t lseek_vfs(int fd, off_t offset, int whence)
 		errno = EBADF;
 		return -1;
 	}
-	
+
 	/* FIFO not seekable */
 	if (node->status.st_mode & S_IFIFO)
 	{
@@ -363,13 +363,11 @@ int get_free_fd(int fd)
 {
 	if (fd < 0)
 		return -1;
-	
+
 	while (1)
 	{
 		if (fd == OPEN_MAX) /* No free file descriptors.. */
-		{
 			return -1;
-		}
 
 		if (cur_task->files[fd].vfs_node != NULL)
 		{

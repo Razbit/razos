@@ -5,8 +5,6 @@
     ;; Razbit 2015 (based on Charlie Somerville's Radium)
 
 [EXTERN syscall_dispatch]       ; syscall.c
-
-
 [GLOBAL syscall_init]           ; syscall.h
 
 %define IA32_SYSENTER_CS  0x0174
@@ -52,4 +50,4 @@ syscall_entry:
     popa
 
     sti
-    sysexit 					; go to PL=3, perform_syscall.ret in crt0.s
+    sysexit                     ; go to PL=3, perform_syscall.ret in crt0.s

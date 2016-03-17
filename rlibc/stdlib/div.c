@@ -19,4 +19,3 @@ ldiv_t ldiv(long numer, long denom)
     result.rem  = numer - (denom * result.quot);
     return result;
 }
-

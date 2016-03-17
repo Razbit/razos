@@ -62,7 +62,7 @@ static ssize_t read_pipe(int fd, void* buf, size_t size)
 			/* Stop at EOF */
 			if (read >= size)
 				goto exit;
-			
+
 			*(uint8_t*)(buf+read) = curnode->data[offset];
 			read++;
 			hdr->read_at++;
@@ -94,11 +94,11 @@ static ssize_t write_pipe(int fd, const void* buf, size_t size)
 		errno = EPIPE;
 		return -1;
 	}
-	
+
 	/* Find the location where we can start writing */
 	size_t start_node = hdr->write_at / 0xFF;
 	size_t offset = hdr->write_at % 0x100;
-	
+
 	for (size_t i = 0; i < start_node; i++)
 		curnode = curnode->next;
 
@@ -140,7 +140,7 @@ static int close_pipe(int fd)
 {
 	struct pipe_hdr_t* hdr = \
 		pipes[cur_task->files[fd].vfs_node->status.st_ino];
-	
+
 	if (cur_task->files[fd].oflag & O_RDONLY)
 	{
 		/* Closing read-side */
@@ -157,12 +157,14 @@ static int close_pipe(int fd)
 		/* No readers and writers left -> delete the pipe */
 		struct pipe_data_t* ptr = hdr->data;
 		struct pipe_data_t* ptr2 = NULL;
+
 		while (ptr != NULL)
 		{
 			ptr2 = ptr;
 			ptr = ptr->next;
 			kfree(ptr2);			
 		}
+
 		kfree(hdr);
 		pipes[cur_task->files[fd].vfs_node->status.st_ino] = NULL;
 	}
@@ -179,7 +181,7 @@ int creat_pipe(int fd[2])
 		errno = ENFILE;
 		return -1;
 	}
-	
+
 	struct vfs_node_t* node = vfs_root;
 	struct vfs_node_t* node_backup = NULL;
 
@@ -229,7 +231,7 @@ int creat_pipe(int fd[2])
 	{
 		kfree(node_backup->next);
 		node_backup->next = NULL;
-		
+
 		errno = EMFILE;
 		return -1;
 	}
@@ -237,7 +239,7 @@ int creat_pipe(int fd[2])
 	cur_task->files[fd[0]].vfs_node = node;
 	cur_task->files[fd[0]].at = 0;
 	cur_task->files[fd[0]].oflag = O_RDONLY;
-	
+
 	fd[1] = get_free_fd(3);
 	if (fd[1] < 0)
 	{
@@ -275,6 +277,6 @@ int creat_pipe(int fd[2])
 		node_backup->next = NULL;
 		return -1; /* kmalloc sets errno */
 	}
-	
+
 	return 0;
 }
