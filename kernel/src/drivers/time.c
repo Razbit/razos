@@ -1,8 +1,18 @@
-/* This file is a part of the RazOS project
+/* Copyright (c) 2016 Eetu "Razbit" Pesonen
  *
- * time.c -- time()
+ * This file is part of RazOS.
  *
- * Razbit 2016 */
+ * RazOS is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * RazOS is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with RazOS. If not, see <http://www.gnu.org/licenses/>. */
 
 #include <time.h>
 
@@ -24,7 +34,7 @@ static struct tm* read_rtc()
 
 	/* We read the RTC (at least) twice, to make sure we won't get any
 	 * dodgy values while the RTC is updating */
-	
+
 	/* Make sure the RTC is not in the middle of an update */
 	while (cmos_read(0x0A) & 0x80); /* bit 7 of status reg A */
 
@@ -47,7 +57,7 @@ static struct tm* read_rtc()
 		cur_tm.tm_mday = (int)cmos_read(0x07);
 		cur_tm.tm_mon = (int)cmos_read(0x08);
 		cur_tm.tm_year = (int)cmos_read(0x09);
-		
+
 	} while (memcmp(&cur_tm, &last_tm, sizeof(struct tm)) != 0);
 
 
@@ -74,7 +84,7 @@ static struct tm* read_rtc()
 
 	/* tm struct saves months [0,11], not [1,12] */
 	cur_tm.tm_mon--;
-	
+
 	return &cur_tm;
 }
 

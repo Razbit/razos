@@ -1,8 +1,20 @@
-/* This file is a part of the RazOS project
+/* exec.c -- execve(), the implementation behind the sys_execve() */
+
+/* Copyright (c) 2015, 2016 Eetu "Razbit" Pesonen
  *
- * exec.c -- execve(), the implementation behind the sys_exec()
+ * This file is part of RazOS.
  *
- * Razbit 2015, 2016 */
+ * RazOS is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * RazOS is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with RazOS. If not, see <http://www.gnu.org/licenses/>. */
 
 #include <sys/types.h>
 #include <kmalloc.h>
@@ -144,7 +156,7 @@ uint32_t* execve(char* path, char** argv, char** envp)
 	/* Latter check because of integer overflow */
 	while (page < USTACK_END && page >= UMEM_BEGIN)
 	{
-		uint32_t flags = page_flags(page, cur_task->page_dir);	
+		uint32_t flags = page_flags(page, cur_task->page_dir);
 		if (!((flags >> 16) & PF_PRES))
 			page += 1024 * PAGE_SIZE;
 

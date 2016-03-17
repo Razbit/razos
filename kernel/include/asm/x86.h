@@ -1,8 +1,20 @@
-/* This file is a part of the RazOS project
+/* x86.h -- x86 architecture-specific thingies */
+
+/* Copyright (c) 2016 Eetu "Razbit" Pesonen
  *
- * x86.h -- x86 architecture-specific thingies
+ * This file is part of RazOS.
  *
- * Razbit 2016 */
+ * RazOS is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * RazOS is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with RazOS. If not, see <http://www.gnu.org/licenses/>. */
 
 #ifndef X86_H
 #define X86_H
@@ -60,10 +72,10 @@ uint32_t get_cr4();
 struct tss_t
 {
 	uint16_t link;   /* 0x00 */
-	uint16_t _res_1; 
+	uint16_t _res_1;
 	uint32_t esp0;   /* 0x04 */
 	uint16_t ss0;    /* 0x08 */
-	uint16_t _res_2; 
+	uint16_t _res_2;
 	uint32_t esp1;   /* 0x0C */
 	uint16_t ss1;    /* 0x10 */
 	uint16_t _res_3;

@@ -1,5 +1,5 @@
 # set these to your cross compiler (see cross-compiler for instructions)
-export CC = i686-elf-gcc 
+export CC = i686-elf-gcc
 export LD = i686-elf-ld
 
 all: tools kernel rlibc init
@@ -15,10 +15,6 @@ rlibc:
 .PHONY: tools
 tools:
 	$(MAKE) -C tools
-
-.PHONY: rlibc
-rlibc:
-	$(MAKE) -C rlibc
 
 .PHONY: clean
 clean:

@@ -1,8 +1,20 @@
-/* This file is a part of the RazOS project
+/* kb.c -- Keyboard driver */
+
+/* Copyright (c) 2014 Eetu "Razbit" Pesonen
  *
- * kb.c -- Keyboard driver
+ * This file is part of RazOS.
  *
- * Razbit 2014 */
+ * RazOS is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * RazOS is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with RazOS. If not, see <http://www.gnu.org/licenses/>. */
 
 /* see refs/kb_ref.txt for scan codes */
 
@@ -111,7 +123,7 @@ void kb_handler()
 			keycode = KEY_RET;
 		}
 		break;
-		
+
 	case 0x1D:
 		if (tempfl & TFL_E1) /* E1, 1D */
 		{
@@ -166,13 +178,13 @@ void kb_handler()
 			keycode = scancode;
 		}
 		break;
-		
+
 	case 0xAA: /* lshift release */
 		flags &= ~LSHIFT;
 		flags &= ~SHIFT;
 		keycode = KEY_LSHIFT;
 		break;
-		
+
 	case 0x35:
 		if (tempfl & TFL_E0)
 		{
@@ -185,8 +197,8 @@ void kb_handler()
 			keycode = KEY_SLASH;
 			ascii = '/';
 		}
-		break;		
-		
+		break;
+
 	case 0x36:
 		flags |= RSHIFT;
 		keycode = KEY_RSHIFT;
@@ -210,7 +222,7 @@ void kb_handler()
 			ascii = '*';
 		}
 		break;
-		
+
 	case 0x38:
 		if (tempfl & TFL_E0)
 		{
@@ -351,7 +363,7 @@ void kb_handler()
 		keycode = NUM_PLUS;
 		ascii = '+';
 		break;
-		
+
 	case 0x4F:
 		if ((tempfl & TFL_E0) || !(flags & NUM_LOCK))
 		{
@@ -424,7 +436,7 @@ void kb_handler()
 			ascii = sc_to_ascii[scancode];
 		else
 			ascii = 0;
-		
+
 		keycode = scancode;
 	}
 
@@ -468,4 +480,3 @@ void kb_handler()
 	flags &= ~NUMPAD;
 	flags &= ~RELEASE;
 }
-

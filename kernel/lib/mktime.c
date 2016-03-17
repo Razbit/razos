@@ -1,8 +1,18 @@
-/* This file is a part of the RazOS project
+/* Copyright (c) 2016 Eetu "Razbit" Pesonen
  *
- * mktime.c -- mktime()
+ * This file is part of RazOS.
  *
- * Razbit 2016 */
+ * RazOS is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * RazOS is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with RazOS. If not, see <http://www.gnu.org/licenses/>. */
 
 #include <time.h>
 
@@ -43,14 +53,14 @@ time_t mktime(struct tm* tmp)
 
 	/* Now tm_sec, tm_min, tm_hour should be set correctly.
 	 * Next we set tm_mon and tm_mday */
-	
+
 	int mon = orig.tm_mon;
 	while (tmp->tm_mday > mdays[isleap(tmp->tm_year)][mon % 12])
 	{
 		tmp->tm_mon++;
 		tmp->tm_mday -= mdays[isleap(tmp->tm_year)][mon % 12];
 		mon++;
-		
+
 		if (tmp->tm_mon >= 12)
 		{
 			tmp->tm_year++;
@@ -68,7 +78,7 @@ time_t mktime(struct tm* tmp)
 	tmp->tm_wday = get_dow(tmp->tm_year, tmp->tm_mon, tmp->tm_mday);
 
 	tmp->tm_yday = tmp->tm_mday;
-	
+
 	/* Add whole months */
 	for (int m = 0; m < tmp->tm_mon; m++)
 		tmp->tm_yday += mdays[isleap(tmp->tm_year)][m];
@@ -90,4 +100,3 @@ time_t mktime(struct tm* tmp)
 	tmp->tm_year -= 1900;
 	return ret;
 }
-

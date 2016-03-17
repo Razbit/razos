@@ -1,8 +1,20 @@
-/* This file is a part of the RazOS project
+/* errno_defs.h -- define errno numbers */
+
+/* Copyright (c) 2016 Eetu "Razbit" Pesonen
  *
- * errno_defs.h -- define errno numbers
+ * This file is part of RazOS.
  *
- * Razbit 2016 */
+ * RazOS is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * RazOS is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with RazOS. If not, see <http://www.gnu.org/licenses/>. */
 
 #ifndef H_ERRNO_DEFS
 #define H_ERRNO_DEFS

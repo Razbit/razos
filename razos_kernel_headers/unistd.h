@@ -1,8 +1,20 @@
-/* This file is a part of the RazOS project
+/* unistd.h -- POSIX standard constants and types */
+
+/* Copyright (c) 2015, 2016 Eetu "Razbit" Pesonen
  *
- * unistd.h -- POSIX standard constants and types
+ * This file is part of RazOS.
  *
- * Razbit 2015 */
+ * RazOS is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * RazOS is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with RazOS. If not, see <http://www.gnu.org/licenses/>. */
 
 #ifndef _NEED_WHENCE_VALUES
 
@@ -61,4 +73,3 @@ int execlp(const char* file, const char* arg0, ... /*, (char*)0 */);
 #define SEEK_SET 0 /* Start from beginning of the file */
 #define SEEK_CUR 1 /* Start from current position in the file */
 #define SEEK_END 2 /* Start at EOF */
-

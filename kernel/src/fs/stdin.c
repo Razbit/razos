@@ -1,8 +1,18 @@
-/* This file is a part of the RazOS project
+/* Copyright (c) 2015, 2016 Eetu "Razbit" Pesonen
  *
- * stdin.c -- standard input
+ * This file is part of RazOS.
  *
- * Razbit 2015 */
+ * RazOS is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * RazOS is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with RazOS. If not, see <http://www.gnu.org/licenses/>. */
 
 #include <sys/types.h>
 #include <asm/system.h>
@@ -23,7 +33,7 @@
 static ssize_t read_stdin(int fd, void* buf, size_t size);
 static ssize_t write_stdin(int fd, const void* buf, size_t size);
 static int open_stdin(struct vfs_node_t* node, int oflag, mode_t mode);
-	
+
 static off_t read_at = 0;
 static off_t write_at = 0;
 static volatile size_t stdin_buf_size = 0;
@@ -147,7 +157,7 @@ static ssize_t write_stdin(int fd, const void* buf, size_t size)
 		/* Echo to the screen */
 		kputchar(((char*)buf)[i]);
 	}
-    
+
 	return size;
 }
 

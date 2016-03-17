@@ -1,8 +1,18 @@
-/* This file is a part of the RazOS project
+/* Copyright (c) 2016 Eetu "Razbit" Pesonen
  *
- * fcntl.c -- File control
+ * This file is part of RazOS.
  *
- * Razbit 2016 */
+ * RazOS is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * RazOS is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with RazOS. If not, see <http://www.gnu.org/licenses/>. */
 
 #include <fcntl.h>
 #include <sys/types.h>
@@ -39,7 +49,7 @@ int do_fcntl(int fd, int cmd, uint32_t arg)
 			errno = EMFILE;
 			return -1;
 		}
-		
+
 		cur_task->files[fd2] = cur_task->files[fd];
 		cur_task->files[fd2].oflag &= ~FD_CLOEXEC;
 

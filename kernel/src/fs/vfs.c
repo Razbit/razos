@@ -1,8 +1,20 @@
-/* This file is a part of the RazOS project
+/* vfs.c -- The kernel Virtual File System */
+
+/* Copyright (c) 2014-2016 Eetu "Razbit" Pesonen
  *
- * vfs.c -- The kernel Virtual File System
+ * This file is part of RazOS.
  *
- * Razbit 2014 - 2016 */
+ * RazOS is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * RazOS is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with RazOS. If not, see <http://www.gnu.org/licenses/>. */
 
 #include "vfs.h"
 #include "../mm/task.h"
@@ -79,7 +91,7 @@ ssize_t write_vfs(int fd, const void* buf, size_t size)
 	if (cur_task->files[fd].oflag & O_WRONLY)
 	{
 		struct vfs_node_t* node = cur_task->files[fd].vfs_node;
-	
+
 		if (node->write != NULL)
 			return node->write(fd, buf, size);
 		else

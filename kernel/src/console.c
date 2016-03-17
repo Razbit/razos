@@ -1,8 +1,20 @@
-/* This file is a part of the RazOS project
+/* console.c -- kernel i/o system */
+
+/* Copyright (c) 2014, 2016 Eetu "Razbit" Pesonen
  *
- * console.c -- kernel i/o system
+ * This file is part of RazOS.
  *
- * Razbit 2014, 2016 */
+ * RazOS is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * RazOS is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with RazOS. If not, see <http://www.gnu.org/licenses/>. */
 
 #include <console.h>
 #include "vga.h"
@@ -25,7 +37,7 @@ static char kprintf_buf[4096] = {0};
 int set_color(int bg, int fg)
 {
 	int ret = (cur_bg) << 4 | (cur_fg & 0x0F);
-	
+
 	cur_bg = bg & 0x0F;
 	cur_fg = fg & 0x0F;
 
@@ -56,14 +68,14 @@ int kputs(char *c)
 	while (c[i])
 		kputchar(c[i++]);
 	kputchar('\n');
-	
+
 	return i;
 }
 
 int kprintf(const char* fmt, ...)
 {
 	memset(kprintf_buf, 0, 4096);
-	
+
 	va_list args;
 	va_start(args, fmt);
 

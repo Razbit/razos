@@ -1,21 +1,31 @@
-/* This file is a part of the RazOS project
+/* elf.h -- The Execubale ELF format (32-bit i386 only) */
+
+/* Copyright (c) 2015 Eetu "Razbit" Pesonen
  *
- * elf.h -- The Execubale ELF format (32-bit i386 only)
+ * This file is part of RazOS.
  *
- * Razbit 2015 */
+ * RazOS is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * RazOS is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with RazOS. If not, see <http://www.gnu.org/licenses/>. */
 
 #ifndef ELF_H
 #define ELF_H
 
 #include <sys/types.h>
 
-
 /* Load an elf program image to memory.
  * We assume that the user-space is empty (no memory allocated),
  * make sure that we do the free-ing in do_execve().
  * Returns end of program image, or (void*)-1 on error */
 void* load_elf(void* data);
-
 
 /* Standard ELF data types */
 /* 32-bit ELF */

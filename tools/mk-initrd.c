@@ -1,11 +1,23 @@
-/* This file is a part of the RazOS project
+/* mk-initrd.c -- a tool for creating the initrd image */
+
+/* Copyright (c) 2014 Eetu "Razbit" Pesonen
  *
- * mk-initrd.c -- a tool for creating the initrd image
+ * This file is part of RazOS.
  *
- * Razbit 2014 */
+ * RazOS is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * RazOS is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with RazOS. If not, see <http://www.gnu.org/licenses/>. */
 
 /* We receive paths to files as arguments and we write those
- * files to the initrd.img */
+ * files into the initrd.img */
 
 #include <stdint.h>
 #include <string.h>

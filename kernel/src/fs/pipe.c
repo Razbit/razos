@@ -1,8 +1,18 @@
-/* This file is a part of the RazOS project
+/* Copyright (c) 2016 Eetu "Razbit" Pesonen
  *
- * pipe.c -- pipe functionality
+ * This file is part of RazOS.
  *
- * Razbit 2016 */
+ * RazOS is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * RazOS is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with RazOS. If not, see <http://www.gnu.org/licenses/>. */
 
 #include <sys/types.h>
 #include <fcntl.h>
@@ -162,7 +172,7 @@ static int close_pipe(int fd)
 		{
 			ptr2 = ptr;
 			ptr = ptr->next;
-			kfree(ptr2);			
+			kfree(ptr2);
 		}
 
 		kfree(hdr);
@@ -245,7 +255,7 @@ int creat_pipe(int fd[2])
 	{
 		kfree(node_backup->next);
 		node_backup->next = NULL;
-		
+
 		errno = EMFILE;
 		return -1;
 	}
@@ -264,7 +274,7 @@ int creat_pipe(int fd[2])
 	}
 
 	pipes[node->status.st_ino]->write_at = 0;
-	pipes[node->status.st_ino]->read_at = 0;	
+	pipes[node->status.st_ino]->read_at = 0;
 	pipes[node->status.st_ino]->writers = 2;
 	pipes[node->status.st_ino]->readers = 2;
 	pipes[node->status.st_ino]->data = \

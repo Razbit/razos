@@ -1,15 +1,23 @@
-/* This file is a part of the RazOS project
+/* POSIX and standard C type definitions */
+
+/* Copyright (c) 2014, 2016 Eetu "Razbit" Pesonen
  *
- * POSIX and standard C type definitions
+ * This file is part of RazOS.
  *
- * Razbit 2014, 2016 */
+ * RazOS is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * RazOS is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with RazOS. If not, see <http://www.gnu.org/licenses/>. */
 
 #ifndef TYPES_H
 #define TYPES_H
-
-/* Bochs magic breakpoint. This is a rather odd place to
- * define this, but this header is included in nearly every file.. */
-#define BOCHS_BREAK __asm__ __volatile__("xchgw %%bx, %%bx":::"memory")
 
 /* These are used internally in this header */
 typedef unsigned int __uint32_t;
@@ -57,7 +65,6 @@ typedef char __int8_t;
 
 #endif /* defined(_RAZOS_KERNEL) || defined(_NEED_ALL_TYPES) */
 
-
 /* stdint */
 #ifdef _NEED_STDINT
 #define uint32_t __uint32_t
@@ -69,7 +76,6 @@ typedef char __int8_t;
 #undef _NEED_STDINT
 #endif /* _NEED_STDINT */
 
-
 /* Signed type for pointer subtraction */
 #ifdef _NEED_PTRDIFF_T
 #ifndef PTRDIFF_T
@@ -78,7 +84,6 @@ typedef __int32_t ptrdiff_t;
 #endif /* PTRDIFF_T */
 #undef _NEED_PTRDIFF_T
 #endif /* _NEED_PTRDIFF_T */
-
 
 /* intptr_t */
 #ifdef _NEED_INTPTR_T
@@ -89,7 +94,6 @@ typedef __int32_t intptr_t;
 #undef _NEED_INTPTR_T
 #endif /* _NEED_INTPTR_T */
 
-
 /* uintptr_t */
 #ifdef _NEED_UINTPTR_T
 #ifndef UINTPTR_T
@@ -98,7 +102,6 @@ typedef __uint32_t uintptr_t;
 #endif /* UINTPTR_T */
 #undef _NEED_UINTPTR_T
 #endif /* _NEED_UINTPTR_T */
-
 
 /* wchar_t */
 #ifdef _NEED_WCHAR_T
@@ -109,7 +112,6 @@ typedef __int32_t wchar_t;
 #undef _NEED_WCHAR_T
 #endif /* _NEED_WCHAR_T */
 
-
 /* Bool */
 #ifdef _NEED_BOOL
 #define bool _Bool;
@@ -118,7 +120,6 @@ typedef __int32_t wchar_t;
 #define __bool_true_false_are_defined 1
 #undef _NEED_BOOL
 #endif /* _NEED_BOOL */
-
 
 /* Null pointer */
 #ifdef _NEED_NULL
@@ -129,7 +130,6 @@ typedef __int32_t wchar_t;
 #undef _NEED_NULL
 #endif /* _NEED_NULL */
 
-
 /* Unsigned type for size of something */
 #ifdef _NEED_SIZE_T
 #ifndef SIZE_T
@@ -138,7 +138,6 @@ typedef __uint32_t size_t;
 #endif /* SIZE_T */
 #undef _NEED_SIZE_T
 #endif /* _NEED_SIZE_T */
-
 
 /* Signed size */
 #ifdef _NEED_SSIZE_T
@@ -149,7 +148,6 @@ typedef __int32_t ssize_t;
 #undef _NEED_SSIZE_T
 #endif /* _NEED_SSIZE_T */
 
-
 /* Offset */
 #ifdef _NEED_OFF_T
 #ifndef OFF_T
@@ -158,7 +156,6 @@ typedef __int32_t off_t;
 #endif /* OFF_T */
 #undef _NEED_OFF_T
 #endif /* _NEED_OFF_T */
-
 
 /* Group ID */
 #ifdef _NEED_GID_T
@@ -169,7 +166,6 @@ typedef __uint32_t gid_t;
 #undef _NEED_GID_T
 #endif /* _NEED_GID_T */
 
-
 /* User ID */
 #ifdef _NEED_UID_T
 #ifndef UID_T
@@ -178,7 +174,6 @@ typedef __uint32_t uid_t;
 #endif /* UID_T */
 #undef _NEED_UID_T
 #endif /* _NEED_UID_T */
-
 
 /* File serial number */
 #ifdef _NEED_INO_T
@@ -189,7 +184,6 @@ typedef __uint32_t ino_t;
 #undef _NEED_INO_T
 #endif /* NEED_INO_T */
 
-
 /* File mode (access, type..) */
 #ifdef _NEED_MODE_T
 #ifndef MODE_T
@@ -199,7 +193,6 @@ typedef __uint32_t mode_t;
 #undef _NEED_MODE_T
 #endif /* _NEED_MODE_T */
 
-
 /* Device ID */
 #ifdef _NEED_DEV_T
 #ifndef DEV_T
@@ -208,7 +201,6 @@ typedef __uint32_t dev_t;
 #endif /* DEV_T */
 #undef _NEED_DEV_T
 #endif /* _NEED_DEV_T */
-
 
 /*  Process ID */
 #ifdef _NEED_PID_T
