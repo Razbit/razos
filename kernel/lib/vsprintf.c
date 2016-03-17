@@ -148,6 +148,7 @@ int vsprintf(char* buf, const char* fmt, va_list arg)
 
 	char *str = buf;
 	char *s;
+	long n;
 
 	int slen;
 
@@ -256,6 +257,11 @@ int vsprintf(char* buf, const char* fmt, va_list arg)
 				len = 1;
 				fmt++;
 			}
+			else if (*fmt == 'h')
+			{
+				len = -1;
+				fmt++;
+			}
 
 			state++;
 
@@ -267,32 +273,40 @@ int vsprintf(char* buf, const char* fmt, va_list arg)
 				flags |= FL_SIGN;
 			case 'u':
 				if (len == 0)
-					str = numstr(str, (uint32_t)va_arg(arg, int),
-					             10, width, prec, flags);
+					n = va_arg(arg, int);
+				else if (len == -1)
+					n = (short)va_arg(arg, int);
 				else
-					str = numstr(str, (uint32_t)va_arg(arg, uint32_t),
-					             10, width, prec, flags);
+					n = va_arg(arg, long);
+
+				str = numstr(str, n, 10, width, prec, flags);
+
 				break;
 
 			case 'o':
 				if (len == 0)
-					str = numstr(str, (uint32_t)va_arg(arg, int),
-					             8, width, prec, flags);
+					n = va_arg(arg, int);
+				else if (len == -1)
+					n = (short)va_arg(arg, int);
 				else
-					str = numstr(str, (uint32_t)va_arg(arg, uint32_t),
-					             8, width, prec, flags);
+					n = va_arg(arg, long);
+
+				str = numstr(str, n, 8, width, prec, flags);
+
 				break;
 
 			case 'x':
 				flags |= FL_SMALL;
 			case 'X':
-
 				if (len == 0)
-					str = numstr(str, (uint32_t)va_arg(arg, int),
-					             16, width, prec, flags);
+					n = va_arg(arg, int);
+				else if (len == -1)
+					n = (short)va_arg(arg, int);
 				else
-					str = numstr(str, (uint32_t)va_arg(arg, uint32_t),
-					             16, width, prec, flags);
+					n = va_arg(arg, long);
+
+				str = numstr(str, n, 16, width, prec, flags);
+
 				break;
 
 			case 'c':
@@ -310,6 +324,8 @@ int vsprintf(char* buf, const char* fmt, va_list arg)
 
 			case 's':
 				s = va_arg(arg, char*);
+				if (s == NULL)
+					break;
 				slen = strlen(s);
 
 				if (prec < 0)
@@ -332,13 +348,16 @@ int vsprintf(char* buf, const char* fmt, va_list arg)
 
 			case 'p':
 				flags |= FL_SMALL;
+				flags |= FL_SPECIAL; /* Precede hex value with 0x */
+
 				if (width == -1)
 				{
 					flags |= FL_ZEROPAD;
-					width = 8;
+					width = 2 * sizeof(void*);
 				}
-				str = numstr(str, (uint32_t)va_arg(arg, uint32_t), 16,	\
-				             width, prec, flags);
+
+				n = (long)va_arg(arg, void*);
+				str = numstr(str, n, 16, width, prec, flags);
 				break;
 
 			case 'n':
@@ -357,6 +376,7 @@ int vsprintf(char* buf, const char* fmt, va_list arg)
 			width = -1;
 			prec = -1;
 			len = 0;
+			n = 0;
 			break;
 		}
 	}
