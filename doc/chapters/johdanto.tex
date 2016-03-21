@@ -1,0 +1,19 @@
+\chapter{Johdanto}
+\label{Johdanto}
+
+Käyttöjärjestelmiä on useita, joista tunnetuimpia ovat Microsoft Windows, Applen Mac OS X sekä erinäiset Linux-versiot. Linux ja Mac OS X pohjautuvat teknisesti 1970-luvulla kehitettyyn UNIX-käyttöjärjestelmään, jota kehittivät Bell Labs -tutkimuslaitoksessa Dennis Richie ja Ken Thompson. Tässä työssä tarkastellaan käyttöjärjestelmän tehtäviä ja teknistä toteutusta UNIXin näkökulmasta tämän työn ohessa kehitetyn UNIX-tyylisen käyttöjärjestelmän, RazOSin, avulla.
+
+\section{Käyttöjärjestelmän tehtävät}
+Käyttöjärjestelmä on ohjelmisto, joka mahdollistaa muiden ohjelmien toiminnan hallinnoimalla tietokoneen resursseja, kuten muistia. Se antaa ohjelmien käyttöön yhtenäisen rajapinnan, API:n, joka on riippumaton alustasta. Rajapintaan kuuluu monia järjestelmäkutsuja, jotka toimivat erinäisten abstrahointien, kuten tiedostojärjestelmän ja virtuaalimuistin, kanssa.
+
+\par
+
+UNIX-maailmassa The Open Groupin ja IEEE Computer Societyn julkaisema POSIX-standardi määrittelee järjestelmäkutsuja ja laajentaa niiden avulla International Organization for Standardizationin ja International Electrotechnical Commissionin standardisoimaa C-kirjastoa. Standardisoidun C-kirjaston avulla ohjelmoijien on mahdollista kehittää ohjelmia, jotka toimivat kaikissa standardien mukaisissa käyttöjärjestelmissä.
+
+\par
+
+Käyttöjärjestelmä myös pitää huolta käyttäjän ja ohjelmien turvallisuudesta. Se esimerkiksi tarkistaa, onko käyttäjällä ja/tai ohjelmalla oikeus käyttää pyytämäänsä tiedostoa, ja suojelee muiden ohjelmien muistialueita virtuaalimuistinhallinan keinoin, etteivät ohjelmat käytä muistia, johon niillä ei ole lupaa koskea.
+
+\par
+
+Virheidenhallinta ja niistä selviäminen ovat myös käyttöjärjestelmän tehtäviä. UNIXeissa virheidenhallinta on tavallisesti hoidettu \textit{signaaleilla}, joita käyttöjärjestelmä antaa C-kirjastolle virheen sattuessa. Kirjasto hoitaa yleensä virheet itse, usein lopettamalla ohjelman suorituksen. Käyttäjä voi myös itse määrittää signaaleille käsittelyfunktion ISO-standardiin kuuluvalla \texttt{signal()} -funktiolla.

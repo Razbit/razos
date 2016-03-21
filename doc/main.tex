@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Heavily modified by Razbit from the following template:
 %
-% Masters/Doctoral Thesis 
+% Masters/Doctoral Thesis
 % LaTeX Template
 % Version 2.2 (21/11/15)
 %
@@ -30,7 +30,7 @@
 english,
 singlespacing, % Single line spacing, alternatives: onehalfspacing or doublespacing
 %draft, % Uncomment to enable draft mode (no pictures, no links, overfull hboxes indicated)
-%nolistspacing, % If the document is onehalfspacing or doublespacing, uncomment this to set spacing in lists to single
+%nolistspacing, % Uncomment this to set spacing in lists to single
 %liststotoc, % Uncomment to add the list of figures/tables/etc to the table of contents
 %toctotoc, % Uncomment to add the main table of contents to the table of contents
 parskip, % Uncomment to add space between paragraphs
@@ -50,7 +50,7 @@ headsepline, % Uncomment to get a line under the header
 
 \usepackage[backend=bibtex,style=authortitle,natbib=true]{biblatex}
 \addbibresource{bibliography.bib} % The filename of the bibliography
-\usepackage[autostyle=true]{csquotes} % Required to generate language-dependent quotes in the bibliography
+\usepackage[autostyle=true]{csquotes} % Generate language-dependent quotes in the bibliography
 
 %----------------------------------------------------------------------------------------
 %	MARGIN SETTINGS
@@ -78,17 +78,38 @@ headsepline, % Uncomment to get a line under the header
 \newcommand\keywordnamesfi{Käyttöjärjestelmä, UNIX, POSIX, Ohjelmointi}
 \university{Kerttulin Lukio} %  \univname
 \department{ICT -linja} %  \deptname
-\newcommand\nappendices{1} % Number of appendices. \appendices
+\newcommand\nappendices{1} % Number of appendices. \nappendices
 
-\abbrevnaming{Lyhennykset}
-\acknowledgementnaming{Kiitokset}
-
+\abbrevnaming{Käytetyt merkinnät ja lyhenteet}
 
 \begin{document}
 
 \frontmatter % Use roman page numbering style (i, ii, iii, iv...) for the pre-content pages
 
 \pagestyle{plain} % Default to the plain heading style until the thesis style is called for the body content
+
+% For setting the chapter titles
+\makeatletter
+\def\@makechapterhead#1{
+  \vspace*{10pt}
+  {
+    \reset@font\huge\bfseries
+    \huge \thechapter{} \quad #1
+    \par\nobreak
+    \vskip 10pt
+  }
+}
+
+\def\@makeschapterhead#1{%
+  \vspace*{10pt}
+  {
+    \reset@font\huge\bfseries
+    \huge #1
+    \par\nobreak
+    \vskip 10pt
+  }
+}
+
 
 %----------------------------------------------------------------------------------------
 %	TITLE PAGE
@@ -107,9 +128,9 @@ headsepline, % Uncomment to get a line under the header
 Eetu Pesonen ja Iiro Rastas \\[0.4cm]
 
 \deptname\\[2cm] % Research group name and department name
- 
+
 {\large \today}\\[4cm] % Date
- 
+
 \vfill
 \end{center}
 \end{titlepage}
@@ -133,7 +154,15 @@ Liitteitä: \nappendices \\
 Asiasanat: \keywordnamesfi \\
 \HRule
 
-Suomenkielinen tiivistelmä tähän.
+Käyttöjärjestelmät ovat monimutkaisia kokonaisuuksia. Työn tarkoitus on selventää käyttöjärjestelmän toimintaa ja toteutusta. Työssä kuvataan UNIX-tyylisen käyttöjärjestelmän teknistä toteutusta erityisesti prosessien, niiden hallinnan ja ajanjaon, muistinhallinnan sekä käyttäjän käytettävissä olevien rajapintojen kannalta. Teknisen toteutuksen kuvausta varten laadittiin UNIX-tyylinen käyttöjärjestelmä, RazOS. Toteutuksen kuvaukseen käytetään apuna lähdekoodia sekä teknisiä yksityiskohtia  selventäviä kaavioita.
+
+\par
+
+RazOS ohjelmoitiin C ja Assembly -ohjelmointikielillä, jotka ovat perinteisiä ohjelmointikieliä käyttöjärjestelmän ohjelmointiin. Alunperin C kehitettiin UNIX-käyttöjärjestelmän kehittämistä varten, joten se on erityisen sopiva ohjelmointikieli työn tarkoituksen kannalta. Alustaksi valittiin laajalti käytössä oleva Intelin x86 -arkkitehtuuri, koska yleisyytensä takia sille on helpompi laatia käyttöjärjestelmä kuin esimerkiksi ARM -arkkitehtuureille. Toinen syy x86:n valintaan oli sen ikä; sitä on käytetty lähes UNIXin alkuajoista asti, aina vuodesta 1978.
+
+\par
+
+Ohjelmointityön tuloksena saatiin aikaiseksi käyttöjärjestelmä, joka tukee osittain POSIX ja C99 -standardien mukaista C-kirjastoa. Sille tehtiin muutama ohjelma sekä komentokehote, rash. RazOSin kehitystyö jatkuu edelleen, ja tavoitteena on täysin standardien mukainen, UNIX-tyylinen käyttöjärjestelmä.
 
 \end{abstract}
 
@@ -156,20 +185,6 @@ Keywords: \keywordnames \\
 Ja sama englanniksi
 
 \end{abstract}
-
-
-%----------------------------------------------------------------------------------------
-%	ACKNOWLEDGEMENTS
-%----------------------------------------------------------------------------------------
-
-\begin{acknowledgements}
-\addchaptertocentry{\acknowledgementname} % Add the acknowledgements to the table of contents
-
-Kiitos kahvinkeittimelle ja muille.
-
-\end{acknowledgements}
-
-\clearpage
 
 
 %----------------------------------------------------------------------------------------
@@ -201,7 +216,7 @@ Kiitos kahvinkeittimelle ja muille.
 % Include the chapters of the thesis as separate files from the Chapters folder
 % Uncomment the lines as you write the chapters
 
-\include{chapters/chapter_1}
+\include{chapters/johdanto}
 
 
 %----------------------------------------------------------------------------------------

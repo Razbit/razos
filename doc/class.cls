@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Heavily modified by Razbit from the following template:
 %
-% Masters/Doctoral Thesis 
+% Masters/Doctoral Thesis
 % Class File
 % Version 1.2 (21/11/15)
 %
@@ -14,7 +14,7 @@
 %
 % Notes:
 % 1) This class file defines the structure and layout of the template file (main.tex).
-% 2) It has been written in such a way that under most circumstances you 
+% 2) It has been written in such a way that under most circumstances you
 % should not need to edit it.
 %
 % Class license:
@@ -57,7 +57,7 @@
 %	CLASS OPTIONS
 %----------------------------------------------------------------------------------------
 
-\ifbool{parskip}{\RequirePackage{parskip}} % If the parskip option is passed to the class, require the parskip package 
+\ifbool{parskip}{\RequirePackage{parskip}} % If the parskip option is passed to the class, require the parskip package
 
 \patchcmd{\@makechapterhead}{\vspace*{50\p@}}{\abovechapterspace}{}{}
 \patchcmd{\@makeschapterhead}{\vspace*{50\p@}}{\abovechapterspace}{}{}
@@ -142,7 +142,7 @@
 
 %----------------------------------------------------------------------------------------
 
-\newcommand{\checktoopen}{% New command to move content to the next page which prints to the next odd page if twosided mode is active  
+\newcommand{\checktoopen}{% New command to move content to the next page which prints to the next odd page if twosided mode is active
 \if@openright\cleardoublepage\else\clearpage\fi
 }
 
@@ -207,8 +207,8 @@
 \pagestyle{thesis}
 \ifbool{headsepline}{\KOMAoption{headsepline}{true}}{}
 \PreventPackageFromLoading[\ClassError{\classname}{Package `fancyhdr' is
-incompatible\MessageBreak with this class}{The pagesyles are defined 
-using package `scrlayer-scrpage', please consult the\MessageBreak 
+incompatible\MessageBreak with this class}{The pagesyles are defined
+using package `scrlayer-scrpage', please consult the\MessageBreak
 KOMA-script documentation for details.}]{fancyhdr}
 
 
@@ -250,7 +250,7 @@ KOMA-script documentation for details.}]{fancyhdr}
 	\checktoopen
 	\null
 	\thispagestyle{plain}
-	
+
 }
 {
   \vfil\vfil\vfil\null
@@ -272,23 +272,6 @@ KOMA-script documentation for details.}]{fancyhdr}
   \end{longtable}
   \addtocounter{table}{-1} % Don't count this table as one of the document tables
   \ifbool{nolistspace}{\endgroup}{}
-}
-
-
-%----------------------------------------------------------------------------------------
-%	ACKNOWLEDGEMENTS PAGE DESIGN
-%----------------------------------------------------------------------------------------
-
-\newcommand{\acknowledgementnaming}[1]{\def\acknowledgementname{#1}}
-
-\NewDocumentEnvironment{acknowledgements}{}{%
-\checktoopen
-\tttypeout{\acknowledgementname}
-\thispagestyle{plain}
-{\huge\textbf{\acknowledgementname}}\\
-}
-{
-\vfil\vfil\null
 }
 
 \endinput
