@@ -99,7 +99,7 @@ uint32_t* execve(char* path, char** argv, char** envp)
 
 		for(int i = 0; i < envc; i++)
 		{
-			env[i] = (char*)kmalloc(strlen(argv[i]) + 1);
+			env[i] = (char*)kmalloc(strlen(envp[i]) + 1);
 			if (env[i] == NULL)
 				return NULL; /* kmalloc sets errno */
 

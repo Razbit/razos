@@ -74,10 +74,7 @@ int main(int argc, char* argv[])
 		close(0);
 		close(fd[1]);
 		dup(fd[0]);
-		//execv("len", NULL);
-		dgetline(&line, &n, 0);
-		printf("From child: |%s|\n", line);
-		exit(0);
+		execv("len", 0);
 	}
 	close(fd[0]);
 
