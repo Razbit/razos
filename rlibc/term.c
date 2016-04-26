@@ -61,6 +61,7 @@ int main(int argc, char* argv[])
 	int childpid;
 	int status;
 	char *line;
+	size_t n;
 
 	pipe(fd);
 	if ((childpid = fork()) == -1)
@@ -70,12 +71,12 @@ int main(int argc, char* argv[])
 	// Child closes output, parent closes input.
 	if (childpid == 0)
 	{
+		close(0);
 		close(fd[1]);
-		dup2(0, fd[0]);
+		dup(fd[0]);
 		//execv("len", NULL);
-		char readbuffer[80];
-		read(0, readbuffer, sizeof(readbuffer));
-		printf("From child: %s\n", readbuffer);
+		dgetline(&line, &n, 0);
+		printf("From child: %s\n", line);
 		exit(0);
 	}
 	close(fd[0]);
@@ -83,6 +84,7 @@ int main(int argc, char* argv[])
 	puts("Write a line from parent:");
 	line = read_line();
 	write(fd[1], line, strlen(line)+1);
+	write(fd[1], "\n", 1);
 	wait(&status);
 
 	return 0;
