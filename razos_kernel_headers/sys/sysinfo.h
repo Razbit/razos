@@ -1,4 +1,4 @@
-/* sys_setup.c -- set kernel parameters */
+/* sys/sysinfo.h -- system information */
 
 /* Copyright (c) 2016 Eetu "Razbit" Pesonen
  *
@@ -16,31 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with RazOS. If not, see <http://www.gnu.org/licenses/>. */
 
-#include <sys/types.h>
-#include <errno.h>
+#ifndef SYSINFO_H
+#define SYSINFO_H
 
-#include <api/razos.h>
-#include "syscall.h"
+unsigned int get_used_mem();
 
-#include "../mm/task.h"
-#include "../mm/paging.h"
-
-#include "sys_setup.h"
-
-uint32_t sys_setup(struct registers_t* regs)
-{
-	uint32_t cmd = REG_ARG1(regs);
-	switch (cmd)
-	{
-	case SET_ERRNO_LOC:
-		cur_task->errno_loc = (int*)REG_ARG2(regs);
-		return 0;
-		break;
-	case GET_USED_MEM:
-		return get_used_frames() * 4096;
-		break;
-	default:
-		errno = ENOSYS;
-		return (uint32_t)-1;
-	}
-}
+#endif /* SYSINFO_H */

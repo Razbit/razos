@@ -50,5 +50,6 @@ uint32_t __syscall3(uint32_t num, uint32_t arg1, uint32_t arg2,	\
 
 /* For sys_setup */
 #define SET_ERRNO_LOC 1
+#define GET_USED_MEM 2
 
 #endif /* RAZOS_H */

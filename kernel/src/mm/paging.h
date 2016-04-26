@@ -137,4 +137,7 @@ void paging_init(struct multiboot_info* mb);
 /* Grow identity-mapped region. If addr == 0, return current end */
 void* set_alloc_start(void* addr);
 
+/* Get the number of used frames */
+uint32_t get_used_frames();
+
 #endif /* PAGING_H */

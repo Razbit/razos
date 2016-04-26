@@ -14,24 +14,11 @@ extern char** environ;
 
 int main(int argc, char* argv[])
 {
-	char c;
-	for(;;)
-	{
-		c = getchar();
-		if (c == 127)
-		{
-			puts("\bInputted the delete character.");
-		}
-		else
-		{
-			printf("%c\n", c);
-		}
-	}
 	time_t ut = time(NULL);
-	struct tm time1 = *gmtime(&ut);    
-	printf("Time since Epoch %i seconds\n", ut);    
+	struct tm time1 = *gmtime(&ut);
+	printf("Time since Epoch %i seconds\n", ut);
 	puts(asctime(&time1));
-    
+
 	pid_t pid = fork();
 
 	if (pid == 0)

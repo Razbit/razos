@@ -67,6 +67,17 @@ static inline uint32_t find_free_frame()
 	return (uint32_t)-1;
 }
 
+uint32_t get_used_frames()
+{
+	uint32_t ret = 0;
+	uint32_t i, j;
+	for (i = 0; i < frame_index(memsize); i++)
+			for (j = 0; j < 32; j++)
+				if ((frames[i] & ((uint32_t)1 << j)) == 1)
+					ret++;
+	return ret;
+}
+
 /* Allocate a frame, return its physical address */
 uint32_t frame_alloc()
 {
