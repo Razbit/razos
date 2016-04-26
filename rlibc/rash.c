@@ -324,7 +324,7 @@ static char *rash_read_line(void)
 	{
 		c = getchar();
 
-		if (c == 127)
+		if (c == 127 || c == 8)
 		{
 			if (position > 0)
 			{
