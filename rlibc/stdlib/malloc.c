@@ -15,9 +15,14 @@
 static char *heap_start = NULL;
 static char *heap_end   = NULL;
 
-static inline uint32_t round_up(uint32_t val, uint32_t divisor)
+static inline uint32_t round_up(uint32_t val)
 {
-	return (val-1 + divisor) & ~(val-1);
+	if ((val & (16-1)) != 0)
+	{
+		val += (16-1);
+		val &= ~(16-1);
+	}
+    return val;
 }
 
 /* Size of heap_node_t must be 16 bytes for intended alignment. */
@@ -75,7 +80,7 @@ void* malloc(size_t size)
 	if (size == 0)
 		return NULL;
 
-	size = round_up(size, sizeof(struct heap_node_t));
+	size = round_up(size);
 
 	/* Make sure we have a heap */
 	if (heap_start == NULL)
@@ -175,7 +180,7 @@ void *realloc(void *ptr, size_t size)
 
 	if (size < nodeptr->size) /* Shrinking the area of allocated memory. */
 	{
-		size_t new_node_size = round_up(size, sizeof(struct heap_node_t));
+		size_t new_node_size = round_up(size);
 		if (new_node_size < nodeptr->size)
 			create_padding_node(nodeptr, new_node_size);
 	}

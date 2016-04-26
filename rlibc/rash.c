@@ -97,7 +97,7 @@ static int do_commands(char **args, int pipes, int *commandStarts, char *input_n
 
             for (k = 0; k < 2*pipes; k++)
             {
-                    close(pipefds[k]);
+	            close(pipefds[k]);
             }
 
             /* The commands are executed here. */
@@ -261,6 +261,7 @@ static char **rash_split_line(char *line, int *arg_len)
             token[token_len++] = *line;
             state = DEFAULT;
         }
+
         if (token_pos >= argbuf)
         {
             argbuf *= 2;
@@ -275,7 +276,7 @@ static char **rash_split_line(char *line, int *arg_len)
         {
             tokbuf *= 2;
             token = realloc(token, tokbuf);
-			if (tokens == NULL)
+            if (token == NULL)
             {
                 dprintf(STDERR_FILENO, "%s", alloc_error);
                 exit(EXIT_FAILURE);
