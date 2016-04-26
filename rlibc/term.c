@@ -76,14 +76,14 @@ int main(int argc, char* argv[])
 		dup(fd[0]);
 		//execv("len", NULL);
 		dgetline(&line, &n, 0);
-		printf("From child: %s\n", line);
+		printf("From child: |%s|\n", line);
 		exit(0);
 	}
 	close(fd[0]);
 
 	puts("Write a line from parent:");
 	line = read_line();
-	write(fd[1], line, strlen(line)+1);
+	write(fd[1], line, strlen(line));
 	write(fd[1], "\n", 1);
 	wait(&status);
 
