@@ -25,10 +25,14 @@ init: rlibc
 	$(MAKE) test -C rlibc
 	$(MAKE) hellow -C rlibc
 	$(MAKE) rash -C rlibc
+	$(MAKE) len -C rlibc
+	$(MAKE) term -C rlibc
 	mv rlibc/test ./test
 	mv rlibc/hellow ./hellow
 	mv rlibc/rash ./rash
-	tools/mk-initrd test hellow rash
+	mv rlibc/len ./len
+	mv rlibc/term ./term
+	tools/mk-initrd test hellow rash len term
 
 bochs:
 	sudo ./update_image.sh

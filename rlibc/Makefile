@@ -50,6 +50,12 @@ hellow: hellow.c.o
 rash: rash.c.o
 	$(LD) $(_LDLAGS) -Tuser.ld -o rash rlibc.o rash.c.o
 
+len: len.c.o
+	$(LD) $(_LDLAGS) -Tuser.ld -o len rlibc.o len.c.o
+
+term: term.c.o
+	$(LD) $(_LDLAGS) -Tuser.ld -o term rlibc.o term.c.o
+
 clean:
 	rm *.o
 	$(MAKE) clean -C arch

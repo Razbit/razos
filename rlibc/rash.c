@@ -1,11 +1,9 @@
 #include <wait.h>     /* wait */
-//#include <sys/stat.h> /* File mode bits (permissions) */
 #include <fcntl.h>    /* creat, open, close */
 #include <unistd.h>   /* pipe, dup2 */
 #include <stdlib.h>   /* malloc, realloc, free, NULL */
 #include <stdio.h>    /* puts, printf, dprintf */
 #include <string.h>   /* strchr, strlen, strcpy, strcmp */
-//#include <signal.h>   /* signal, SIGINT, SIG_IGN */
 
 static const char *alloc_error = "rash: allocation error\n";
 #define IN '\a'
@@ -13,38 +11,24 @@ static const char *alloc_error = "rash: allocation error\n";
 #define PIPE '\f'
 
 /* Declarations for builtin shell commands: */
-//static int rash_cd(char **args);
 static int rash_help(char **args);
 static int rash_exit(char **args);
 
 /* List of builtin commands and their corresponding functions. */
 static char *builtin_str[] =
 {
-//    "cd",
     "help",
     "exit"
 };
 
 static int (*builtin_func[]) (char **) =
 {
-//    &rash_cd,
     &rash_help,
     &rash_exit
 };
 
 static const int rash_num_builtins = sizeof(builtin_str) / sizeof(char*);
-/*
-static int rash_cd(char **args)
-{
-    if (args[1] == NULL)
-        fprintf(stderr, "rash: expected argument to \"cd\"\n");
-    
-    else if (chdir(args[1]) != 0)
-            perror("rash");
-    
-    return 1;
-}
-*/
+
 static int rash_help(char **args)
 {
     int i;
@@ -195,10 +179,7 @@ static int rash_launch(char **args)
     free(commandStarts);
     
     if (s != 0) /* Error in the do_commands function */
-    {
-        //perror("rash");
         exit(EXIT_FAILURE);
-    }
 
     return 1;
 }
@@ -328,10 +309,52 @@ static void print_tokens(char **args, int len)
 /* Read a line from stdin and return it. */
 static char *rash_read_line(void)
 {
-	char *line = NULL;
-	size_t n;
-	dgetline(&line, &n, STDIN_FILENO);
-	return line;
+	int bufsize = 80;
+	int position = 0;
+	char *buffer = malloc(bufsize * sizeof(char));
+	int c;
+
+	if (buffer == NULL)
+	{
+		exit(EXIT_FAILURE);
+	}
+
+	for (;;)
+	{
+		c = getchar();
+
+		if (c == 127)
+		{
+			if (position > 0)
+			{
+				printf("\b \b");
+				--position;
+			}
+		}
+		else if (c == EOF || c == '\n')
+		{
+			puts("");
+			buffer[position] = '\0';
+			return buffer;
+		}
+		else
+		{
+			printf("%c", c);
+			buffer[position] = c;
+			++position;
+		}
+
+		/* If the buffer is exceeded, reallocate. */
+		if (position >= bufsize)
+		{
+			bufsize *= 2; /* Double the buffer size. */
+			buffer = realloc(buffer, bufsize * sizeof(char));
+			if (buffer == NULL)
+			{
+				exit(EXIT_FAILURE);
+			}
+		}
+	}
 }
 
 static void rash_loop(void)
@@ -359,7 +382,6 @@ static void rash_loop(void)
 int main(void)
 {
 	setenv("SHELL", "rash", 1);
-    //signal(SIGINT, SIG_IGN);
     rash_loop();
 
     return EXIT_SUCCESS;

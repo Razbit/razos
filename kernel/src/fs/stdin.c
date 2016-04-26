@@ -155,7 +155,7 @@ static ssize_t write_stdin(int fd, const void* buf, size_t size)
 		stdin_buf_size += push_stdin(((char*)buf)[i]);
 
 		/* Echo to the screen */
-		kputchar(((char*)buf)[i]);
+		//kputchar(((char*)buf)[i]);
 	}
 
 	return size;
