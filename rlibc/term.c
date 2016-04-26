@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <wait.h>
+#include <fcntl.h>
 
 /* Read a line from stdin and return it. */
 static char *read_line(void)
@@ -55,16 +56,49 @@ static char *read_line(void)
 	}
 }
 
+static char read_char(void)
+{
+	int c;
+	int position = 0;
+
+	for (;;)
+	{
+		c = getchar();
+		if (c == 127 || c == 8)
+		{
+			if (position > 0)
+			{
+				printf("\b \b");
+				--position;
+			}
+		}
+		else
+		{
+			if (c == '\n')
+			{
+				puts("");
+				position = 0;
+			}
+			else
+			{
+				printf("%c", c);
+				++position;
+			}
+			return c;
+		}
+	}
+}
+
 int main(int argc, char* argv[])
 {
 	int fd[2];
 	int childpid;
+	char c;
 	int status;
-	char *line;
-	size_t n;
+	int flags;
 
 	pipe(fd);
-	if ((childpid = fork()) == -1)
+	if ((childpid = fork()) < 0)
 	{
 		exit(EXIT_FAILURE);
 	}
@@ -74,14 +108,21 @@ int main(int argc, char* argv[])
 		close(0);
 		close(fd[1]);
 		dup(fd[0]);
-		execv("len", 0);
+		execv("rash", 0);
 	}
 	close(fd[0]);
 
-	puts("Write a line from parent:");
-	line = read_line();
-	write(fd[1], line, strlen(line));
-	write(fd[1], "\n", 1);
+	flags = fcntl(0, F_GETFL, 0);
+	fcntl(0, F_SETFL, flags | O_NONBLOCK);
+	for (;;)
+	{
+		c = read_char();
+		write(fd[1], &c, 1);
+		if (c == EOF)
+		{
+			break;
+		}
+	}
 	wait(&status);
 
 	return 0;
