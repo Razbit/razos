@@ -13,17 +13,17 @@ RazOS:iin kuuluu myös joitakin käyttäjäohjelmia, tärkeimpänä komentotulkk
 
 \begin{figure}[H]
 \centering
-\includegraphics[]{../figures/rash.png}
+\includegraphics[width=\textwidth]{../figures/rash.png}
 \label{fig:rash.png}
 \end{figure}
 
 \section{Standardityökalut (stdlib.h)}
 
-C-kirjasto stdlib.h määrittelee erilaisia yleishyödyllisiä funktioita, tyyppejä ja makroja, tärkeimpinä dynaamiseen muistinvaraukseen käytettävä malloc, ympäristömuuttujan hallitsemiseen käytettävät getenv- ja setenv-funktiot sekä satunnaislukujen luomiseen käytettävä rand-funktio.
+C-kirjasto \texttt{stdlib.h} määrittelee erilaisia yleishyödyllisiä funktioita, tyyppejä ja makroja, tärkeimpinä dynaamiseen muistinvaraukseen käytettävä \texttt{malloc}, ympäristömuuttujan hallitsemiseen käytettävät funktiot, \texttt{getenv} ja \texttt{setenv}, sekä satunnaislukujen luomiseen käytettävä \texttt{rand()}.
 
 \subsection{Dynaaminen muistinvaraus (malloc)}
 
-Dynaaminen muistinvaraus toimii RazOS:issa hyvin samalla tavoin niin ytimessä kuin käyttäjätilassakin. Käyttäjätilassa jokaisella ohjelmalla on kuitenkin oma virtuaalimuistiavaruus, jossa muistia hallitaan. Koska käyttäjätilalla ei myöskään ole oikeutta käyttää järjestelmäresursseja suoraan, varataan varsinaiset muistisivut brk- ja sbrk-järjestelmäkutsujen avulla.
+Dynaaminen muistinvaraus toimii RazOS:issa hyvin samalla tavoin niin ytimessä kuin käyttäjätilassakin. Käyttäjätilassa jokaisella ohjelmalla on kuitenkin oma virtuaalimuistiavaruus, jossa muistia hallitaan. Koska käyttäjätilalla ei myöskään ole oikeutta käyttää järjestelmäresursseja suoraan, varataan varsinaiset muistisivut \texttt{brk} ja \texttt{sbrk} -järjestelmäkutsujen avulla.
 
 \subsection{Ympäristömuuttuja (environ)}
 
@@ -37,8 +37,8 @@ Koska environ-muuttujan merkkijonojen manuaalinen muuttaminen on virhealtista, P
 
 C-kirjaston rand-funktio on näennäissatunnaislukugeneraattori, joka pyrkii matemaattisilla operaatioilla luomaan annetusta siemenarvosta mahdollisimman satunnaisen luvun. RazOS:in rand-funktio täyttää yksinkertaisuudestaan huolimatta C99-standardin minimivaatimukset, ja perustuukin standardin ehdotukseen.
 
-\begin{footnotesize}
-\begin{minted}[linenos]{C}
+\begin{listing}[H]
+\begin{minted}[]{c}
 #include <stdlib.h>
 
 static unsigned long next = 1; /* For the rand implementation. */
@@ -54,7 +54,9 @@ void srand(unsigned int seed)
 	next = seed;
 }
 \end{minted}
-\end{footnotesize}
+\caption{stdlib.h}
+\label{lst:stdlib}
+\end{listing}
 
 \section{Syöte ja tulostus (stdio.h)}
 
@@ -76,8 +78,8 @@ Komentotulkki on yksi tärkeimmistä ohjelmista Unix-käyttöjärjestelmässä. 
 
 Korkealla tasolla komentotulkin toimintaperiaate on varsin yksinkertainen, josta osoituksena alla oleva Rashin syöte-tuloste -silmukka:
 
-\begin{footnotesize}
-\begin{minted}[linenos]{C}
+\begin{listing}[H]
+\begin{minted}[]{c}
 static void rash_loop(void)
 {
     char *line;
@@ -100,7 +102,9 @@ static void rash_loop(void)
     } while (status);
 }
 \end{minted}
-\end{footnotesize}
+\caption{Rashin silmukka}
+\label{lst:rash_loop}
+\end{listing}
 
 Komentotulkin kehitystyö tehtiin GNU/Linux-ympäristössä, josta se siirrettiin pienin muutoksin osaksi RazOS:ia.
 
@@ -108,8 +112,8 @@ Komentotulkin kehitystyö tehtiin GNU/Linux-ympäristössä, josta se siirrettii
 
 Alla on pieni C-ohjelma, joka tulostaa näytölle päivämäärän ja kellonajan.
 
-\begin{footnotesize}
-\begin{minted}[linenos]{C}
+\begin{listing}[H]
+\begin{minted}[]{c}
 #include <stdio.h>
 #include <time.h>
 
@@ -128,6 +132,8 @@ int main(void)
 	return 0;
 }
 \end{minted}
-\end{footnotesize}
+\caption{Esimerkkiohjelma; date.c}
+\label{lst:datec}
+\end{listing}
 
 Ohjelma toimii ilman muutoksia niin RazOS:issa, muissa Unixeissa kuin kaikissa C99-standardin ohjelmointikirjastot sisältävissä käyttöjärjestelmissä.

@@ -47,10 +47,21 @@ headsepline, % Uncomment to get a line under the header
 \usepackage[titletoc]{appendix}
 
 \usepackage{minted}
+\renewcommand\listingscaption{Listaus}
+
+\usepackage{etoolbox}
+\AtBeginEnvironment{minted}{\singlespacing%
+    \fontsize{10}{10}\selectfont}
+
+\usepackage{graphicx}
 
 \usepackage[backend=bibtex,style=authortitle,natbib=true]{biblatex}
 \addbibresource{bibliography.bib} % The filename of the bibliography
 \usepackage[autostyle=true]{csquotes} % Generate language-dependent quotes in the bibliography
+
+%\pretolerance=10000
+\tolerance=2000
+\emergencystretch=10pt
 
 %----------------------------------------------------------------------------------------
 %	MARGIN SETTINGS
@@ -201,6 +212,7 @@ Ja sama englanniksi
 \begin{abbreviations}{ll} % Include a list of abbreviations (a table of two columns)
 
 \textbf{API} & \textbf{A}pplication \textbf{P}rogramming \textbf{I}nterface, ohjelmointirajapinta\\
+\textbf{0x} & Etuliite heksadesimaaleille\\
 
 \end{abbreviations}
 
@@ -217,6 +229,9 @@ Ja sama englanniksi
 % Uncomment the lines as you write the chapters
 
 \include{chapters/johdanto}
+\include{chapters/kernel}
+\include{chapters/kayttajatila}
+\include{chapters/yhteenveto}
 
 
 %----------------------------------------------------------------------------------------
@@ -237,7 +252,8 @@ Ja sama englanniksi
 %	BIBLIOGRAPHY
 %----------------------------------------------------------------------------------------
 
-\printbibliography[title={Kirjallisuus}, heading=bibintoc]
+\nocite{*}
+\printbibliography[title={Kirjallisuus ja lähteet}, heading=bibintoc]
 
 %----------------------------------------------------------------------------------------
 
