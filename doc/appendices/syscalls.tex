@@ -1,0 +1,113 @@
+\chapter{RazOSin järjestelmäkutsut}
+
+\label{Syscalls}
+
+RazOSissa on kirjoitushetkellä 18 järjestelmäkutsua. Ne on määritelty tiedostossa \texttt{razos/razos\_kernel\_headers/api/razos.h}.
+
+\textbf{sys\_exit}\\
+Numero: 0\\
+Kutsuminen: \texttt{void exit(int status)}\\
+Implementaatio: \texttt{razos/kernel/src/syscall/sys\_tasking.c}\\
+Kuvaus: lopettaa prosessin
+
+\textbf{sys\_sched\_yield}\\
+Numero: 1\\
+Kutsuminen: \texttt{void sched\_yield(void)}\\
+Implementaatio: \texttt{razos/kernel/src/syscall/sys\_tasking.c}\\
+Kuvaus: luovuttaa suoritusvuoron
+
+\textbf{sys\_fork}\\
+Numero: 2\\
+Kutsuminen: \texttt{pid\_t fork(void)}\\
+Implementaatio: \texttt{razos/kernel/src/syscall/sys\_tasking.c}\\
+Kuvaus: jakaa prosessin kahteen samanlaiseen
+
+\textbf{sys\_wait}\\
+Numero: 3\\
+Kutsuminen: \texttt{uint32\_t wait(int* stat\_loc)}\\
+Implementaatio: \texttt{razos/kernel/src/syscall/sys\_tasking.c}\\
+Kuvaus: asettaa vanhemman odottamaan lapsiprosessin valmistumista
+
+\textbf{sys\_read}\\
+Numero: 4\\
+Kutsuminen: \texttt{ssize\_t read(int fd, void* buf, size\_t size)}\\
+Implementaatio: \texttt{razos/kernel/src/syscall/sys\_fs.c}\\
+Kuvaus: lukee tiedostosta
+
+\textbf{sys\_write}\\
+Numero: 5\\
+Kutsuminen: \texttt{ssize\_t write(int fd, const void* buf, size\_t size)}\\
+Implementaatio: \texttt{razos/kernel/src/syscall/sys\_fs.c}\\
+Kuvaus: kirjoittaa tiedostoon
+
+\textbf{sys\_open}\\
+Numero: 6\\
+Kutsuminen: \texttt{int open(const char* name, int oflag, ...)}\\
+Implementaatio: \texttt{razos/kernel/src/syscall/sys\_fs.c}\\
+Kuvaus: avaa tiedoston
+
+\textbf{sys\_close}\\
+Numero: 7\\
+Kutsuminen: \texttt{int close(int fd)}\\
+Implementaatio: \texttt{razos/kernel/src/syscall/sys\_fs.c}\\
+Kuvaus: sulkee avoimen tiedoston
+
+\textbf{sys\_creat}\\
+Numero: 8\\
+Kutsuminen: \texttt{int creat(const char* name, mode\_t mode)}\\
+Implementaatio: \texttt{razos/kernel/src/syscall/sys\_fs.c}\\
+Kuvaus: luo uuden tiedoston
+
+\textbf{sys\_lseek}\\
+Numero: 9\\
+Kutsuminen: \texttt{off\_t lseek(int fd, off\_t offset, int whence)}\\
+Implementaatio: \texttt{razos/kernel/src/syscall/sys\_fs.c}\\
+Kuvaus: siirtyy tiedostossa \textit{offset} tavua
+
+\textbf{sys\_fcntl}\\
+Numero: 10\\
+Kutsuminen: \texttt{int fcntl(int fd, int cmd, ...)}\\
+Implementaatio: \texttt{razos/kernel/src/syscall/sys\_fs.c}\\
+Kuvaus: hakee tai asettaa monia tiedoston asetuksia/tietoja
+
+\textbf{sys\_fstat}\\
+Numero: 11\\
+Kutsuminen: \texttt{int fstat(int fd, struct stat* buf)}\\
+Implementaatio: \texttt{razos/kernel/src/syscall/sys\_fs.c}\\
+Kuvaus: hakee tiedoston status-tietoja
+
+\textbf{sys\_setup}\\
+Numero: 12\\
+Kutsuminen: \texttt{}\\
+Implementaatio: \texttt{razos/kernel/src/syscall/sys\_setup.c}\\
+Kuvaus: asettaa tai hakee kernelin asetuksia
+
+\textbf{sys\_pipe}\\
+Numero: 13\\
+Kutsuminen: \texttt{int pipe(int fd[2])}\\
+Implementaatio: \texttt{razos/kernel/src/syscall/sys\_pipe.c}\\
+Kuvaus: luo pipen
+
+\textbf{sys\_brk}\\
+Numero: 14\\
+Kutsuminen: \texttt{int brk(void* addr)}\\
+Implementaatio: \texttt{razos/kernel/src/syscall/sys\_uvm.c}\\
+Kuvaus: asettaa käyttäjän heap-alueen lopun osoitteeseen \textit{addr}
+
+\textbf{sys\_sbrk}\\
+Numero: 15\\
+Kutsuminen: \texttt{void* sbrk(intptr\_t incr)}\\
+Implementaatio: \texttt{razos/kernel/src/syscall/sys\_uvm.c}\\
+Kuvaus: kasvattaa tai pienetää käyttäjän heap-aluetta \textit{incr} tavun verran
+
+\textbf{sys\_execve}\\
+Numero: 16\\
+Kutsuminen: \texttt{int execve(const char* path, char* const argv[], char* const envp[])}\\
+Implementaatio: \texttt{razos/kernel/src/syscall/sys\_execve.c}\\
+Kuvaus: vaihtaa suoritettavan ohjelman
+
+\textbf{sys\_time}\\
+Numero: 17\\
+Kutsuminen: \texttt{time\_t time(time\_t* timer)}\\
+Implementaatio: \texttt{razos/kernel/src/syscall/sys\_time.c}\\
+Kuvaus: palauttaa ajan sekunteina UNIXin Epochista, 1.1.1970 UTC00:00:00

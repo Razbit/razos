@@ -386,3 +386,7 @@ __syscall3:
 \end{listing}
 
 Ylläolevasta koodista hypätään \texttt{sysenter}illä ytimeen, funktioon \texttt{syscall\_entry}, tiedostossa \texttt{razos/kernel/src/syscall/syscall.s}. Siellä alustetaan kernelin pino ja kutsutaan C-koodilla kirjoitettu jatkokäsittelijä, \texttt{syscall\_dispatch()}. Se etsii \texttt{syscall\_table} -taulukosta järjestelmäkutsun numeroa vastaavan funktion, ja suorittaa sen. Lopuksi siivotaan pino ja suoritetaan \texttt{sysexit} -komento, jonka myötä palataan käyttäjämaailmaan.
+
+\par
+
+Järjestelmäkutsujen avulla voidaan kirjoittaa C-kirjaston ne osat, jotka tarvitsevat jotain kernelin resursseja, kuten tiedostoja. Ilman niitä olisi kirjaston teko hyvin vaikeaa, ja ohjelmien pitäisi olla osa ydintä. Se veisi mennessään huomattavan paljon joustavuutta ja toisi mukanaan suuria tietoturvaongelmia, koska kaikki koodi voisi käyttää mitä vain ytimen osaa hyväkseen, ja kaikki koodi suoritettaisiin lupatasolla nolla.
