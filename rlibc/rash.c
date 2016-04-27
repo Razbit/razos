@@ -310,10 +310,52 @@ static void print_tokens(char **args, int len)
 /* Read a line from stdin and return it. */
 static char *rash_read_line(void)
 {
-	char *line;
-	size_t n;
-	dgetline(&line, &n, 0);
-	return line;
+	int bufsize = 80;
+	int position = 0;
+	char *buffer = malloc(bufsize * sizeof(char));
+	int c;
+
+	if (buffer == NULL)
+	{
+		exit(EXIT_FAILURE);
+	}
+
+	for (;;)
+	{
+		c = getchar();
+
+		if (c == 127 || c == 8)
+		{
+			if (position > 0)
+			{
+				printf("\b \b");
+				--position;
+			}
+		}
+		else if (c == EOF || c == '\n')
+		{
+			puts("");
+			buffer[position] = '\0';
+			return buffer;
+		}
+		else
+		{
+			printf("%c", c);
+			buffer[position] = c;
+			++position;
+		}
+
+		/* If the buffer is exceeded, reallocate. */
+		if (position >= bufsize)
+		{
+			bufsize *= 2; /* Double the buffer size. */
+			buffer = realloc(buffer, bufsize * sizeof(char));
+			if (buffer == NULL)
+			{
+				exit(EXIT_FAILURE);
+			}
+		}
+	}
 }
 
 static void rash_loop(void)
@@ -341,6 +383,8 @@ static void rash_loop(void)
 int main(void)
 {
 	setenv("SHELL", "rash", 1);
+	puts("\nWelcome to RazOS.");
+	puts("For help in using the shell, type 'help' on the prompt and press enter.");
     rash_loop();
 
     return EXIT_SUCCESS;

@@ -75,7 +75,7 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 	//char* argv[] = {"arg0", NULL};
 	//char* envp[] = {"VAR=VAL", NULL};
 
-	uint32_t* ret = execve("term", NULL, NULL);
+	uint32_t* ret = execve("rash", NULL, NULL);
 
 	if (ret != NULL)
 	{

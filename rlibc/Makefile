@@ -57,6 +57,9 @@ len: len.c.o
 term: term.c.o
 	$(LD) $(_LDLAGS) -Tuser.ld -o term rlibc.o term.c.o
 
+date: date.c.o
+	$(LD) $(_LDLAGS) -Tuser.ld -o date rlibc.o date.c.o
+
 clean:
 	rm *.o
 	$(MAKE) clean -C arch
