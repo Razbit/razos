@@ -173,7 +173,7 @@ RazOS ohjelmoitiin C ja Assembly -ohjelmointikielillä, jotka ovat perinteisiä 
 
 \par
 
-Ohjelmointityön tuloksena saatiin aikaiseksi käyttöjärjestelmä, joka tukee osittain POSIX ja C99 -standardien mukaista C-kirjastoa. Sille tehtiin muutama ohjelma sekä komentokehote, rash. RazOSin kehitystyö jatkuu edelleen, ja tavoitteena on täysin standardien mukainen, UNIX-tyylinen käyttöjärjestelmä.
+Ohjelmointityön tuloksena saatiin aikaiseksi käyttöjärjestelmä, joka tukee osittain POSIX ja C99 -standardien mukaista C-kirjastoa. Sille tehtiin muutama ohjelma sekä komentotulkki, Rash. RazOSin kehitystyö jatkuu edelleen, ja tavoitteena on täysin standardien mukainen, UNIX-tyylinen käyttöjärjestelmä.
 
 \end{abstract}
 
@@ -193,7 +193,15 @@ Appendices: \nappendices \\
 Keywords: \keywordnames \\
 \HRule
 
-Ja sama englanniksi
+Operating systems are complex entities. The purpose of this work is to examine the workings and the implementation of an operating system. In this work we describe the technical implementation of a UNIX-like operating system, drawing particular attention to processes, their control and time-sharing, as well as to memory management and the interfaces available to the user. To illustrate the technical implementation, we have developed a UNIX-like operating system, RazOS. We use source code and figures of technical details to help illustrate this implementation.
+
+\par
+
+RazOS was programmed in traditional system programming languages, namely C and Assembly. C was originally created for the development of the UNIX operating system, so it is particularly suitable for work of this nature. We chose the widely used Intel x86 architecture as our target platform, since its prevalence makes it easier to develop an operating system to than some other architectures, such as ARM. The second reason for choosing x86 was its age; it has been in use since the infancy of UNIX, ever since 1978.
+
+\par
+
+Our development work has resulted in an operating system that partially supports the C library defined by the POSIX and C99 standards. We have developed some programs, as well as a shell, Rash. RazOS is actively developed, and our goal is a completely standards-compliant, UNIX-like operating system.
 
 \end{abstract}
 
