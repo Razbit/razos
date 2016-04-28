@@ -3,6 +3,18 @@
 
 Käyttöjärjestelmiä on useita, joista tunnetuimpia ovat Microsoft Windows, Applen Mac OS X sekä erinäiset Linux-versiot. Linux ja Mac OS X pohjautuvat teknisesti 1970-luvulla kehitettyyn UNIX-käyttöjärjestelmään, jota kehittivät Bell Labs -tutkimuslaitoksessa Dennis Richie ja Ken Thompson. Tässä työssä tarkastellaan käyttöjärjestelmän tehtäviä ja teknistä toteutusta UNIXin näkökulmasta tämän työn ohessa kehitetyn UNIX-tyylisen käyttöjärjestelmän, RazOSin, avulla.
 
+\par
+
+Ajatus tarkemmasta käyttöjärjestelmän toiminnan tutkimisesta syntyi, kun käyttäjätason ohjelmia tehdessä käyttöjärjestelmä ja ohjelmointikirjastot vaikuttivat ``mustalta laatikolta''. Halusimme selvittää, miten laitteisto, käyttöjärjestelmä, kirjastot ja ohjelmat toimivat yhdessä. Tähän projektiin ei siis kuulu juurikaan käyttäjätason ohjelmia, vaan käyttöjärjestelmä itsessään, ja lisäksi osittain standardi C-kirjasto. Joitain käyttäjämaailman ohjelmia on tosin tehty, testausmielessä. Periaatteessa POSIX ja C99 -standardien mukaisten ohjelmien pitäisi RazOSissa toimia, hyvin pienellä muokkauksella.
+
+\par
+
+RazOSin kehitys tapahtui GNU/Linux ympäristössä. Koodi kirjoitettiin GNU Emacs ja Vim -editoreilla, ja kääntämiseen käytettiin GNU Compiler Collectionin versiota 5.2.0 ja linkitykseen GNU ld -työkalua GNU Binutils -kokoelman versiosta 2.25.1. Kääntämisen apuna oli GNU Make. RazOSia ei ole vielä ajettu ``oikeassa'' tietokoneessa, vaan testaamiseen on käytetty emulaattoreita Qemu ja Bochs.
+
+\par
+
+RazOSin kehitystyö jatkuu edelleen, ja tavoitteena on täysin \parencite{POSIX} ja \parencite{ISOC99} -standardeja tukeva käyttöjärjestelmä ohjelmointikirjastoineen. Suunnitelmissa on jatkaa kehitystä, kunnes RazOS on niin sanottu ``self-hosting''-käyttöjärjestelmä, eli se pystyy kääntämään itsensä ja kehitystyö voidaan siten siirtää GNU/Linux -ympäristöstä RazOSiin. Se vaatii vielä paljon työtä, mutta perusasiat ovat kunnossa: RazOS tukee monipuolista muistinhallintaa, keskeytyksiä, moniajoa ja tiedostoja sekä osaa käsitellä aikaa. Paljon laitteistoajureita puuttuu vielä, ja kirjastoista on suuria osia kesken, mutta niiden kehitys jatkuu. Kuten sanottu, tähän työhön ei varsinaisesti kuulu käyttäjän käytettävissä olevat ohjelmat, mutta niiden teko standardeja noudattaen on mahdollista; kokeilemamme ohjelmat toimivat niin GNU/Linux -ympäristössä kuin RazOSissakin.
+
 \section{Käyttöjärjestelmän tehtävät}
 Käyttöjärjestelmä on ohjelmisto, joka mahdollistaa muiden ohjelmien toiminnan hallinnoimalla tietokoneen resursseja, kuten muistia. Se antaa ohjelmien käyttöön yhtenäisen rajapinnan, API:n, joka on riippumaton alustasta. Rajapintaan kuuluu monia järjestelmäkutsuja, jotka toimivat erinäisten abstrahointien, kuten tiedostojärjestelmän ja virtuaalimuistin, kanssa.
 
