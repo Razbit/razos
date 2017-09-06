@@ -1,5 +1,5 @@
 CSOURCES = idt.c pit.c kb.c time.c gpf.c
-ASMSOURCES = isr.s
+ASMSOURCES = isr.s ata_lba.s
 SUBOBJS = 
 
 OBJS = $(patsubst %.c,%.c.o,$(CSOURCES))

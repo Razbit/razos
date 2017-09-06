@@ -42,4 +42,4 @@ bochs:
 
 qemu:
 	sudo ./update_image.sh
-	qemu-system-x86_64 -fda floppy.img -m 512 -d cpu_reset
+	qemu-system-x86_64 -fda floppy.img -drive format=raw,file=hd0.img -boot order=a -m 512 -d cpu_reset

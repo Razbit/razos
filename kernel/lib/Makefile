@@ -1,4 +1,4 @@
-CSOURCES = ctype.c portio.c sprintf.c stdlib.c string.c vsprintf.c fcntl.c unistd.c errno.c mktime.c
+CSOURCES = ctype.c portio.c sprintf.c stdlib.c string.c vsprintf.c fcntl.c unistd.c errno.c mktime.c memdump.c
 ASMSOURCES = 
 SUBOBJS = 
 
