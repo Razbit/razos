@@ -1,6 +1,6 @@
 /* vfs.h -- The kernel Virtual File System */
 
-/* Copyright (c) 2014-2016 Eetu "Razbit" Pesonen
+/* Copyright (c) 2014-2017 Eetu "Razbit" Pesonen
  *
  * This file is part of RazOS.
  *
@@ -21,53 +21,41 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include "device.h"
 
-/* Device IDs, for st_dev in stat structure */
-#define DEVID_RAMFS 1
-#define DEVID_PIPE  2
-#define DEVID_STDIO 3
-
-struct vfs_node_t;
-
-typedef ssize_t (*read_t)(int, void*, size_t);
-typedef ssize_t (*write_t)(int, const void*, size_t);
-typedef int (*open_t)(struct vfs_node_t*, int, mode_t);
-typedef int (*creat_t)(struct vfs_node_t*, mode_t);
-typedef int (*close_t)(int);
-typedef off_t (*lseek_t)(int, off_t, int);
-
-struct vfs_node_t
-{
-	char name[64];
-	struct stat status;
-
-	read_t read;
-	write_t write;
-	open_t open;
-	creat_t creat;
-	close_t close;
-	lseek_t lseek;
-
-	struct vfs_node_t* next;
-};
+/* fildes_t sysflag values */
+#define FD_USED 1
 
 struct fildes_t
 {
-	struct vfs_node_t* vfs_node;
+	char* path;
+	struct stat status;
 	off_t at;                    /* Where are we in the file */
 	uint32_t oflag;
+	uint32_t sysflag;
+	struct device_t* dev;
 };
 
-/* Root of the filesystem */
-extern struct vfs_node_t* vfs_root;
+struct fs_t
+{
+	ssize_t (*read)(size_t, char*, void*, size_t, struct device_t*);
+	ssize_t (*write)(size_t, char*, const void*, size_t, struct device_t*);
+	int (*close)(size_t, char*, struct device_t*);
+	off_t (*lseek)(size_t, char*, off_t, int, struct device_t*);
+	int (*open)(char*, int, mode_t, struct device_t*);
+	int (*creat)(char*, mode_t, struct device_t*);
+	int (*exist)(char*, struct device_t*);
+};
 
 /* Standard read, write, open, creat, close and lseek */
 ssize_t read_vfs(int fd, void* buf, size_t size);
 ssize_t write_vfs(int fd, const void* buf, size_t size);
-int open_vfs(const char* name, int oflag, mode_t mode);
-int creat_vfs(const char* name, mode_t mode);
+int open_vfs(const char* path, int oflag, mode_t mode);
+int creat_vfs(const char* path, mode_t mode);
 int close_vfs(int fd);
 off_t lseek_vfs(int fd, off_t offset, int whence);
+
+int mount_vfs(char* src, char* dest, char* fs_type, uint32_t flags, void* data);
 
 int do_fcntl(int fd, int cmd, uint32_t arg);
 

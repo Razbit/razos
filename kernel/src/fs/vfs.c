@@ -17,6 +17,7 @@
  * along with RazOS. If not, see <http://www.gnu.org/licenses/>. */
 
 #include "vfs.h"
+#include "device.h"
 #include "../mm/task.h"
 #include "ramfs.h"
 #include "fifofs.h"
@@ -30,10 +31,6 @@
 #include <limits.h>
 #include <errno.h>
 
-/* Root of the filesystem */
-struct vfs_node_t* vfs_root = NULL;
-uint32_t inodes = 0;
-
 ssize_t read_vfs(int fd, void* buf, size_t size)
 {
 	if (buf == NULL)
@@ -41,12 +38,12 @@ ssize_t read_vfs(int fd, void* buf, size_t size)
 		errno = ENOMEM;
 		return -1;
 	}
-	if (fd < 0 || fd >= OPEN_MAX || cur_task->files[fd].vfs_node == NULL)
+	if (fd < 0 || fd >= OPEN_MAX || !(cur_task->files[fd].sysflag & FD_USED))
 	{
 		errno = EBADF;
 		return -1;
 	}
-	if (cur_task->files[fd].vfs_node->status.st_mode & S_IFDIR)
+	if (cur_task->files[fd].status.st_mode & S_IFDIR)
 	{
 		errno = EISDIR;
 		return -1;
@@ -56,10 +53,8 @@ ssize_t read_vfs(int fd, void* buf, size_t size)
 
 	if (cur_task->files[fd].oflag & O_RDONLY)
 	{
-		struct vfs_node_t* node = cur_task->files[fd].vfs_node;
-
-		if (node->read != NULL)
-			return node->read(fd, buf, size);
+		if (cur_task->files[fd].dev->fs->read != NULL)
+			return cur_task->files[fd].dev->fs->read(fd, cur_task->files[fd].path, buf, size, cur_task->files[fd].dev);
 		else
 		{
 			errno = ENXIO;
@@ -80,7 +75,7 @@ ssize_t write_vfs(int fd, const void* buf, size_t size)
 		errno = ENOBUFS;
 		return -1;
 	}
-	if (fd < 0 || fd >= OPEN_MAX || cur_task->files[fd].vfs_node == NULL)
+	if (fd < 0 || fd >= OPEN_MAX || !(cur_task->files[fd].sysflag & FD_USED))
 	{
 		errno = EBADF;
 		return -1;
@@ -90,10 +85,8 @@ ssize_t write_vfs(int fd, const void* buf, size_t size)
 
 	if (cur_task->files[fd].oflag & O_WRONLY)
 	{
-		struct vfs_node_t* node = cur_task->files[fd].vfs_node;
-
-		if (node->write != NULL)
-			return node->write(fd, buf, size);
+		if (cur_task->files[fd].write != NULL)
+			return cur_task->files[fd].write(fd, cur_task->files[fd].path, buf, size, cur_task->files[fd].dev);
 		else
 		{
 			errno = ENXIO;
@@ -107,47 +100,75 @@ ssize_t write_vfs(int fd, const void* buf, size_t size)
 	}
 }
 
-int open_vfs(const char* name, int oflag, mode_t mode)
+int open_vfs(const char* path, int oflag, mode_t mode)
 {
-	if (name == NULL)
+	if (path == NULL)
 	{
 		errno = ENOENT;
 		return -1;
 	}
 
-	/* Find the corresponding VFS node for the file */
-	struct vfs_node_t* node = NULL;
-	struct vfs_node_t* ptr = vfs_root;
+	/* Find the FS that the file is on by searching mount points */
 
-	if (vfs_root != NULL)
+	struct fildes_t* fildes = kmalloc(sizeof(struct fildes_t));
+	if (fildes == NULL)
 	{
-		while (ptr != NULL)
+		/* kmalloc sets errno */
+		return -1;
+	}
+	struct mount_t* mount_point = mount_list;
+
+	char* dir = kmlloc(strlen(path));
+	if (dir == NULL)
+	{
+		kfree(fildes);
+		/* kmalloc sets errno */
+		return -1;
+	}
+
+	for (;;)
+	{
+		while (mount_point)
 		{
-			if (ptr->status.st_dev == DEVID_PIPE)
-				ptr = ptr->next;
-			else if (strcmp(name, ptr->name) == 0)
-				break;
-			else
-				ptr = ptr->next;
+			if (strcmp(mount_point->path, dir) == 0)
+			{
+				goto mount_found;
+			}
+			mount_point = mount_point->next;
+		}
+
+		mount_point = mount_list;
+
+		if (traverse_path(dir) < 0)
+		{
+			/* getting here would be weird, we wouldn't even have / */
+			errno = ENOENT;
+			goto fail;
 		}
 	}
 
+mount_found:
+
+	/* do something */
+
 	/* File doesn't exist yet -> create it. */
-	if (ptr == NULL)
+	if (/* doesnt exist */)
 	{
 		if (oflag & O_CREAT)
 		{
-			int ret = creat_vfs(name, mode);
+			int ret = creat_vfs(path, mode);
 			/* If creat fails, it sets errno for us */
 			if (ret < 0)
-				return -1;
+				goto fail;
 			cur_task->files[ret].oflag = oflag;
+			if (fildes)
+				kfree(fildes);
 			return ret;
 		}
 		else
 		{
 			errno = ENOENT;
-			return -1;
+			goto fail;
 		}
 	}
 	else
@@ -155,23 +176,22 @@ int open_vfs(const char* name, int oflag, mode_t mode)
 		if ((oflag & (O_CREAT | O_EXCL)) == (O_CREAT | O_EXCL))
 		{
 			errno = EEXIST;
-			return -1;
+			goto fail;
 		}
 	}
 
-	node = ptr;
 
-	if ((node->status.st_mode & S_IFDIR) && (oflag & O_WRONLY))
+	if ((fildes->status.st_mode & S_IFDIR) && (oflag & O_WRONLY))
 	{
 		errno = EISDIR;
-		return -1;
+		goto fail;
 	}
 
 	int fd = 3; /* 0, 1, 2 reserved for stdin/out/err */
 	/* Use fs-provided open(), if available */
-	if (node->open != NULL)
+	if (fildes->open != NULL)
 	{
-		fd = node->open(node, oflag, mode);
+		fd = node->open(fildes, oflag, mode);
 	}
 	else
 	{
@@ -191,8 +211,15 @@ int open_vfs(const char* name, int oflag, mode_t mode)
 	else
 	{
 		errno = EMFILE;
-		return -1;
+		goto fail;
 	}
+
+fail:
+	if (fildes)
+		kfree(fildes);
+	if (dir)
+		kfree(dir);
+	return -1;
 }
 
 int close_vfs(int fd)
@@ -203,25 +230,25 @@ int close_vfs(int fd)
 		return -1;
 	}
 
-	struct vfs_node_t* node = cur_task->files[fd].vfs_node;
-
-	if (node == NULL)
+	if (cur_task->files[fd].sysflag & FD_USERD == 0)
 	{
 		errno = EBADF;
 		return -1;
 	}
 
-	if (node->close != NULL)
+	if (cur_task->files[fd].close != NULL)
 	{
-		int ret = node->close(fd);
-		/* If this fails, the node->close should have set the errno */
+		int ret = cur_task->files[fd].close(fd, cur_task->files[fd].path);
+		/* If this fails, errno should be set */
 		if (ret < 0)
 			return -1;
 	}
 
-	cur_task->files[fd].vfs_node = NULL;
+	cur_task->files[fd].path = NULL;
 	cur_task->files[fd].at = 0;
 	cur_task->files[fd].oflag = 0;
+	cur_task->files[fd].sysflag = 0;
+	cur_task->files[fd].dev = NULL;
 
 	return 0;
 }
@@ -327,16 +354,14 @@ off_t lseek_vfs(int fd, off_t offset, int whence)
 		return -1;
 	}
 
-	struct vfs_node_t* node = cur_task->files[fd].vfs_node;
-
-	if (node == NULL)
+	if (!(cur_task->files[fd].sysflag & FD_USED))
 	{
 		errno = EBADF;
 		return -1;
 	}
 
 	/* FIFO not seekable */
-	if (node->status.st_mode & S_IFIFO)
+	if (cur_task->files[fd].status.st_mode & S_IFIFO)
 	{
 		errno = ESPIPE;
 		return -1;
@@ -344,8 +369,8 @@ off_t lseek_vfs(int fd, off_t offset, int whence)
 
 	/* If there is some fs-special functionality, use that. It should
 	 * set errno on errors.. */
-	if (node->lseek != NULL)
-		return node->lseek(fd, offset, whence);
+	if (cur_task->files[fd].lseek != NULL)
+		return cur_task->files[fd].lseek(fd, cur_task->files[fd].path, offset, whence, cur_task->files[fd].dev);
 
 	/* Otherwise we go default */
 	else
@@ -359,7 +384,7 @@ off_t lseek_vfs(int fd, off_t offset, int whence)
 			cur_task->files[fd].at += offset;
 			break;
 		case SEEK_END:
-			cur_task->files[fd].at = node->status.st_size + offset;
+			cur_task->files[fd].at = cur_task->files[fd].status.st_size + offset;
 			break;
 		default:
 			errno = EINVAL;
@@ -381,7 +406,7 @@ int get_free_fd(int fd)
 		if (fd == OPEN_MAX) /* No free file descriptors.. */
 			return -1;
 
-		if (cur_task->files[fd].vfs_node != NULL)
+		if (cur_task->files[fd].sysflag & FD_USED)
 		{
 			fd++;
 			continue;
