@@ -23,6 +23,7 @@
 #include <colors.h>
 #include <kassert.h>
 #include <time.h>
+#include <fcntl.h>
 
 #include "gdt.h"
 #include "drivers/idt.h"
@@ -31,8 +32,10 @@
 #include "mm/paging.h"
 #include "mm/task.h"
 #include "mm/sched.h"
+#include "fs/vfs.h"
 #include "fs/initrd.h"
 #include "fs/stdio_vfs.h"
+#include "fs/devfs.h"
 #include "loader/exec.h"
 
 int kmain(struct multiboot_info* mb, uint32_t esp)
@@ -58,12 +61,11 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 
 	task_init();
 	syscall_init();
-
-	init_stdin();
-	init_stdout();
-	init_stderr();
-
+	devfs_init();
+	ramfs_init();
+	init_stdio();
 	init_kb();
+
 
 	/* Load initrd files to the ramfs
 	 * open, close, creat, read, write, lseek can now access initrd */
@@ -75,7 +77,7 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 	//char* argv[] = {"arg0", NULL};
 	//char* envp[] = {"VAR=VAL", NULL};
 
-	uint32_t* ret = execve("rash", NULL, NULL);
+	uint32_t* ret = execve("/rd/rash", NULL, NULL);
 
 	if (ret != NULL)
 	{

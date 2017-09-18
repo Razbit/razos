@@ -28,13 +28,15 @@ init: rlibc
 	$(MAKE) len -C rlibc
 	$(MAKE) term -C rlibc
 	$(MAKE) date -C rlibc
+	$(MAKE) pipe_test -C rlibc
 	mv rlibc/test ./test
 	mv rlibc/hellow ./hellow
 	mv rlibc/rash ./rash
 	mv rlibc/len ./len
 	mv rlibc/term ./term
 	mv rlibc/date ./date
-	tools/mk-initrd test hellow rash len term date
+	mv rlibc/pipe_test ./pipe_test
+	tools/mk-initrd test hellow rash len term date hello pipe_test
 
 bochs:
 	sudo ./update_image.sh

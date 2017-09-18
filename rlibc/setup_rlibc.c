@@ -26,7 +26,7 @@
 extern char** environ;
 
 /* Set kernel parameter */
-static inline int set_kernel_param(unsigned int cmd, int param)
+static inline int set_kernel_param(unsigned int cmd, uint32_t param)
 {
 	return (int)__syscall2(SYS_SETUP, (uint32_t)cmd, (uint32_t)param);
 }
@@ -52,7 +52,7 @@ void init_rlibc(int argc, char* argv[], char* envp[])
 	}
 
 	int* errno_loc = __errno_location();
-	set_kernel_param(SET_ERRNO_LOC, (int)errno_loc);
+	set_kernel_param(SET_ERRNO_LOC, (uint32_t)errno_loc);
 
 	/* Without these GCC breaks the stack.. */
 	__asm__ __volatile__("mov %0, %%esi" :: "r"(envp) : "memory");

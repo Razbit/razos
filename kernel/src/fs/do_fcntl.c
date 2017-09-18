@@ -28,7 +28,7 @@
 int do_fcntl(int fd, int cmd, uint32_t arg)
 {
 	/* If fd is not open */
-	if (fd < 0 || fd >= OPEN_MAX || cur_task->files[fd].vfs_node == NULL)
+	if (fd < 0 || fd >= OPEN_MAX || !(cur_task->files[fd].sysflag & FD_USED))
 	{
 		errno = EBADF;
 		return -1;

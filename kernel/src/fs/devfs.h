@@ -1,6 +1,6 @@
-/* stdio_vfs.h -- VFS -part of the stdio system */
+/* devfs.h -- device file system */
 
-/* Copyright (c) 2015 Eetu "Razbit" Pesonen
+/* Copyright (c) 2017 Eetu "Razbit" Pesonen
  *
  * This file is part of RazOS.
  *
@@ -16,12 +16,25 @@
  * You should have received a copy of the GNU General Public License
  * along with RazOS. If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef STDIO_VFS_H
-#define STDIO_VFS_H
+#ifndef DEVFS_H
+#define DEVFS_H
 
-int init_stdio();
-int init_stdin();
-int init_stdout();
-int init_stderr();
+#include "device.h"
+#include "vfs.h"
 
-#endif /* STDIO_VFS_H */
+#include <sys/types.h>
+
+extern struct devfs_node_t* devfs_root;
+
+struct devfs_node_t
+{
+	char* path;
+	struct device_t* dev;
+	struct devfs_node_t* next;
+};
+
+int devfs_init();
+int devfs_exist(char* path, void* dev);
+int devfs_open(char* path, int oflag, mode_t mode, struct fildes_t* fildes);
+
+#endif /* DEVFS_H */

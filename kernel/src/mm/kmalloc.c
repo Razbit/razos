@@ -175,6 +175,8 @@ static void* do_kmalloc(size_t size, size_t align)
 		break;
 	}
 
+	memset(ret, 0, size);
+
 	return ret;
 }
 

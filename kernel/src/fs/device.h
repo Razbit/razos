@@ -30,29 +30,29 @@
 
 /* Special devices */
 #define DEV_SPECIAL_MAJ 0x00010000
-#define DEVID_RAMFS (DEV_SPECIAL_MAJ | 1)
-#define DEVID_PIPE  (DEV_SPECIAL_MAJ | 2)
-#define DEVID_STDIO (DEV_SPECIAL_MAJ | 3)
+#define DEVID_DEVDEV   (DEV_SPECIAL_MAJ | 0x01)
+#define DEVID_RAMDISK  (DEV_SPECIAL_MAJ | 0x02)
+#define DEVID_PIPE     (DEV_SPECIAL_MAJ | 0x04)
+#define DEVID_STDIN    (DEV_SPECIAL_MAJ | 0x08)
+#define DEVID_STDOUT   (DEV_SPECIAL_MAJ | 0x10)
+#define DEVID_STDERR   (DEV_SPECIAL_MAJ | 0x20)
 
-typedef enum __dev_type
-{
-	DEV_UNKOWN = 0,
-	DEV_CHAR = 1,
-	DEV_BLOCK = 2
-} dev_type_t;
-
-typedef int (*dev_read_t)(void*, off_t, size_t, struct device_t*);
-typedef int (*dev_write_t)(void*, off_t, size_t, struct device_t*);
+/* Device types */
+#define	DEV_UNKOWN 0
+#define	DEV_CHAR   1
+#define	DEV_BLOCK  2
 
 struct device_t
 {
 	char name[64];
 	dev_t devid;
-	dev_type_t type;
+	dev_t type;
 	struct fs_t* fs;
-	dev_read_t dev_read;
-	dev_write_t dev_write;
+	int (*dev_read)(void*, off_t, size_t, struct device_t*);
+	int (*dev_write)(void*, off_t, size_t, struct device_t*);
 	void* private;          // for use of the device driver
+
+	struct device_t* next;
 };
 
 struct mount_t
@@ -64,11 +64,14 @@ struct mount_t
 
 extern struct mount_t* mount_list;
 
-void dev_init();
+int dev_init();
 int dev_add(struct device_t* dev);
 struct device_t* dev_get(dev_t id);
-
 int dev_mount(struct device_t* dev, char* path);
+void list_mount();
+
 int traverse_path(char* path);
+char* reduce_path(const char* path, const char* mount);
+
 
 #endif /* DEVICE_H */

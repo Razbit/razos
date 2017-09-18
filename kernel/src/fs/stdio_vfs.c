@@ -1,6 +1,6 @@
-/* stdio_vfs.h -- VFS -part of the stdio system */
+/* stdio_vfs.c -- VFS -part of the stdio system */
 
-/* Copyright (c) 2015 Eetu "Razbit" Pesonen
+/* Copyright (c) 2017 Eetu "Razbit" Pesonen
  *
  * This file is part of RazOS.
  *
@@ -16,12 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with RazOS. If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef STDIO_VFS_H
-#define STDIO_VFS_H
+#include "stdio_vfs.h"
 
-int init_stdio();
-int init_stdin();
-int init_stdout();
-int init_stderr();
+int init_stdio()
+{
+	if (!init_stdout())
+		return -1;
+	if (!init_stderr())
+		return -1;
+	if (!init_stdin())
+		return -1;
 
-#endif /* STDIO_VFS_H */
+	return 0;
+}

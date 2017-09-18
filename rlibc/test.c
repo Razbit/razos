@@ -23,9 +23,9 @@ int main(int argc, char* argv[])
 
 	if (pid == 0)
 	{
-		char* argv2[] = {"hellow", "world", NULL};
+		char* argv2[] = {"/rd/hellow", "world", NULL};
 		setenv("SHELL", "bash", 1);
-		execve("hellow", argv2, environ);
+		execve("/rd/hellow", argv2, environ);
 
 		return 2;
 	}

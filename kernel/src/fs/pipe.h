@@ -30,15 +30,20 @@ struct pipe_data_t
 struct pipe_hdr_t
 {
 	struct pipe_data_t* data;
+	ino_t inode;
 	size_t write_at;
 	size_t read_at;
 	size_t writers;
     size_t readers;
+	struct pipe_hdr_t* next;
 };
 
-extern struct pipe_hdr_t* pipes[1024];
+extern struct pipe_hdr_t* pipes;
 extern ino_t pipe_inodes;
 
 int creat_pipe(int fd[2]);
+ssize_t read_pipe(int fd, void* buf, size_t size);
+ssize_t write_pipe(int fd, const void* buf, size_t size);
+int close_pipe(int fd);
 
 #endif /* PIPE_H */

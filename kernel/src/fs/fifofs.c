@@ -14,6 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with RazOS. If not, see <http://www.gnu.org/licenses/>. */
 
+/* TODO: rewrite */
+
 #include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -32,12 +34,11 @@ struct fifofs_hdr_t* fifofs_nodes[] = {NULL};
 
 static ssize_t read_fifofs(int fd, void* buf, size_t size)
 {
-	struct vfs_node_t* node = cur_task->files[fd].vfs_node;
-	struct fifofs_hdr_t* hdr = fifofs_nodes[node->status.st_ino];
+	struct fifofs_hdr_t* hdr = fifofs_nodes[cur_task->files[fd].status.st_ino];
 	struct fifofs_data_t* curnode = hdr->data;
 
 	/* According to POSIX/Oracle reading from empty fifo: */
-	while (node->status.st_size == 0)
+	while (cur_task->files[fd].status.st_size == 0)
 	{
 		/* Return 0 if write side is closed */
 		if (hdr->writers == 0)
@@ -59,8 +60,8 @@ static ssize_t read_fifofs(int fd, void* buf, size_t size)
 	off_t offset = hdr->read_at % 0x100;
 
 	/* How much we can read */
-	if (size > (size_t)node->status.st_size)
-		size = node->status.st_size;
+	if (size > (size_t)cur_task->files[fd].status.st_size)
+		size = cur_task->files[fd].status.st_size;
 
 	/* Read the data to buf */
 	size_t read = 0;
@@ -92,8 +93,7 @@ exit:
 
 static ssize_t write_fifofs(int fd, const void* buf, size_t size)
 {
-	struct vfs_node_t* node = cur_task->files[fd].vfs_node;
-	struct fifofs_hdr_t* hdr = fifofs_nodes[node->status.st_ino];
+	struct fifofs_hdr_t* hdr = fifofs_nodes[cur_task->files[fd].status.st_ino];
 	struct fifofs_data_t* curnode = hdr->data;
 
 	/* If there is no reader, according to Oracle we should
@@ -119,7 +119,7 @@ static ssize_t write_fifofs(int fd, const void* buf, size_t size)
 		{
 			curnode->data[offset] = *(uint8_t*)(buf+written);
 			written++;
-			node->status.st_size++;
+			cur_task->files[fd].status.st_size++;
 			hdr->write_at++;
 			if (written >= size)
 				break;

@@ -1,6 +1,6 @@
 /* vfs.c -- The kernel Virtual File System */
 
-/* Copyright (c) 2014-2016 Eetu "Razbit" Pesonen
+/* Copyright (c) 2014-2017 Eetu "Razbit" Pesonen
  *
  * This file is part of RazOS.
  *
@@ -20,7 +20,7 @@
 #include "device.h"
 #include "../mm/task.h"
 #include "ramfs.h"
-#include "fifofs.h"
+#include "pipe.h"
 
 #include <sys/types.h>
 #include <fcntl.h>
@@ -30,6 +30,8 @@
 #include <kmalloc.h>
 #include <limits.h>
 #include <errno.h>
+#include <console.h>
+#include <asm/system.h>
 
 ssize_t read_vfs(int fd, void* buf, size_t size)
 {
@@ -38,23 +40,32 @@ ssize_t read_vfs(int fd, void* buf, size_t size)
 		errno = ENOMEM;
 		return -1;
 	}
+
 	if (fd < 0 || fd >= OPEN_MAX || !(cur_task->files[fd].sysflag & FD_USED))
 	{
 		errno = EBADF;
 		return -1;
 	}
-	if (cur_task->files[fd].status.st_mode & S_IFDIR)
+
+	if (cur_task->files[fd].status->st_mode & S_IFDIR)
 	{
 		errno = EISDIR;
 		return -1;
 	}
+
 	if (size == 0)
 		return 0;
+
+	/* Handle pipes */
+	if (cur_task->files[fd].sysflag & PIPE)
+		return read_pipe(fd, buf, size);
 
 	if (cur_task->files[fd].oflag & O_RDONLY)
 	{
 		if (cur_task->files[fd].dev->fs->read != NULL)
+		{
 			return cur_task->files[fd].dev->fs->read(fd, cur_task->files[fd].path, buf, size, cur_task->files[fd].dev);
+		}
 		else
 		{
 			errno = ENXIO;
@@ -83,10 +94,16 @@ ssize_t write_vfs(int fd, const void* buf, size_t size)
 	if (size == 0)
 		return 0;
 
+	if (cur_task->files[fd].sysflag & PIPE)
+	{
+		return write_pipe(fd, buf, size);
+	}
+
+
 	if (cur_task->files[fd].oflag & O_WRONLY)
 	{
-		if (cur_task->files[fd].write != NULL)
-			return cur_task->files[fd].write(fd, cur_task->files[fd].path, buf, size, cur_task->files[fd].dev);
+		if (cur_task->files[fd].dev->fs->write != NULL)
+			return cur_task->files[fd].dev->fs->write(fd, cur_task->files[fd].path, buf, size, cur_task->files[fd].dev);
 		else
 		{
 			errno = ENXIO;
@@ -102,6 +119,13 @@ ssize_t write_vfs(int fd, const void* buf, size_t size)
 
 int open_vfs(const char* path, int oflag, mode_t mode)
 {
+	/* TODO: fifo */
+	if (mode & S_IFIFO)
+	{
+		errno = EPIPE;
+		return -1;
+	}
+
 	if (path == NULL)
 	{
 		errno = ENOENT;
@@ -116,15 +140,26 @@ int open_vfs(const char* path, int oflag, mode_t mode)
 		/* kmalloc sets errno */
 		return -1;
 	}
+
+	fildes->status = kmalloc(sizeof(struct stat));
+	if (fildes->status == NULL)
+	{
+		kfree(fildes);
+		return -1;
+	}
+
 	struct mount_t* mount_point = mount_list;
 
-	char* dir = kmlloc(strlen(path));
+	char* dir = kmalloc(strlen(path)+1);
 	if (dir == NULL)
 	{
+		kfree(fildes->status);
 		kfree(fildes);
 		/* kmalloc sets errno */
 		return -1;
 	}
+
+	strcpy(dir, path);
 
 	for (;;)
 	{
@@ -149,14 +184,27 @@ int open_vfs(const char* path, int oflag, mode_t mode)
 
 mount_found:
 
-	/* do something */
+	/* mount_point now contains information of the device where
+	 * the desired file is located */
 
-	/* File doesn't exist yet -> create it. */
-	if (/* doesnt exist */)
+	fildes->path = kmalloc(strlen(path)+1);
+	if (fildes->path == NULL)
+		goto fail;
+
+	strcpy(fildes->path, path);
+
+	fildes->dev = mount_point->device;
+
+	/* remove path to mount point from path */
+	char* reduced_path = reduce_path(path, mount_point->path);
+
+	/* exist() populates the stat struct */
+	if (!fildes->dev->fs->exist(reduced_path, fildes))
 	{
+		/* File doesn't exist yet so we create it. */
 		if (oflag & O_CREAT)
 		{
-			int ret = creat_vfs(path, mode);
+			int ret = _creat_vfs(path, mode, mount_point);
 			/* If creat fails, it sets errno for us */
 			if (ret < 0)
 				goto fail;
@@ -180,31 +228,34 @@ mount_found:
 		}
 	}
 
-
-	if ((fildes->status.st_mode & S_IFDIR) && (oflag & O_WRONLY))
+	if ((fildes->status->st_mode & S_IFDIR) && (oflag & O_WRONLY))
 	{
 		errno = EISDIR;
 		goto fail;
 	}
 
-	int fd = 3; /* 0, 1, 2 reserved for stdin/out/err */
+	int fd;
+
 	/* Use fs-provided open(), if available */
-	if (fildes->open != NULL)
+	if (fildes->dev->fs->open != NULL)
 	{
-		fd = node->open(fildes, oflag, mode);
+		fd = fildes->dev->fs->open(reduced_path, oflag, mode, fildes);
 	}
 	else
 	{
-		/* Find an empty fildes from the task struct */
-		fd = get_free_fd(fd);
+		fd = get_free_fd(3);
 	}
 
 	if (fd >= 0)
 	{
 		/* Populate the fildes */
-		cur_task->files[fd].vfs_node = node;
-		cur_task->files[fd].at = 0;
-		cur_task->files[fd].oflag = oflag;
+		fildes->at = 0;
+		fildes->oflag = oflag;
+		fildes->sysflag |= FD_USED;
+
+		memcpy(&(cur_task->files[fd]), fildes, sizeof(struct fildes_t));
+		kfree(fildes);
+		kfree(dir);
 
 		return fd;
 	}
@@ -215,6 +266,8 @@ mount_found:
 	}
 
 fail:
+	if (fildes->status)
+		kfree(fildes->status);
 	if (fildes)
 		kfree(fildes);
 	if (dir)
@@ -230,20 +283,26 @@ int close_vfs(int fd)
 		return -1;
 	}
 
-	if (cur_task->files[fd].sysflag & FD_USERD == 0)
+	if ((cur_task->files[fd].sysflag & FD_USED) == 0)
 	{
 		errno = EBADF;
 		return -1;
 	}
 
-	if (cur_task->files[fd].close != NULL)
+	if (cur_task->files[fd].sysflag & PIPE)
 	{
-		int ret = cur_task->files[fd].close(fd, cur_task->files[fd].path);
+		close_pipe(fd);
+	}
+	else if (cur_task->files[fd].dev->fs->close != NULL)
+	{
+		int ret = cur_task->files[fd].dev->fs->close(fd, cur_task->files[fd].path, cur_task->files[fd].dev);
 		/* If this fails, errno should be set */
 		if (ret < 0)
 			return -1;
 	}
 
+	kfree(cur_task->files[fd].status);
+	cur_task->files[fd].status = NULL;
 	cur_task->files[fd].path = NULL;
 	cur_task->files[fd].at = 0;
 	cur_task->files[fd].oflag = 0;
@@ -253,97 +312,125 @@ int close_vfs(int fd)
 	return 0;
 }
 
-int creat_vfs(const char* name, mode_t mode)
+int _creat_vfs(const char* path, mode_t mode, struct mount_t* mount)
 {
-	struct vfs_node_t* node = vfs_root;
-
-	/* First file */
-	if (node == NULL)
+	if (path == NULL || mount == NULL)
 	{
-		node = (struct vfs_node_t*)kmalloc(sizeof(struct vfs_node_t));
-		/* If this fails, kmalloc sets errno */
-		if (node == NULL)
-			return -1;
-
-		vfs_root = node;
-	}
-	else
-	{
-		while (node->next != NULL)
-			node = node->next;
-
-		node->next = \
-			(struct vfs_node_t*)kmalloc(sizeof(struct vfs_node_t));
-		/* kmalloc sets errno on failure */
-		if (node->next == NULL)
-			return -1;
-
-		node = node->next;
+		errno = ENOENT;
+		return -1;
 	}
 
-	/* Yeah, this is rather stupid since we ain't got no users xD */
+	struct fildes_t* fildes = kmalloc(sizeof(struct fildes_t));
+	if (fildes == NULL)
+		return -1;
+
+	fildes->status = kmalloc(sizeof(struct stat));
+	if (fildes->status == NULL)
+	{
+		kfree(fildes);
+		return -1;
+	}
+
 	/* If access mode is unspecified, use 0-rwx-rwx-rwx */
 	if ((mode & S_IPERM) == 0)
 		mode |= (S_IRWXU | S_IRWXG | S_IRWXO);
 
-	node->status.st_mode = mode;
-	node->status.st_uid = 0;
-	node->status.st_gid = 0;
-
-	node->next = NULL;
-	strncpy(&(node->name[0]), name, 63);
-	node->name[63] = '\0';
-	node->status.st_size = 0;
-
-	/* This will be better when we have mounts and dirs, this is
-	 * rather stupid */
-	/* if this is a regular file or type not specified */
-	if ((mode & S_IFREG) || (mode & S_IFMT) == 0)
+	fildes->path = kmalloc(strlen(path)+1);
+	if (fildes->path == NULL)
 	{
-		node->status.st_dev = DEVID_RAMFS;
-		node->status.st_rdev = DEVID_RAMFS;
-		node->status.st_ino = ramfs_inodes++;
-		node->creat = &creat_ramfs;
-	}
-	else if (mode & S_IFIFO)
-	{
-		/* fifos created on ramfs for now */
-		node->status.st_dev = DEVID_RAMFS;
-		node->status.st_rdev = DEVID_RAMFS;
-		node->status.st_ino = ramfs_inodes++;
-		node->creat = &creat_fifofs;
-	}
-	else
-	{
-		/* There is no *default* but ramfs, so just fail if we somehow
-		 * come here.. */
-		errno = EROFS;
+		kfree(fildes->status);
+		kfree(fildes);
 		return -1;
 	}
 
-	if (node->creat != NULL)
+	strcpy(fildes->path, path);
+	fildes->status->st_mode = mode;
+	fildes->status->st_uid = 0;
+	fildes->status->st_gid = 0;
+	fildes->status->st_size = 0;
+	fildes->status->st_dev = mount->device->devid;
+	fildes->at = 0;
+	fildes->oflag = O_WRONLY;
+	fildes->sysflag = FD_USED;
+	fildes->dev = mount->device;
+
+	int ret = 0;
+
+	if (mount->device->fs->creat != NULL)
 	{
-		int ret = node->creat(node, mode);
-		/* If this fails, node->creat should have set the errno */
+		ret = mount->device->fs->creat(reduce_path(path, mount->path), mode, mount->device, fildes);
 		if (ret < 0)
+		{
+			kfree(fildes->status);
+			kfree(fildes);
 			return -1;
+		}
 	}
 
-	/* Find an empty fildes from the task struct, fill it and
-	 * return the index */
+	/* Find an empty fildes from the task struct */
+
 	int fd = get_free_fd(3);
-	if (fd < 0)
+	if (fd < 0 || fd > OPEN_MAX)
 	{
 		errno = EMFILE;
+		kfree(fildes->status);
+		kfree(fildes);
 		return -1;
 	}
 
 	/* Now i is  the first free index. Populate the fildes */
-	cur_task->files[fd].vfs_node = node;
-	cur_task->files[fd].at = 0;
-	cur_task->files[fd].oflag = O_WRONLY;
+	memcpy(&(cur_task->files[fd]), fildes, sizeof(struct fildes_t));
+
+	kfree(fildes);
 
 	return fd;
+}
+
+int creat_vfs(const char* path, mode_t mode)
+{
+	if (path == NULL)
+	{
+		errno = ENOENT;
+		return -1;
+	}
+
+	/* Find the FS that the file is created to by searching mount points */
+
+	struct mount_t* mount_point = mount_list;
+
+	char* dir = kmalloc(strlen(path)+1);
+	if (dir == NULL)
+	{
+		/* kmalloc sets errno */
+		return -1;
+	}
+
+	for (;;)
+	{
+		while (mount_point)
+		{
+			if (strcmp(mount_point->path, dir) == 0)
+			{
+				goto mount_found;
+			}
+			mount_point = mount_point->next;
+		}
+
+		mount_point = mount_list;
+
+		if (traverse_path(dir) < 0)
+		{
+			/* getting here would be weird, we wouldn't even have / */
+			errno = ENOENT;
+			kfree(dir);
+			return -1;
+		}
+	}
+
+	kfree(dir);
+
+mount_found:
+	return _creat_vfs(path, mode, mount_point);
 }
 
 off_t lseek_vfs(int fd, off_t offset, int whence)
@@ -361,7 +448,7 @@ off_t lseek_vfs(int fd, off_t offset, int whence)
 	}
 
 	/* FIFO not seekable */
-	if (cur_task->files[fd].status.st_mode & S_IFIFO)
+	if (cur_task->files[fd].status->st_mode & S_IFIFO)
 	{
 		errno = ESPIPE;
 		return -1;
@@ -369,8 +456,8 @@ off_t lseek_vfs(int fd, off_t offset, int whence)
 
 	/* If there is some fs-special functionality, use that. It should
 	 * set errno on errors.. */
-	if (cur_task->files[fd].lseek != NULL)
-		return cur_task->files[fd].lseek(fd, cur_task->files[fd].path, offset, whence, cur_task->files[fd].dev);
+	if (cur_task->files[fd].dev->fs->lseek != NULL)
+		return cur_task->files[fd].dev->fs->lseek(fd, cur_task->files[fd].path, offset, whence, cur_task->files[fd].dev);
 
 	/* Otherwise we go default */
 	else
@@ -384,7 +471,7 @@ off_t lseek_vfs(int fd, off_t offset, int whence)
 			cur_task->files[fd].at += offset;
 			break;
 		case SEEK_END:
-			cur_task->files[fd].at = cur_task->files[fd].status.st_size + offset;
+			cur_task->files[fd].at = cur_task->files[fd].status->st_size + offset;
 			break;
 		default:
 			errno = EINVAL;
@@ -417,3 +504,10 @@ int get_free_fd(int fd)
 
 	return fd;
 }
+
+/*int mount_vfs(char* src, char* dest, char* fs_type, uint32_t flags, void* data)
+{
+	* figure out dev from <src> and call dev_mount() *
+
+	return 0;
+}*/

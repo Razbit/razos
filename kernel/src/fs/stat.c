@@ -21,6 +21,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <limits.h>
+#include <string.h>
 #include <errno.h>
 
 #include "vfs.h"
@@ -57,7 +58,7 @@ int fstat(int fd, struct stat* buf)
 		return -1;
 	}
 
-	*buf = cur_task->files[fd].vfs_node->status;
+	memcpy(buf, cur_task->files[fd].status, sizeof(struct stat));
 
 	return 0;
 }

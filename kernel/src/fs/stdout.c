@@ -1,4 +1,4 @@
-/* Copyright (c) 2015, 2016 Eetu "Razbit" Pesonen
+/* Copyright (c) 2015 - 2017 Eetu "Razbit" Pesonen
  *
  * This file is part of RazOS.
  *
@@ -17,7 +17,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <console.h> /* For now, a better terminal on the way */
+#include <console.h>
 #include <string.h>
 #include <kmalloc.h>
 #include <errno.h>
@@ -25,71 +25,80 @@
 #include "../mm/task.h"
 
 #include "vfs.h"
-#include "ramfs.h"
+#include "device.h"
 #include "stdio_vfs.h"
 
-static ssize_t write_stdout(int fd, const void* buf, size_t size);
-static int open_stdout(struct vfs_node_t* node, int oflag, mode_t mode);
+static ssize_t write_stdout(int fd, char* path, const void* buf, size_t size, struct device_t* dev);
+static int open_stdout(char* path, int oflag, mode_t mode, struct fildes_t* fildes);
 
-/* Initialize stdout. We use modified ramfs nodes in the background */
+
 int init_stdout()
 {
-	/* stdin already open? */
-	if (cur_task->files[STDOUT_FILENO].vfs_node != NULL)
-		return STDOUT_FILENO;
+	kprintf("Initializing stdout..\n");
 
-	struct vfs_node_t* node = vfs_root;
-
-	/* If this is the first file */
-	if (node == NULL)
+	/* stdout already open? */
+	if (cur_task->files[STDOUT_FILENO].sysflag & FD_USED)
 	{
-		node = (struct vfs_node_t*)kmalloc(sizeof(struct vfs_node_t));
-		if (node == NULL)
-			return -1;
-
-		vfs_root = node;
-	}
-	else
-	{
-		/* Find the end of vfs */
-		while (node->next != NULL)
-			node = node->next;
-
-		node->next = \
-			(struct vfs_node_t*)kmalloc(sizeof(struct vfs_node_t));
-		if (node->next == NULL)
-			return -1;
-
-		node = node->next;
+		if (cur_task->files[STDOUT_FILENO].dev->devid == DEVID_STDOUT)
+			return STDOUT_FILENO;
 	}
 
-	node->status.st_mode = 0;
-	node->status.st_uid = 0;
-	node->status.st_gid = 0;
-	node->status.st_size = 0;
-	node->next = NULL;
-	strcpy(node->name, "stdout");
+	cur_task->files[STDOUT_FILENO].status = kmalloc(sizeof(struct stat));
+	if (cur_task->files[STDOUT_FILENO].status == NULL)
+	{
+		return -1;
+	}
 
-	node->status.st_dev = DEVID_STDIO;
-	node->status.st_rdev = DEVID_STDIO;
-	node->status.st_ino = STDOUT_FILENO;
-	node->close = NULL;
-	node->read = NULL;
-	node->write = &write_stdout;
-	node->creat = NULL;
-	node->open = &open_stdout;
-	node->lseek = NULL;
+	struct fs_t* fs = kmalloc(sizeof(struct fs_t));
+	if (fs == NULL)
+		return -1;
 
-	cur_task->files[STDOUT_FILENO].vfs_node = node;
+	fs->write = write_stdout;
+	fs->open = open_stdout;
+	strcpy(fs->type, "stdout");
+
+	struct device_t* stdout_dev = kmalloc(sizeof(struct device_t));
+	if (stdout_dev == NULL)
+	{
+		kfree(fs);
+		return -1;
+	}
+
+	strcpy(stdout_dev->name, "stdout");
+	stdout_dev->devid = DEVID_STDOUT;
+	stdout_dev->type = DEV_CHAR;
+	stdout_dev->fs = fs;
+
+	if (dev_add(stdout_dev) < 0)
+	{
+		kfree(fs);
+		kfree(stdout_dev);
+		return -1;
+	}
+
+	cur_task->files[STDOUT_FILENO].path = kmalloc(strlen("/dev/stdout")+1);
+	if (cur_task->files[STDOUT_FILENO].path == NULL)
+	{
+		/* TODO: remove dev */
+		kfree(fs);
+		kfree(stdout_dev);
+		return -1;
+	}
+
+	strcpy(cur_task->files[STDOUT_FILENO].path, "/dev/stdout");
 	cur_task->files[STDOUT_FILENO].at = 0;
 	cur_task->files[STDOUT_FILENO].oflag = O_WRONLY;
+	cur_task->files[STDOUT_FILENO].sysflag = FD_USED;
+	cur_task->files[STDOUT_FILENO].dev = stdout_dev;
 
 	return STDOUT_FILENO;
 }
 
-static ssize_t write_stdout(int fd, const void* buf, size_t size)
+static ssize_t write_stdout(int fd, char* path, const void* buf, size_t size, struct device_t* dev)
 {
 	(void)fd;
+	(void)path;
+	(void)dev;
 
 	for (size_t i = 0; i < size; i++)
 		kputchar(((char*)buf)[i]);
@@ -97,17 +106,19 @@ static ssize_t write_stdout(int fd, const void* buf, size_t size)
 	return (ssize_t)size;
 }
 
-/* Only used for when opening as fd 1 */
-static int open_stdout(struct vfs_node_t* node, int oflag, mode_t mode)
+
+static int open_stdout(char* path, int oflag, mode_t mode, struct fildes_t* fildes)
 {
+	(void)path;
 	(void)mode;
 	(void)oflag;
-	(void)node;
+
+	fildes->dev = dev_get(DEVID_STDOUT);
 
 	int ret = STDOUT_FILENO;
 
 	/* If STDOUT_FILENO is not free, get the first free fd */
-	if (cur_task->files[STDOUT_FILENO].vfs_node != NULL)
+	if (cur_task->files[STDOUT_FILENO].sysflag & FD_USED)
 		ret = get_free_fd(3);
 
 	if (ret < 0)

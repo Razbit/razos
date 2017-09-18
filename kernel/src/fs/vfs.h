@@ -24,12 +24,13 @@
 #include "device.h"
 
 /* fildes_t sysflag values */
-#define FD_USED 1
+#define FD_USED 0x00000001
+#define PIPE    0x00000002
 
 struct fildes_t
 {
 	char* path;
-	struct stat status;
+	struct stat* status;
 	off_t at;                    /* Where are we in the file */
 	uint32_t oflag;
 	uint32_t sysflag;
@@ -38,13 +39,17 @@ struct fildes_t
 
 struct fs_t
 {
-	ssize_t (*read)(size_t, char*, void*, size_t, struct device_t*);
-	ssize_t (*write)(size_t, char*, const void*, size_t, struct device_t*);
-	int (*close)(size_t, char*, struct device_t*);
-	off_t (*lseek)(size_t, char*, off_t, int, struct device_t*);
-	int (*open)(char*, int, mode_t, struct device_t*);
-	int (*creat)(char*, mode_t, struct device_t*);
-	int (*exist)(char*, struct device_t*);
+	ssize_t (*read)(int, char*, void*, size_t, struct device_t*);
+	ssize_t (*write)(int, char*, const void*, size_t, struct device_t*);
+	int (*close)(int, char*, struct device_t*);
+	off_t (*lseek)(int, char*, off_t, int, struct device_t*);
+	int (*open)(char*, int, mode_t, struct fildes_t*);
+	int (*creat)(char*, mode_t, struct device_t*, struct fildes_t*);
+	int (*exist)(char*, void*);
+	int (*mount)(char*, struct device_t*);
+
+	char type[8];
+	void* private;
 };
 
 /* Standard read, write, open, creat, close and lseek */
@@ -52,10 +57,11 @@ ssize_t read_vfs(int fd, void* buf, size_t size);
 ssize_t write_vfs(int fd, const void* buf, size_t size);
 int open_vfs(const char* path, int oflag, mode_t mode);
 int creat_vfs(const char* path, mode_t mode);
+int _creat_vfs(const char* path, mode_t mode, struct mount_t* mount);
 int close_vfs(int fd);
 off_t lseek_vfs(int fd, off_t offset, int whence);
 
-int mount_vfs(char* src, char* dest, char* fs_type, uint32_t flags, void* data);
+//int mount_vfs(char* src, char* dest, char* fs_type, uint32_t flags, void* data);
 
 int do_fcntl(int fd, int cmd, uint32_t arg);
 

@@ -194,7 +194,8 @@ uint32_t* execve(char* path, char** argv, char** envp)
 	/* Close files that have O_CLOEXEC set */
 	for (int i = 0; i < OPEN_MAX; i++)
 	{
-		if (cur_task->files[i].oflag & O_CLOEXEC)
+		if ((cur_task->files[i].sysflag & FD_USED) \
+		    && (cur_task->files[i].oflag & O_CLOEXEC))
 			close(i);
 	}
 

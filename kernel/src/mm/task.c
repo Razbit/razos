@@ -65,6 +65,8 @@ struct task_t* cur_task = NULL;
 static struct tss_t tss;
 static struct task_t* tasks[256];
 
+int task_errno = 0;
+
 struct task_t* get_task(pid_t pid)
 {
 	if (pid > countof(tasks))
@@ -118,6 +120,7 @@ void task_init()
 	cur_task = alloc_empty_task();
 	cur_task->page_dir = cur_page_dir;
 	cur_task->ppid = 0;
+	cur_task->errno_loc = &task_errno;
 
 	kprintf("Tasking initialization succeeded.\n");
 }

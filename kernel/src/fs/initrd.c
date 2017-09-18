@@ -29,17 +29,27 @@
  * and copy the data. */
 void init_initrd(void* loc)
 {
+	kprintf("Loading initrd\n");
 	uint32_t nfiles = *((uint32_t*)loc);
 	struct initrd_node_t* node = (struct initrd_node_t*)(loc+4);
+
+	const char* prefix = "/rd/";
 
 	for (uint32_t i = 0; i < nfiles; i++)
 	{
 		size_t size = node[i].size;
 		off_t offset = node[i].offset + (off_t)loc;
-		char* name = node[i].name;
 
-		int fd = open_vfs(name, O_RDWR | O_CREAT, S_IFREG);
+		char* path = kmalloc(strlen(prefix) + strlen(node[i].name));
+		if (path == NULL)
+			break;
+
+		strcat(path, prefix);
+		strcat(path, node[i].name);
+
+		int fd = open_vfs(path, O_RDWR | O_CREAT, S_IFREG);
 		write_vfs(fd, (void*)offset, size);
 		close_vfs(fd);
+		kfree(path);
 	}
 }

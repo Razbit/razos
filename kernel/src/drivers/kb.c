@@ -76,7 +76,8 @@ static int stdin_fd;
 
 int init_kb()
 {
-	stdin_fd = open("stdin", O_WRONLY);
+	stdin_fd = open("/dev/stdin", O_WRONLY);
+	kprintf("Keyboard initialized.\n");
 	return stdin_fd;
 }
 

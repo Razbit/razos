@@ -1,5 +1,5 @@
 CSOURCES = do_exit.c wait.c sched.c setup_rlibc.c
-ASMSOURCES = 
+ASMSOURCES =
 SUBOBJS = fcntl.o stdlib.o unistd.o math.o errno.o stat.o ctype.o stdio.o string.o time.o sys.o
 
 OBJS = $(patsubst %.c, %.c.o,$(CSOURCES))
@@ -12,7 +12,7 @@ export LDFLAGS = -r
 export ASFLAGS = -felf
 export ARCH = i386
 
-_LDFLAGS = 
+_LDFLAGS =
 
 CRT0 = $(PWD)/arch/crt0.s.o
 CRTI = $(PWD)/arch/crti.s.o
@@ -60,6 +60,9 @@ term: term.c.o
 date: date.c.o
 	$(LD) $(_LDLAGS) -Tuser.ld -o date rlibc.o date.c.o
 
+pipe_test: pipe_test.c.o
+	$(LD) $(_LDLAGS) -Tuser.ld -o pipe_test rlibc.o pipe_test.c.o
+
 clean:
 	rm *.o
 	$(MAKE) clean -C arch
@@ -74,4 +77,3 @@ clean:
 	$(MAKE) clean -C stdio
 	$(MAKE) clean -C time
 	$(MAKE) clean -C sys
-

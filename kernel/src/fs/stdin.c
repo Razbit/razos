@@ -18,7 +18,7 @@
 #include <asm/system.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <console.h> /* For now, a better terminal on the way */
+#include <console.h>
 #include <string.h>
 #include <kmalloc.h>
 #include <errno.h>
@@ -27,12 +27,12 @@
 #include "../mm/sched.h"
 
 #include "vfs.h"
-#include "ramfs.h"
+#include "device.h"
 #include "stdio_vfs.h"
 
-static ssize_t read_stdin(int fd, void* buf, size_t size);
-static ssize_t write_stdin(int fd, const void* buf, size_t size);
-static int open_stdin(struct vfs_node_t* node, int oflag, mode_t mode);
+static ssize_t read_stdin(int fd, char* path, void* buf, size_t size, struct device_t* dev);
+static ssize_t write_stdin(int fd, char* path, const void* buf, size_t size, struct device_t* dev);
+static int open_stdin(char* path, int oflag, mode_t mode, struct fildes_t* fildes);
 
 static off_t read_at = 0;
 static off_t write_at = 0;
@@ -42,55 +42,64 @@ static char stdin_buf[1024] = {'\0'};
 
 int init_stdin()
 {
+	kprintf("Initializing stdin..\n");
+
 	/* stdin already open? */
-	if (cur_task->files[STDIN_FILENO].vfs_node != NULL)
-		return STDIN_FILENO;
-
-	struct vfs_node_t* node = vfs_root;
-
-	/* If this is the first file */
-	if (node == NULL)
+	if (cur_task->files[STDIN_FILENO].sysflag & FD_USED)
 	{
-		node = (struct vfs_node_t*)kmalloc(sizeof(struct vfs_node_t));
-		if (node == NULL)
-			return -1;
-
-		vfs_root = node;
-	}
-	else
-	{
-		/* Find the end of vfs */
-		while (node->next != NULL)
-			node = node->next;
-
-		node->next = \
-			(struct vfs_node_t*)kmalloc(sizeof(struct vfs_node_t));
-		if (node->next == NULL)
-			return -1;
-
-		node = node->next;
+		if (cur_task->files[STDIN_FILENO].dev->devid == DEVID_STDIN)
+			return STDIN_FILENO;
 	}
 
-	node->status.st_mode = 0;
-	node->status.st_uid = 0;
-	node->status.st_gid = 0;
-	node->status.st_size = 0;
-	node->next = NULL;
-	strcpy(node->name, "stdin");
+	cur_task->files[STDIN_FILENO].status = kmalloc(sizeof(struct stat));
+	if (cur_task->files[STDIN_FILENO].status == NULL)
+	{
+		return -1;
+	}
 
-	node->status.st_dev = DEVID_STDIO;
-	node->status.st_rdev = DEVID_STDIO;
-	node->status.st_ino = STDIN_FILENO;
-	node->close = NULL;
-	node->read = &read_stdin;
-	node->write = &write_stdin;
-	node->creat = NULL;
-	node->open = &open_stdin;
-	node->lseek = NULL;
 
-	cur_task->files[STDIN_FILENO].vfs_node = node;
+	struct fs_t* fs = kmalloc(sizeof(struct fs_t));
+	if (fs == NULL)
+		return -1;
+
+	fs->read = read_stdin;
+	fs->write = write_stdin;
+	fs->open = open_stdin;
+	strcpy(fs->type, "stdin");
+
+	struct device_t* stdin_dev = kmalloc(sizeof(struct device_t));
+	if (stdin_dev == NULL)
+	{
+		kfree(fs);
+		return -1;
+	}
+
+	strcpy(stdin_dev->name, "stdin");
+	stdin_dev->devid = DEVID_STDIN;
+	stdin_dev->type = DEV_CHAR;
+	stdin_dev->fs = fs;
+
+	if (dev_add(stdin_dev) < 0)
+	{
+		kfree(fs);
+		kfree(stdin_dev);
+		return -1;
+	}
+
+	cur_task->files[STDIN_FILENO].path = kmalloc(strlen("/dev/stdin")+1);
+	if (cur_task->files[STDIN_FILENO].path == NULL)
+	{
+		/* TODO: remove dev */
+		kfree(fs);
+		kfree(stdin_dev);
+		return -1;
+	}
+
+	strcpy(cur_task->files[STDIN_FILENO].path, "/dev/stdin");
 	cur_task->files[STDIN_FILENO].at = 0;
 	cur_task->files[STDIN_FILENO].oflag = O_RDWR;
+	cur_task->files[STDIN_FILENO].sysflag = FD_USED;
+	cur_task->files[STDIN_FILENO].dev = stdin_dev;
 
 	return STDIN_FILENO;
 }
@@ -123,12 +132,15 @@ static char pop_stdin()
 	return stdin_buf[read_at-1];
 }
 
-static ssize_t read_stdin(int fd, void* buf, size_t size)
+static ssize_t read_stdin(int fd, char* path, void* buf, size_t size, struct device_t* dev)
 {
 	(void)fd;
+	(void)path;
+	(void)dev;
+
 	size_t read = 0;
 
-	sched_halt(); /* Make sure not to switch tasks now */
+	sched_halt(); /* Make sure we don't switch tasks now */
 	sti(); /* Now we can catch kb inputs */
 
 	while (stdin_buf_size < size);
@@ -147,31 +159,33 @@ static ssize_t read_stdin(int fd, void* buf, size_t size)
 	return (ssize_t)read;
 }
 
-static ssize_t write_stdin(int fd, const void* buf, size_t size)
+static ssize_t write_stdin(int fd, char* path, const void* buf, size_t size, struct device_t* dev)
 {
 	(void)fd;
+	(void)path;
+	(void)dev;
+
 	for (size_t i = 0; i < size; i++)
 	{
 		stdin_buf_size += push_stdin(((char*)buf)[i]);
-
-		/* Echo to the screen */
-		//kputchar(((char*)buf)[i]);
 	}
 
 	return size;
 }
 
-/* Only used for when opening as fd 0 */
-static int open_stdin(struct vfs_node_t* node, int oflag, mode_t mode)
+
+static int open_stdin(char* path, int oflag, mode_t mode, struct fildes_t* fildes)
 {
+	(void)path;
 	(void)mode;
 	(void)oflag;
-	(void)node;
+
+	fildes->dev = dev_get(DEVID_STDIN);
 
 	int ret = STDIN_FILENO;
 
 	/* If STDIN_FILENO is not free, get the first free fd */
-	if (cur_task->files[STDIN_FILENO].vfs_node != NULL)
+	if (cur_task->files[STDIN_FILENO].sysflag & FD_USED)
 		ret = get_free_fd(3);
 
 	if (ret < 0)
