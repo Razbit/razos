@@ -21,6 +21,8 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <dirent.h>
+
 #include "device.h"
 
 /* fildes_t sysflag values */
@@ -37,6 +39,7 @@ struct fildes_t
 	struct device_t* dev;
 };
 
+/* An interface to communicate with a filesystem */
 struct fs_t
 {
 	ssize_t (*read)(int, char*, void*, size_t, struct device_t*);
@@ -47,6 +50,9 @@ struct fs_t
 	int (*creat)(char*, mode_t, struct device_t*, struct fildes_t*);
 	int (*exist)(char*, void*);
 	int (*mount)(char*, struct device_t*);
+	int (*closedir)(DIR*);
+	DIR* (*opendir)(const char*);
+	struct dirent* (*readdir)(DIR*)
 
 	char type[8];
 	void* private;
