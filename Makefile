@@ -36,7 +36,7 @@ init: rlibc
 	mv rlibc/term ./term
 	mv rlibc/date ./date
 	mv rlibc/pipe_test ./pipe_test
-	tools/mk-initrd test hellow rash len term date hello pipe_test
+	tools/mk-initrd test hellow rash len term date pipe_test
 
 bochs:
 	sudo ./update_image.sh

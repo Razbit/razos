@@ -1,4 +1,4 @@
-CSOURCES = device.c devfs.c vfs.c initrd.c ramfs.c stat.c do_fcntl.c pipe.c stdio_vfs.c stdout.c stderr.c stdin.c
+CSOURCES = device.c devfs.c vfs.c initrd.c ramfs.c stat.c do_fcntl.c pipe.c stdio_vfs.c stdout.c stderr.c stdin.c fat/fat.c
 ASMSOURCES =
 SUBOBJS =
 
@@ -19,3 +19,4 @@ link:
 
 clean:
 	rm *.o
+	rm fat/*.o

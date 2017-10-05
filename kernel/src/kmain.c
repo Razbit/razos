@@ -24,11 +24,14 @@
 #include <kassert.h>
 #include <time.h>
 #include <fcntl.h>
+#include <kmalloc.h>
+#include <memdump.h>
 
 #include "gdt.h"
 #include "drivers/idt.h"
 #include "drivers/pit.h"
 #include "drivers/kb.h"
+#include "drivers/ata_lba.h"
 #include "mm/paging.h"
 #include "mm/task.h"
 #include "mm/sched.h"
@@ -36,6 +39,7 @@
 #include "fs/initrd.h"
 #include "fs/stdio_vfs.h"
 #include "fs/devfs.h"
+#include "fs/fat/fat.h"
 #include "loader/exec.h"
 
 int kmain(struct multiboot_info* mb, uint32_t esp)
@@ -73,17 +77,23 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 
 	kputs("RazOS kernel initialized, starting init..");
 
+	struct fat_bpb_t* bpb = kmalloc(512);
+	ata_lba_read(0, 1, (void*)bpb);
+	dump_bpb(bpb);
+
+	memdump(bpb, 64);
+
 	/* Uncomment and set arguments/env variables when/if needed. */
 	//char* argv[] = {"arg0", NULL};
 	//char* envp[] = {"VAR=VAL", NULL};
 
-	uint32_t* ret = execve("/rd/rash", NULL, NULL);
+	/*uint32_t* ret = execve("/rd/rash", NULL, NULL);
 
 	if (ret != NULL)
 	{
 		kputs("Switching to user mode..");
 		sched_begin(ret[2], ret[1], ret[0]);
-	}
+		}*/
 
 	kputs("\n==HALTED==");
 

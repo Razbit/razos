@@ -52,7 +52,7 @@ struct fs_t
 	int (*mount)(char*, struct device_t*);
 	int (*closedir)(DIR*);
 	DIR* (*opendir)(const char*);
-	struct dirent* (*readdir)(DIR*)
+	struct dirent* (*readdir)(DIR*);
 
 	char type[8];
 	void* private;
