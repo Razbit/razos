@@ -23,6 +23,16 @@
 
 #include <sys/types.h>
 
+
+#define n_sectors(_BPB)	  \
+	((_BPB->n_sects == 0) ? _BPB->n_sects_l : _BPB->n_sects);
+#define fat_size(_BPB)	  \
+	((_BPB->fat_size == 0) ? _BPB->ebpb.fat32.fat_size : _BPB->fat_size);
+#define root_size(_BPB)	  \
+	((_BPB->n_dirs * 32) + (_BPB->sect_size - 1) / _BPB->sect_size);
+#define data_start(_BPB)  \
+	(_BPB->n_res + (_BPB->n_fats * _BPB->fat_size) + root_size(_BPB));
+
 /* Volume Boot Record */
 /* BIOS Param Block */
 struct fat_bpb_t
@@ -31,7 +41,7 @@ struct fat_bpb_t
 	uint8_t oem_id[8];   /* DOS version, not used */
 	uint16_t sect_size;  /* Bytes per sector */
 	uint8_t clust_size;  /* Sectors per cluster */
-	uint16_t res_sect;   /* Number of reserved sectors */
+	uint16_t n_res;      /* Number of reserved sectors */
 	uint8_t n_fats;      /* Number of FATs */
 	uint16_t n_dirs;     /* Number of dir entries in root dir */
 	uint16_t n_sects;    /* Number of sectors in volume (if 0, over 64k)*/
@@ -96,6 +106,5 @@ struct fat32_fs_info_t
 };
 
 void dump_bpb(struct fat_bpb_t* data);
-char* parse_fat_str(char* str, size_t len); /* remove padding, add null */
 
 #endif /* FAT_H */
