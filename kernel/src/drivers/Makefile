@@ -1,12 +1,12 @@
-CSOURCES = idt.c pit.c kb.c time.c gpf.c
-ASMSOURCES = isr.s ata_lba.s
-SUBOBJS = 
+CSOURCES = idt.c pit.c kb.c time.c gpf.c ata.c
+ASMSOURCES = isr.s
+SUBOBJS =
 
 OBJS = $(patsubst %.c,%.c.o,$(CSOURCES))
 OBJS += $(patsubst %.s,%.s.o,$(ASMSOURCES))
 
 
-all: $(OBJS) link 
+all: $(OBJS) link
 
 link:
 	$(LD) $(LDFLAGS) -o drivers.o $(SUBOBJS) $(OBJS)

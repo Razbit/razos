@@ -31,7 +31,7 @@
 #include "drivers/idt.h"
 #include "drivers/pit.h"
 #include "drivers/kb.h"
-#include "drivers/ata_lba.h"
+#include "drivers/ata.h"
 #include "mm/paging.h"
 #include "mm/task.h"
 #include "mm/sched.h"
@@ -39,6 +39,7 @@
 #include "fs/initrd.h"
 #include "fs/stdio_vfs.h"
 #include "fs/devfs.h"
+#include "fs/device.h"
 #include "fs/fat/fat.h"
 #include "loader/exec.h"
 
@@ -77,11 +78,13 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 
 	kputs("RazOS kernel initialized, starting init..");
 
+	struct device_t* hd0 = ata_init();
 	struct fat_bpb_t* bpb = kmalloc(512);
-	ata_lba_read(0, 1, (void*)bpb);
+	ata_read(bpb, 0, 512, hd0);
 	dump_bpb(bpb);
 
-	memdump(bpb, 64);
+  	struct fat_dir_entry_t* root_buf = kmalloc(root_size(bpb));
+	read_root_16(root_buf, bpb, hd0);
 
 	/* Uncomment and set arguments/env variables when/if needed. */
 	//char* argv[] = {"arg0", NULL};

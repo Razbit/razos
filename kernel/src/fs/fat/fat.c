@@ -20,7 +20,6 @@
 
 #include "fat.h"
 #include "../device.h"
-#include "../../drivers/ata_lba.h"
 
 #include <sys/types.h>
 #include <console.h>
@@ -41,7 +40,7 @@ int fat_type(struct fat_bpb_t* bpb)
 	return ret;
 }
 
-int read_root_16(struct fat_dir_entry_t* buf, struct fat_bpb_t* bpb, device_t* dev)
+int read_root_16(struct fat_dir_entry_t* buf, struct fat_bpb_t* bpb, struct device_t* dev)
 {
 	int i, ret = -1;
 	for (i = 0; i < root_size(bpb); i++)
@@ -58,7 +57,7 @@ fail:
 
 }
 
-int read_sector(void* buf, size_t sector, device_t* dev)
+int read_sector(void* buf, size_t sector, struct device_t* dev)
 {
 	return dev->dev_read(buf, sector, 1, dev);
 }
