@@ -12,7 +12,7 @@ all: $(OBJS)
 	mv $(ARCH)/crt0.s.o ./crt0.s.o
 
 %.s.o: %.s
-	nasm $(ASFLAGS) $< -o $@
+	$(AS) $(ASFLAGS) $< -o $@
 
 %.c.o: %.c
 	$(CC) $(CFLAGS) $< -o $@

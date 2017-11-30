@@ -1,16 +1,21 @@
-[GLOBAL fmod]
+/* This file is a part of the RazOS project
+ *
+ * Itara20 2016
+ */
 
-SECTION .text
+.global fmod
+
+.section .text
 
 fmod:
-    fld QWORD [esp+12]  ; y
-    fld QWORD [esp+4]   ; x
+    fld 12(%esp)  /* y*/
+    fld 4(%esp)   /* x*/
 
 loop:
     fprem
-    fnstsw  ax
+    fnstsw %ax
     sahf
-    jp  loop
+    jp loop
 
 end:
     ret

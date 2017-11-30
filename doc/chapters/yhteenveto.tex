@@ -8,7 +8,7 @@ Unix tunnetaan ehkä parhaiten komentorivityökaluistaan, kuten komennoista grep
 
 \par
 
-Lähdekoodi kokonaisuudessaan löytyy GitHubista, osoiteesta \url{https://github.com/Razbit/razos}. Sieltä löytyy myös ohjeet RazOSin ``asentamiseen'' ja käyttämiseen, tiedostosta README.md. Oikealla tietokoneella käyttämistä emme suosittele.
+Lähdekoodi kokonaisuudessaan löytyy GitHubista, osoiteesta \url{https://github.com/Razbit/razos}. Sieltä löytyy myös ohjeet RazOSin ``asentamiseen'' ja käyttämiseen, tiedostosta README.md. Oikealla tietokoneella käyttämistä emme suosittele. Jos tiedoston \texttt{floppy.img} laittaa johonkin emulaattoriin, kuten Qemuun, levykkeeksi, voi käyttöjärjestelmää kokeilla.
 
 \section{Ajankäyttö ja työnjako}
 
@@ -17,3 +17,15 @@ Projekti alkoi jo syksyllä 2014. Sen jälkeen on ollut kaksi täydellistä uude
 \par
 
 Iiro tuli projektiin mukaan vasta alkusyksystä 2015. Silloin oli kernelin toinen uudelleenkirjoitus alkamassa, ja tehtiin sellainen työnjako, että Iiro tekee käyttäjäpuolta ja Eetu kerneliä. Toki vähän meni ristiin välillä, mutta se oli ajatus ja siinä on melko hyvin pysytty.
+
+\section{Mitä opimme}
+
+Jo ennen projektia meillä oli molemmilla suhteellisen kattava ohjelmointitausta; C oli jo tuttu kieli ja monia ohjelmointiprojekteja oli takana. Tämän kaltainen projekti toi ohjelmointiin aivan uudenlaisen näkökulman: ennen saattoi luottaa siihen, että kirjasto tarjosi kaikenlaisia valmiita funktioita ja tietotyyppejä, mutta käyttöjärjestelmää tehdessä ne on määriteltävä itse. Assymblyllä ohjelmointi oli vierasta, mutta se tuli hyvin tutuksi projektin aikana. Binäärimuotoon käännettyjen ohjelmien rakenteesta saimme valtavan määrän uutta tietoa, kuten myös laitteiston ja ohjelmiston toimimisesta yhdessä. Laitteiston läheinen ohjelmointi oli uutta siinä mittakaavassa, jossa sitä piti käyttöjärjestelmän alimpia osia tehdessä harjoittaa.
+
+\par
+
+Lopputulos, RazOSin toiminnalisuus kirjoitushetkellä, yllätti tekijänsäkin; se toimii yllättävän hyvin, vaikka monesti on meinannut usko loppua. Tekemistä vielä toki on, että pääsisimme tavoitteeseemme: käyttöjärjestelmään, jolla voisi jatkaa sen itsensä kehitystä.
+
+\par
+
+Mitä tekisimme toisin? Montakin asiaa. RazOS on pyritty pitämään mahdollisimman yksinkertaisena, eikä liialliseen optimointiin ole ryhdytty. Se näkyy esimerkiksi siinä, että muistinhallinta on melko hidas, ja heap-alueet fragmentoituvat helposti. Nämä asiat tosin ovat omalla tavallaan projektin tarkoituksen ulkopuolella; nykyiset algoritmit selittävät verrattain yksinkertaisesti käyttöjärjestelmän toimintaa. Ehkä suurin muutos, mikä tulisi tehdä, on virtuaalisen tiedostojärjestelmän toteutus siten, että se tukisi kansioita.

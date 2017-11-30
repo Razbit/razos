@@ -16,37 +16,37 @@
  * You should have received a copy of the GNU General Public License
  * along with RazOS. If not, see <http://www.gnu.org/licenses/>. */
 
-/* Parts of this file are based on the work of Charlie Somerville.
- * The original file can be obtained here:
- * https://github.com/charliesome/radium
- *
- * Copyright (c) 2013-2015 Charlie Somerville
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without
- * restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies
- * of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE. */
-
 #ifndef IDT_H
 #define IDT_H
 
 void idt_init();
+
+void except_err(uint32_t num, uint32_t err, uint32_t eip);
+void except(uint32_t num, uint32_t eip);
+
+void isr0();
+void isr1();
+void isr2();
+void isr3();
+void isr4();
+void isr5();
+void isr6();
+void isr7();
+void isr8();
+void isr9();
+void isr10();
+void isr11();
+void isr12();
+void isr13(); /* GPF */
+void isr14(); /* PF */
+void isr16();
+void isr17();
+void isr18();
+void isr19();
+void isr20();
+void isr30();
+void isr32(); /* PIT */
+void isr33(); /* KB */
+void isr39(); /* LPT1 or spurious */
 
 #endif /* IDT_H */

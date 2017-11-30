@@ -1,25 +1,31 @@
-; This file is a part of the RazOS project
-;
-; Itara20 2016
+/* This file is a part of the RazOS project
+ *
+ * Itara20 2016
+ */
 
-[GLOBAL floor]
+.global floor
 
-SECTION .data
+.section .data
 
-old: dw 0
-new: dw 0x0400
+old:
+    .int old
+    movw $0, old
+new:
+    .int new
+    movw $0x0400, new
 
-SECTION .text
+
+.section .text
 
 floor:
-    fstcw [old]
-    mov eax, old
-    and ah, 0b11110011
-    or eax, new
+    fstcw (old)
+    movl (old), %eax
+    andb $0b11110011, %ah
+    orl (new), %eax
 
-    fldcw [new]
-    fld QWORD [esp+4]
+    fldcw (new)
+    fld 4(%esp)
     frndint
 
-    fldcw [old]
+    fldcw (old)
     ret

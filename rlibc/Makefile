@@ -9,7 +9,7 @@ export PWD = $(shell pwd)
 export CFLAGS = -std=gnu99 -O2 -Wall -Wextra -c -g \
 	-I$(PWD) -I$(PWD)/../razos_kernel_headers
 export LDFLAGS = -r
-export ASFLAGS = -felf
+export ASFLAGS =
 export ARCH = i386
 
 _LDFLAGS =
@@ -37,7 +37,7 @@ all: $(OBJS)
 	$(LD) $(LDFLAGS) -Tuser.ld -o rlibc.o $(CRT0) $(CRTI) $(CRTBEGIN) $(OBJS) $(SUBOBJS) $(CRTEND) $(CRTN)
 
 %.s.o: %.s
-	nasm $(ASFLAGS) $< -o $@
+	$(AS) $(ASFLAGS) $< -o $@
 
 %.c.o: %.c
 	$(CC) $(CFLAGS) $< -o $@

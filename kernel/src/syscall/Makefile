@@ -11,7 +11,7 @@ link:
 	$(LD) $(LDFLAGS) -o syscall.o $(SUBOBJS) $(OBJS)
 
 %.s.o: %.s
-	nasm $(ASFLAGS) $< -o $@
+	$(AS) $(ASFLAGS) $< -o $@
 
 %.c.o: %.c
 	$(CC) $(CFLAGS) $< -o $@

@@ -80,7 +80,7 @@ int kmain(struct multiboot_info* mb, uint32_t esp)
 
 	struct device_t* hd0 = ata_init();
 	struct fat_bpb_t* bpb = kmalloc(512);
-	ata_read(bpb, 0, 512, hd0);
+	ata_read(bpb, 0, 1, hd0);
 	dump_bpb(bpb);
 
   	struct fat_dir_entry_t* root_buf = kmalloc(root_size(bpb));

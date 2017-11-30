@@ -1,4 +1,4 @@
-CSOURCES = idt.c pit.c kb.c time.c gpf.c ata.c
+CSOURCES = idt.c pit.c kb.c time.c gpf.c except.c ata.c
 ASMSOURCES = isr.s
 SUBOBJS =
 
@@ -12,7 +12,7 @@ link:
 	$(LD) $(LDFLAGS) -o drivers.o $(SUBOBJS) $(OBJS)
 
 %.s.o: %.s
-	nasm $(ASFLAGS) $< -o $@
+	$(AS) $(ASFLAGS) $< -o $@
 
 %.c.o: %.c
 	$(CC) $(CFLAGS) $< -o $@
