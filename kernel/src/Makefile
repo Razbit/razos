@@ -26,7 +26,7 @@ all: $(OBJS)
 	$(LD) $(LDFLAGS) -o kern.o $(SUBOBJS) $(OBJS)
 
 %.s.o: %.s
-	nasm $(ASFLAGS) $< -o $@
+	$(AS) $(ASFLAGS) $< -o $@
 
 %.c.o: %.c
 	$(CC) $(CFLAGS) $< -o $@

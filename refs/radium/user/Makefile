@@ -11,8 +11,8 @@ all: init.bin
 	@ld -o $@ -T linker.ld $^
 
 crt0.o: crt0.asm
-	@echo nasm $@
-	@nasm -felf -o $@ $<
+	@echo $(AS) $@
+	@$(AS) -felf -o $@ $<
 
 %.o: %.c
 	@echo cc $@

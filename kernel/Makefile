@@ -4,7 +4,7 @@ export PWD = $(shell pwd)
 export CFLAGS = -std=gnu99 -ffreestanding -O2 -Wall -Wextra -c -g \
 	-I$(PWD)/include -I$(PWD)/../razos_kernel_headers -D_RAZOS_KERNEL
 export LDFLAGS =
-export ASFLAGS = -felf
+export ASFLAGS =
 
 all: ./src/boot.s.o
 	$(MAKE) -C lib
@@ -16,7 +16,7 @@ all: ./src/boot.s.o
 	$(LD) $(LDFLAGS) -Tlink.ld -o kernel ./src/boot.s.o $(SUBOBJS)
 
 %.s.o: %.s
-	nasm $(ASFLAGS) $< -o $@
+	$(AS) $(ASFLAGS) $< -o $@
 
 clean:
 	$(MAKE) clean -C lib

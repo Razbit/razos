@@ -1,6 +1,6 @@
 /* idt.c -- Interrupt Descriptor Table */
 
-/* Copyright (c) 2015 Eetu "Razbit" Pesonen
+/* Copyright (c) 2015, 2017 Eetu "Razbit" Pesonen
  *
  * This file is part of RazOS.
  *
@@ -105,7 +105,30 @@ void idt_init()
 {
 	irq_remap();
 
-	idt_init_asm(); /* isr.s */
+	register_isr(0, isr0);
+	register_isr(1, isr1);
+	register_isr(2, isr2);
+	register_isr(3, isr3);
+	register_isr(4, isr4);
+	register_isr(5, isr5);
+	register_isr(6, isr6);
+	register_isr(7, isr7);
+	register_isr(8, isr8);
+	register_isr(9, isr9);
+	register_isr(10, isr10);
+	register_isr(11, isr11);
+	register_isr(12, isr12);
+	register_isr(13, isr13);
+	register_isr(14, isr14);
+	register_isr(16, isr16);
+	register_isr(17, isr17);
+	register_isr(18, isr18);
+	register_isr(19, isr19);
+	register_isr(20, isr20);
+	register_isr(30, isr30);
+	register_isr(32, isr32);
+	register_isr(33, isr33);
+	register_isr(39, isr39);
 
 	idt_ptr.size = sizeof(idt) - 1;
 	idt_ptr.base = idt;

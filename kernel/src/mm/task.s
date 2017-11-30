@@ -1,131 +1,111 @@
-;; task.s -- Assembly helpers for tasking
+/* task.s -- Assembly helpers for tasking
+ *
+ * Copyright (c) 2015 - 2017 Eetu "Razbit" Pesonen
+ *
+ * This file is part of RazOS.
+ *
+ * RazOS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2
+ * as published by the Free Software Foundation.
+ *
+ * RazOS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with RazOS. If not, see <http://www.gnu.org/licenses/>.
+ *
+ *
+ * Parts of this file are based on the work of Charlie Somerville.
+ * The original file can be obtained here:
+ * https://github.com/charliesome/radium
+ *
+ * Copyright (c) 2013-2015 Charlie Somerville
+ */
 
-;; Copyright (c) 2015, 2016 Eetu "Razbit" Pesonen
-;;
-;; This file is part of RazOS.
-;;
-;; RazOS is free software: you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License version 2
-;; as published by the Free Software Foundation.
-;;
-;; RazOS is distributed in the hope that it will be useful,
-;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-;; GNU General Public License for more details.
-;;
-;; You should have received a copy of the GNU General Public License
-;; along with RazOS. If not, see <http://www.gnu.org/licenses/>.
+/* using cur_task from task.c
+ * using sched_next from task.c
+ * using task_fork_inner from task.c
+ * using sched_cont from task.c
+ * using get_page_dir_phys from paging.c
+ */
 
-;; Parts of this file are based on the work of Charlie Somerville.
-;; The original file can be obtained here:
-;; https://github.com/charliesome/radium
-;;
-;; Copyright (c) 2013-2015 Charlie Somerville
-;;
-;; MIT License
-;;
-;; Permission is hereby granted, free of charge, to any person
-;; obtaining a copy of this software and associated documentation
-;; files (the "Software"), to deal in the Software without
-;; restriction, including without limitation the rights to use, copy,
-;; modify, merge, publish, distribute, sublicense, and/or sell copies
-;; of the Software, and to permit persons to whom the Software is
-;; furnished to do so, subject to the following conditions:
-;;
-;; The above copyright notice and this permission notice shall be
-;; included in all copies or substantial portions of the Software.
-;;
-;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-;; EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-;; MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-;; NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
-;; BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-;; ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-;; SOFTWARE.
-
-[GLOBAL sched_begin]            ; sched.h
-[GLOBAL sched_switch]           ; sched.h
-[GLOBAL task_fork]              ; task.h
-
-[EXTERN cur_task]               ; task.c
-[EXTERN sched_next]             ; task.c
-[EXTERN task_fork_inner]        ; task.c
-[EXTERN sched_cont]             ; task.c
-[EXTERN get_page_dir_phys]      ; paging.c
-
-    ;; see gdt.h
-%define USER_CODE (0x18 | 3)
-%define USER_DATA (0x20 | 3)
-
-    ;; see task.h
-%define task_fpu_state(task) [(task) + 0]
-%define task_esp(task)       [(task) + 0x200]
-%define task_eip(task)       [(task) + 0x204]
-%define task_page_dir(task)  [(task) + 0x208]
+.global sched_begin             /* sched.h*/
+.global sched_switch            /* sched.h*/
+.global task_fork               /* task.h*/
 
 sched_begin:
-    mov esi, [esp + 12]         ; envp
-    mov edi, [esp + 8]          ; argv
-    mov ecx, [esp + 4]          ; user stack end
+    movl 12(%esp), %esi        /* envp*/
+    movl 8(%esp), %edi         /* argv*/
+    movl 4(%esp), %ecx         /* user stack end*/
 
     call sched_cont
 
-    mov eax, USER_DATA
-    mov ds, eax
-    mov es, eax
-    mov fs, eax
-    mov gs, eax
+    movl $0x23, %eax
+    movl %eax, %ds
+    movl %eax, %es
+    movl %eax, %fs
+    movl %eax, %gs
 
-    mov edx, 0x10000000         ; task entry point
-    sti                         ; Now the PIT may call sched_switch
-    sysexit                     ; Enter the user world
+    movl $0x10000000, %edx      /* task entry point*/
+
+    sti                         /* Now the PIT may call sched_switch*/
+    sysexit                     /* Enter the user world*/
 
 sched_switch:
-    ;; save old task state
+    /*  save old task state*/
     pusha
-    mov eax, [cur_task]
-    fxsave task_fpu_state(eax)
-    mov task_esp(eax), esp
-    mov task_eip(eax), dword .return
+    movl (cur_task), %eax
+    fxsave (%eax)
+    movl %esp, 0x200(%eax)
+    pushl %ebx
+    movl $sw.return, %ebx
+    movl %ebx, 0x204(%eax)
+    popl %ebx
 
-    ;; fetch the next task
+    /*  fetch the next task*/
     call sched_next
-    mov [cur_task], eax
 
-    ;; get physical page dir address
-    push dword task_page_dir(eax)
+    movl %eax, (cur_task)
+
+    /*  get physical page dir address*/
+    pushl 0x208(%eax)
     call get_page_dir_phys
-    add esp, 4
-    ;; eax now contains physical address of the new task's page dir
-    ;; load to cr3
-    mov cr3, eax
+    addl $4, %esp
+    /*  eax now contains physical address of the new task's page dir*/
+    /*  load to cr3*/
+    movl %eax, %cr3
 
-    ;; restore eax
-    mov eax, [cur_task]
+    /*  restore eax*/
+    movl (cur_task), %eax
 
-    ;; restore task state
-    fxrstor task_fpu_state(eax)
-    mov esp, task_esp(eax)
-    jmp task_eip(eax)
+    /*  restore task state*/
+    fxrstor (%eax)
+    movl 0x200(%eax), %esp
+    jmp *0x204(%eax)
 
-.return:
+sw.return:
     popa
     ret
 
 task_fork:
-    xor eax, eax
+    xor %eax, %eax
 
     pusha
-    call task_fork_inner        ; create & set up the new task
+    call task_fork_inner        /* create & set up the new task*/
 
-    ;; We save the return value so the parent that calls us gets
-    ;; the right task_t* for the new child
-    mov [esp + 7*4], eax        ; EAX from pusha
+    /* We save the return value so the parent that calls us gets
+     * the right task_t* for the new child
+     */
+    movl %eax, 28(%esp)        /* EAX from pusha*/
 
-    mov task_esp(eax), esp
-    mov task_eip(eax), dword .return
+    movl %esp, 0x200(%eax)
+    pushl %ebx
+    movl $tf.return, %ebx
+    movl %ebx, 0x204(%eax)
+    popl %ebx
 
-.return:
+tf.return:
     popa
     ret
