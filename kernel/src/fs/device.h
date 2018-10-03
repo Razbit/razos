@@ -28,6 +28,8 @@
 #define DEV_MAJ 0xFFFF0000
 #define DEV_MIN 0x0000FFFF
 
+#define DEV_ATA_MAJ    0x00020000
+
 /* Special devices */
 #define DEV_SPECIAL_MAJ 0x00010000
 #define DEVID_DEVDEV   (DEV_SPECIAL_MAJ | 0x01)

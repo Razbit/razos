@@ -62,8 +62,85 @@ int read_sector(void* buf, size_t sector, struct device_t* dev)
 	return dev->dev_read(buf, sector, 1, dev);
 }
 
+ssize_t fat_read(int fd, char* path, void* buf, size_t size, struct device_t* dev)
+{
+	return -1;
+}
+
+ssize_t fat_write(int fd, char* path, const void* buf, size_t size, struct device_t* dev)
+{
+	return -1;
+}
+
+int fat_close(int fd, char* path, struct device_t dev)
+{
+	return -1;
+}
+
+int fat_open(char* path, int oflag, mode_t mode, struct fildes_t* fildes)
+{
+	return -1;
+}
+
+int fat_creat(char* path, mode_t mode, struct device_t* dev, struct fildes_t* fildes)
+{
+	return -1;
+}
 
 
+int fat_exist(char* path, void* _fildes)
+{
+	/* populate _fildes->status */
+	return 0;
+}
+
+
+int fat_mount(char* path, struct device_t* dev)
+{
+	/* copy FAT contents to a kernel buffer */
+	return 0;
+}
+
+int fat_closedir(DIR* dir)
+{
+	return 0;
+}
+
+DIR* fat_opendir(const char* path)
+{
+	return NULL;
+}
+
+struct dirent* fat_readdir(DIR* dir)
+{
+	return NULL;
+}
+
+
+
+
+/* tell devfs this device has a fat fs on it */
+int init_fat(struct device_t* dev)
+{
+	dev->fs = kmalloc(sizeof(struct fs_t));
+
+	if (dev->fs == NULL)
+		return -1;
+
+	dev->fs->read = fat_read;
+	dev->fs->write = fat_write;
+	dev->fs->close = fat_close;
+	dev->fs->open = fat_open;
+	dev->fs->lseek = NULL;
+	dev->fs->creat = fat_creat;
+	dev->fs->exist = fat_exist;
+	dev->fs->mount = fat_mount;
+	dev->fs->opendir = fat_opendir;
+	dev->fs->closedir = fat_closedir;
+	dev->fs->readdir = fat_readdir;
+
+	return 0;
+}
 
 /* Debugging functions */
 

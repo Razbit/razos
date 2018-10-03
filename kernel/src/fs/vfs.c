@@ -477,7 +477,6 @@ off_t lseek_vfs(int fd, off_t offset, int whence)
 			errno = EINVAL;
 			return -1;
 		}
-
 		return cur_task->files[fd].at;
 	}
 }
